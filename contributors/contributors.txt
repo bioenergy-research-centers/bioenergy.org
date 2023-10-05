@@ -5,3 +5,5 @@ Mark Miller, Lawrence Berkeley National Lab
 Mark Kulawik, Lawrence Berkeley National Lab
 Oliver Ruebel, Lawrence Berkeley National Lab
 Dan Hopp, Oak Ridge National Lab
+Dirk Norman, University of Wisconsin-Madison
+Cliint Cecil, University of Wisconsin-Madison
