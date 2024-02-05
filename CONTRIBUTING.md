@@ -40,12 +40,13 @@ Once we have your consent on file, your name will be added to `contributors.txt`
 
 ## 2. Create a Pull Request
 
-Follow the process described in the creative-commons [PR Guidelines](https://opensource.creativecommons.org/contributing-code/pr-guidelines/).
+Follow the process described in the creative-commons [PR Guidelines](https://opensource.creativecommons.org/contributing-code/pr-guidelines/) and **Assign** yourself to the related open issue(s) to share what you are working on. (Issues should already exist from agile planning and be used to track all work)
 
 Briefly:
 - **Create a branch** for your code changes. Push your branch to the repository early and often to avoid losing any work and share your progress.
+- **Verify Tests Pass** locally and new contribtions have proper coverage. 
 - **Open a Pull Request** from your branch against the `main` branch of bioenergy.org.
-- **Describe your change** by filling out the pull request template.
+- **Describe your change** by filling out the pull request template. Make sure to reference the associated issue and fully describe the work done. The creative-commons PR guide says: "Too much detail is better than too little".
 
 A code **Reviewer** will be assigned automatically. Verify your PR has a reviewer assigned and wait for Code Review feedback.
 
@@ -58,20 +59,12 @@ Contributors should strive for small, focused changes to expedite the review pro
 Work with the assigned reviewer to apply recommendations and address feedback. Code Review should be a constructive process, working together to ensure a quality product that meets coding standards and project goals. 
 - Read the [thoughtbot code review guide](https://github.com/thoughtbot/guides/tree/main/code-review)
 - After you push updates [Re-request a review](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/about-pull-request-reviews#re-requesting-a-review) to inform the reviewer.
-- The assigned reviewer will follow the Code Reviewer Guidelines outlined below and merge the request when all feedback is addressed. 
-
-If the functionality that you contributed is complex, we may ask for additional written design documents. We want your code to follow coding standards, be clear, readable and maintainable, and of course it should do what it is supposed to do. We will look for errors, style issues, comments (or lack thereof), and any other issues in your code. 
-We will inform you of our comments and we expect you to make the recommended changes. New re-reviews may be expected until the code complies with our required processes.
+- The assigned reviewer will follow the Code Reviewer Guidelines outlined below and merge the request when all feedback is addressed.
 
 **Note:** Any bugs, either discovered by you, us, or any users should also be tracked in Github Issues. We request that you take full responsibility for correcting bugs in your contributions. Be aware that, unless notified otherwise, the correction of bugs takes precedence over the submission or creation of new code.
 
-## Scope agreement and timeline commitment
-If your contribution is small (e.g. a bug fix), simply submit your contribution via GitHub. If your contribution is larger (e.g. a significant new feature), 
-we’ll need to evaluate your proposed changes. To do that, please create a GitHub Issue with a detailed description of the project that you are proposing, including any precise functionalities that you plan to implement as part of the project, and any timeframes for implementation. We will review your materials, and we may schedule a meeting or conference call to discuss your information in more detail. We may ask you to revise your materials and make changes to it, 
-which we will re-review. All final decisions and resolution of disagreements will be handled by the data products portal team leads.  Before you do any significant work we must reach prior agreement and written approval on project areas, scope, timeframe, expected contents, and functionalities to be addressed, or your changes may not be accepted.
-
 ## Agile Development Process
-Project work items are tracked and planned using Github Issues. New issues will be continuously created over time as the project progresses. Issues will be monitored by team members and reviewed for progress during agile team meetings. New work will be continuously reviewed and merged from contributor branches into the main branch. The main branch must always be deployable. Bioenergy.org will be updated on a regular basis as requested by team leads.
+Project work items are tracked and planned using Github Issues. New issues will be continuously created over time as the project progresses. Issues will be monitored by team members and reviewed for progress during agile team meetings. New work will be continuously reviewed and merged from contributor branches into the main branch. The main branch must always be deployable. Bioenergy.org will be updated on a regular basis as requested by team leads. All final decisions on project goals and scope will be made by the data products portal team leads.
 
 ### Issue Assignment
 Contributors should assign themselves to issues that are being actively worked on. If you are not able to assign yourself, please leave a comment that you are working on an issue to avoid duplicating effort.
@@ -80,14 +73,14 @@ Contributors should assign themselves to issues that are being actively worked o
 Pull Request reviewers are assigned automatically using the github [CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners#about-code-owners) feature. All changes to the project must be reviewed and accepted by another team member before merging.
 
 When assigned as a code reviewer, perform the following:
+- Read the [thoughtbot code review guide](https://github.com/thoughtbot/guides/tree/main/code-review)
 - verify the contributor is listed in contributors.txt.
 - verify all pull request checklist items are complete and changes meet coding standards.
 - verify the new functionality will work as intended and aligns with project goals.
-- Read the [thoughtbot code review guide](https://github.com/thoughtbot/guides/tree/main/code-review)
 - provide constructive feedback as needed. Strive to find [the right balance (Gitlab link)](https://docs.gitlab.com/ee/development/code_review.html#the-right-balance) in your suggestions.
 - raise any concerns with team members and/or data products portal leads.
 
-Team members eligible for Code Review will be decided by the data products portal team leads.
+Team members eligible for Code Review will be decided by the data products portal team leads. We want the project code to follow coding standards, be clear, readable and maintainable, and of course it should do what it is supposed to do. As the reviewer, look for errors, style issues, comments, and any other potential issues. Use comments to provide feedback and recommend changes. New re-reviews may be expected until both contributor and reviewer agree the update meets expectations.
 
 ### Coding Standards
 
