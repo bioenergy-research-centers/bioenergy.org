@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${BIOENERGY_ORG_DB_NAME}
+      POSTGRES_USER: ${BIOENERGY_ORG_DB_USER}
+      POSTGRES_PASSWORD: ${BIOENERGY_ORG_DB_PASSWORD}
+    ports:
+      - ${BIOENERGY_ORG_DB_LOCAL_PORT}:${BIOENERGY_ORG_DB_CONTAINER_PORT}
+    volumes:
+      - db:/var/lib/postges
+  # api:
+  #   depends_on:
+  #     - postgres
+  #   build: ./api
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - ${NODE_LOCAL_PORT}:${NODE_CONTAINER_PORT}
+  #   environment:
+  #     - DB_HOST=postgres
+  #     - DB_USER=${DB_USER}
+  #     - DB_PASSWORD=${DB_PASSWORD}
+  #     - DB_NAME=${DB_NAME}
+  #     - DB_PORT=${DB_LOCAL_PORT}
+  #   stdin_open: true
+  #   tty: true
+volumes:
+  db:
