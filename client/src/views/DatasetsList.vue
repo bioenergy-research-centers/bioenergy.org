@@ -25,7 +25,9 @@
           {{ dataset.title }}
         </li>
       </ul>
-
+      <a href="add" class="m-3 btn btn-sm btn-success">
+        Add Dataset
+      </a>
       <button class="m-3 btn btn-sm btn-danger" @click="removeAllDatasets">
         Remove All
       </button>
@@ -100,7 +102,7 @@ export default {
           console.log(e);
         });
     },
-    
+
     searchTitle() {
       DatasetDataService.findByTitle(this.title)
         .then(response => {

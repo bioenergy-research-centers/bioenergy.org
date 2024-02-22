@@ -29,7 +29,7 @@
  * tags:
  *   name: Datasets
  *   description: The datasets managing API
- * /datasets/:
+ * /api/datasets/:
  *   get:
  *    summary: Returns the list of all the datasets
  *    tags: [Datasets]
@@ -62,7 +62,7 @@
  *               $ref: '#/components/schemas/Dataset'
  *       500:
  *         description: Some server error
- * /datasets/{id}:
+ * /api/datasets/{id}:
  *  get:
  *    summary: Get the dataset by id
  *    tags: [Datasets]
