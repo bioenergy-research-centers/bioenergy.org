@@ -8,7 +8,7 @@ require("dotenv").config( {path: ['.env','../.env'] } );
 const app = express();
 
 var corsOptions = {
-  origin: "http://localhost:8081"
+  origin: ["http://localhost:8081", "http://localhost:8080", "https://bioenergy.org", "https://www.bioenergy.org"]
 };
 
 app.use(cors(corsOptions));
