@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 require("dotenv").config( {path: ['.env','../.env'] } );
 
 const app = express();
@@ -41,6 +43,38 @@ require("./app/routes/dataset.routes")(app);
 // const datasets = require(./app/routes/dataset.routes)
 // app.use('/datasets', datasets)
 
+
+// Swagger setup
+
+const options = {
+  definition: {
+    openapi: "3.1.0",
+    info: {
+      title: "Bioenergy.org API with Swagger",
+      version: "0.1.0",
+      description:
+        "This is a simple CRUD API application made with Express and documented with Swagger",
+      contact: {
+        name: "Nathan Hillson",
+        url: "https://www.bioenergy.org",
+        email: "njhillson@lbl.gov",
+      },
+    },
+    servers: [
+      {
+        url: "http://localhost:8080",
+      },
+    ],
+  },
+  apis: ["./app/routes/*.js"],
+};
+
+const specs = swaggerJsdoc(options);
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, { explorer: true })
+);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
