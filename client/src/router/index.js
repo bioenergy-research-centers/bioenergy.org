@@ -28,11 +28,6 @@ const router = createRouter({
       path: "/datasets/:id",
       name: "dataset",
       component: () => import("../views/Dataset.vue")
-    },
-    {
-      path: "/add",
-      name: "add",
-      component: () => import("../views/AddDataset.vue")
     }
   ]
 })

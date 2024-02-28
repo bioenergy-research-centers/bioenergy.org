@@ -10,20 +10,8 @@ class DatasetDataService {
     return http.get(`/datasets/${id}`);
   }
 
-  create(data) {
-    return http.post("/datasets", data);
-  }
-
-  update(id, data) {
-    return http.put(`/datasets/${id}`, data);
-  }
-
-  delete(id) {
-    return http.delete(`/datasets/${id}`);
-  }
-
-  deleteAll() {
-    return http.delete(`/datasets`);
+  published() {
+    return http.get("/datasets/published");
   }
 
   findByTitle(title) {

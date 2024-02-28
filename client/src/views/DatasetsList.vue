@@ -25,12 +25,6 @@
           {{ dataset.title }}
         </li>
       </ul>
-      <a href="add" class="m-3 btn btn-sm btn-success">
-        Add Dataset
-      </a>
-      <button class="m-3 btn btn-sm btn-danger" @click="removeAllDatasets">
-        Remove All
-      </button>
     </div>
     <div class="col-md-6">
       <div v-if="currentDataset">
@@ -44,8 +38,6 @@
           <div>
             <label><strong>Status:</strong></label> {{ currentDataset.published ? "Published" : "Pending" }}
           </div>
-
-          <router-link :to="'/datasets/' + currentDataset.id" class="btn btn-warning">Edit</router-link>
 
       </div>
       <div v-else>
@@ -90,17 +82,6 @@ export default {
     setActiveDataset(dataset, index) {
       this.currentDataset = dataset;
       this.currentIndex = dataset ? index : -1;
-    },
-
-    removeAllDatasets() {
-      DatasetDataService.deleteAll()
-        .then(response => {
-          console.log(response.data);
-          this.refreshList();
-        })
-        .catch(e => {
-          console.log(e);
-        });
     },
 
     searchTitle() {
