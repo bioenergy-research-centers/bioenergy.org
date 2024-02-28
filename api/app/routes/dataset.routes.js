@@ -44,24 +44,6 @@
  *            $ref: '#/components/schemas/Dataset'
  *   500:
  *     description: Some server error
- *   post:
- *     summary: Create a new dataset
- *     tags: [Datasets]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Dataset'
- *     responses:
- *       200:
- *         description: The created dataset.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Dataset'
- *       500:
- *         description: Some server error
  * /api/datasets/{id}:
  *  get:
  *    summary: Get the dataset by id
@@ -80,16 +62,23 @@
  *          application/json:
  *            schema:
  *              $ref: '#/components/schemas/Dataset'
+* /api/datasets/published:
+ *  get:
+ *    summary: Get all published datasets
+ *    tags: [Datasets]
+ *    responses:
+ *      200:
+ *        description: The published dataset list
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/Dataset'
  */
 
 module.exports = app => {
   const datasets = require("../controllers/dataset.controller.js");
 
   var router = require("express").Router();
-
-
-  // Create a new Tutorial
-  router.post("/", datasets.create);
 
   // Retrieve all Tutorials
   router.get("/", datasets.findAll);
@@ -99,15 +88,6 @@ module.exports = app => {
 
   // Retrieve a single Tutorial with id
   router.get("/:id", datasets.findOne);
-
-  // Update a Tutorial with id
-  router.put("/:id", datasets.update);
-
-  // Delete a Tutorial with id
-  router.delete("/:id", datasets.delete);
-
-  // Create a new Tutorial
-  router.delete("/", datasets.deleteAll);
 
   app.use('/api/datasets', router);
 };
