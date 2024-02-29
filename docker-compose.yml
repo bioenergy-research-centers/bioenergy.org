@@ -1,22 +1,7 @@
 version: "3.8"
 
 services:
-  postgres:
-    image: postgres
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      POSTGRES_DB: ${BIOENERGY_ORG_DB_NAME}
-      POSTGRES_USER: ${BIOENERGY_ORG_DB_USER}
-      POSTGRES_PASSWORD: ${BIOENERGY_ORG_DB_PASSWORD}
-    ports:
-      - ${BIOENERGY_ORG_DB_LOCAL_PORT}:5432
-    volumes:
-      - db:/var/lib/postges
   api:
-    depends_on:
-      - postgres
     build: ./api
     restart: unless-stopped
     env_file:
@@ -38,5 +23,3 @@ services:
       - ./nginx_config:/etc/nginx/conf.d
     stdin_open: true
     tty: true
-volumes:
-  db:
