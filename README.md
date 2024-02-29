@@ -55,13 +55,17 @@ Prerequisites:
 
 The application is a monorepo with two main components. The client is a Vue.js application and the API is an Express application.
 
-Running the application
+### Running the application
 
 - Copy the `.env.sample` file to `.env` and fill in the environment variables. These can also be set as environment variables on your system.
 - Docker Compose:
   - To run the application, run `docker-compose up` in the root directory of the project. This will start the nginx server for the client, the express server for the API, and the Postgres database.
   - You can run `docker-compose down` to stop the application and destroy the containers and volumes.
   - Running `docker-compose up --build` will rebuild the containers and restart the application.
+
+### Generating some test data
+
+- run `docker compose run api node seed_dev_db.js` from the root folder of the project.
 
 ### Resources Used to Build This Application
 
