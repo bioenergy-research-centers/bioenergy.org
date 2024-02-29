@@ -63,6 +63,11 @@ The application is a monorepo with two main components. The client is a Vue.js a
   - You can run `docker-compose down` to stop the application and destroy the containers and volumes.
   - Running `docker-compose up --build` will rebuild the containers and restart the application.
 
+### Running a postgres container
+
+The following command will run a postgres container with the password `mysecretpassword` and expose the database on port 6432.
+`docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres -p 6432:5432`
+
 ### Generating some test data
 
 - run `docker compose run api node seed_dev_db.js` from the root folder of the project.
