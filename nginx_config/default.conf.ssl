@@ -1,0 +1,74 @@
+# HTTP server to redirect all 80 traffic to SSL/HTTPS
+server {
+    listen 80 default_server;
+    listen  [::]:80;
+    server_name _;
+    return 301 https://$host$request_uri;
+}
+
+# HTTPS server 
+server {
+    listen      443 ssl http2;
+    listen  [::]:443 ssl http2;
+    server_name localhost;
+
+    ssl_certificate     /etc/nginx/conf.d/ssl/hello.ese.lbl.gov.pem;
+    ssl_certificate_key /etc/nginx/conf.d/ssl/hello.ese.lbl.gov.key;
+
+    ssl_session_timeout 1d;
+    ssl_session_cache   shared:SSL:10m;   # about 40000 sessions
+    ssl_session_tickets off;
+    #ssl_stapling        on;
+    #ssl_stapling_verify on;
+    ssl_stapling        off;
+    ssl_stapling_verify off;
+
+    ssl_prefer_server_ciphers on;
+    ssl_ecdh_curve            secp384r1;
+    ssl_protocols             TLSv1.3;
+    ssl_ciphers               ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    client_max_body_size    100M;
+
+    #access_log  /var/log/nginx/host.access.log  main;
+
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+        try_files $URI $uri/ /index.html;
+    }
+
+    #error_page  404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+
+    # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+    #
+    #location ~ \.php$ {
+    #    proxy_pass   http://127.0.0.1;
+    #}
+
+    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+    #
+    #location ~ \.php$ {
+    #    root           html;
+    #    fastcgi_pass   127.0.0.1:9000;
+    #    fastcgi_index  index.php;
+    #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+    #    include        fastcgi_params;
+    #}
+
+    # deny access to .htaccess files, if Apache's document root
+    # concurs with nginx's one
+    #
+    #location ~ /\.ht {
+    #    deny  all;
+    #}
+}
