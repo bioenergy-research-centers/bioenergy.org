@@ -18,7 +18,8 @@ services:
     env_file:
       - .env
     ports:
-      - ${BIOENERGY_ORG_CLIENT_LOCAL_PORT}:80
+      - 80:80
+      - 443:443
     volumes:
       - ./nginx_config:/etc/nginx/conf.d
     stdin_open: true
