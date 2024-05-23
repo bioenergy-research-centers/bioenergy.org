@@ -1,17 +1,32 @@
+version: "3.8"
+
 services:
   api:
+    build: ./api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - ${BIOENERGY_ORG_API_LOCAL_PORT}:8080
+    stdin_open: true
+    tty: true
     volumes:
       - ./api:/api
-
   client:
+    depends_on:
+      - api
     build:
       context: ./client
       dockerfile: Dockerfile.dev
     ports:
-      # !override #https://docs.docker.com/compose/compose-file/13-merge/#replace-value
-      - ${BIOENERGY_ORG_CLIENT_LOCAL_DEV_PORT}:3000
+      - ${BIOENERGY_ORG_CLIENT_LOCAL_PORT}:3000
     environment:
-      - BIOENERGY_ORG_CLIENT_LOCAL_DEV_PORT
-    volumes: # !override
+      - BIOENERGY_ORG_CLIENT_LOCAL_PORT
+    volumes:
       - ./client:/app
       - /app/node_modules/
+    restart: unless-stopped
+    env_file:
+      - .env
+    stdin_open: true
+    tty: true
