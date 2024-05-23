@@ -1,0 +1,17 @@
+services:
+  api:
+    volumes:
+      - ./api:/api
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    ports:
+      # !override #https://docs.docker.com/compose/compose-file/13-merge/#replace-value
+      - ${BIOENERGY_ORG_CLIENT_LOCAL_DEV_PORT}:3000
+    environment:
+      - BIOENERGY_ORG_CLIENT_LOCAL_DEV_PORT
+    volumes: # !override
+      - ./client:/app
+      - /app/node_modules/

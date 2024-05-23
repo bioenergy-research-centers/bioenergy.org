@@ -23,7 +23,7 @@
           <router-link to="/about" class="nav-link">About</router-link>
         </li>
         <li class="nav-item">
-          <a href="http://localhost:8080/api-docs" class="nav-link" target="_blank">API Docs</a>
+          <a href="<%= BIOENERGY_ORG_API_URI %>/api-docs" class="nav-link" target="_blank">API Docs</a>
         </li>
       </div>
     </nav>
