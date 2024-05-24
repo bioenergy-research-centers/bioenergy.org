@@ -3,9 +3,7 @@
 </script>
 
 <script>
-// export default {
-//   name: "app"
-// };
+  var docs_link= import.meta.env.VITE_BIOENERGY_ORG_API_URI +"/api-docs";
 </script>
 
 <template>
@@ -23,7 +21,8 @@
           <router-link to="/about" class="nav-link">About</router-link>
         </li>
         <li class="nav-item">
-          <a href="<%= BIOENERGY_ORG_API_URI %>/api-docs" class="nav-link" target="_blank">API Docs</a>
+          <a :href="docs_link" class="nav-link" target="_blank">API
+            Docs</a>
         </li>
       </div>
     </nav>
