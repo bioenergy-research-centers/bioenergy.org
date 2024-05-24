@@ -1,7 +1,11 @@
 FROM node:20
 
-WORKDIR /api
+RUN ["mkdir", "/install"]
+WORKDIR /install
+ENV NODE_PATH=/install/node_modules
 COPY package*.json .
 RUN npm install
+
+WORKDIR /api
 COPY . .
 CMD npm start
