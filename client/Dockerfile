@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm run build
+RUN VITE_BIOENERGY_ORG_API_URI=https://api.bioenergy.org npm run build
 
 # production stage
 FROM nginx:stable-alpine as production-stage
