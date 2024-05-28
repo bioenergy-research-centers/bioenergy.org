@@ -59,7 +59,8 @@ The application is a monorepo with two main components. The client is a Vue.js a
 
 - Copy the `.env.sample` file to `.env` and fill in the environment variables. These can also be set as environment variables on your system.
 - Docker Compose:
-  - To run the application, run `docker-compose up` in the root directory of the project. This will start the nginx server for the client, the express server for the API, and the Postgres database.
+  - To run the application in production mode, run `docker-compose up` in the root directory of the project. This will start the nginx server for the client, the express server for the API, and the Postgres database.
+  - To run the application in development mode, run `docker compose -f docker-compose.dev.yml up`. This will start the client and API in development mode with hot reloading.
   - You can run `docker-compose down` to stop the application and destroy the containers and volumes.
   - Running `docker-compose up --build` will rebuild the containers and restart the application.
 
