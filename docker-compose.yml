@@ -13,7 +13,10 @@ services:
   client:
     depends_on:
       - api
-    build: ./client
+    build:
+      context: ./client
+      args:
+        VITE_BIOENERGY_ORG_API_URI: ${VITE_BIOENERGY_ORG_API_URI}
     restart: unless-stopped
     env_file:
       - .env

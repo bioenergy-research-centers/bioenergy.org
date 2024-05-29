@@ -3,11 +3,12 @@
 
 # build stage
 FROM node:20 as build-stage
+ARG VITE_BIOENERGY_ORG_API_URI
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN VITE_BIOENERGY_ORG_API_URI=https://api.bioenergy.org npm run build
+RUN npm run build
 
 # production stage
 FROM nginx:stable-alpine as production-stage
