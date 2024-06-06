@@ -1,10 +1,13 @@
 <script setup>
-import TheWelcome from '../components/TheWelcome.vue'
+import HeaderView from "@/views/HeaderView.vue";
+import SearchInput from "@/views/SearchInput.vue";
 </script>
 
 <template>
-  <main>
-    <h1>You did it!</h1>
-    <TheWelcome />
-  </main>
+  <HeaderView/>
+  <SearchInput/>
 </template>
+
+<style scoped>
+
+</style>

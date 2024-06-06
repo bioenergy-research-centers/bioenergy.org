@@ -1,35 +1,17 @@
-@import './base.css';
+@import "bootstrap/dist/css/bootstrap.min.css";
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+body {
+    background-color: #f7f7f7;
+    font-family: helvetica, arial, sans-serif;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0) inset;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+.search-input {
+    margin-top: 200px;
+    align-items: center;
+    justify-content: center;
 }
