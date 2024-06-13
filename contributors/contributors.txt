@@ -10,3 +10,5 @@ William Morrell, Sandia National Lab
 Dirk Norman, University of Wisconsin-Madison
 Clint Cecil, University of Wisconsin-Madison
 Nicholas Thrower, Michigan State University
+Charles Parker, Lawrence Berkeley National Lab
+Harry Caufield, Lawrence Berkeley National Lab
