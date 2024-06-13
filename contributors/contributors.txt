@@ -8,3 +8,4 @@ Dan Hopp, Oak Ridge National Lab
 William Morrell, Sandia National Lab
 Dirk Norman, University of Wisconsin-Madison
 Clint Cecil, University of Wisconsin-Madison
+Nicholas Thrower, Michigan State University
