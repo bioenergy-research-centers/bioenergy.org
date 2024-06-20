@@ -20,6 +20,9 @@ jobs:
               with:
                 node-version: 22
 
+            - name: Install package
+              run: npm install --save ./api/
+
             - name: Install dependencies
               run: npm ci
 
