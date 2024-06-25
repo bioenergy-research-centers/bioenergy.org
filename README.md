@@ -80,3 +80,10 @@ The following command will run a postgres container with the password `mysecretp
   - <https://sequelize.org/docs/v6/core-concepts/model-querying-basics/#operators>
 - <https://vuejs.org/>
   - <https://v2.vuejs.org/v2/cookbook>
+
+## BRC Data End Points
+
+- CABBI: <https://cabbitools.igb.illinois.edu/brc/cabbi.json>
+- CBI: <https://fair.ornl.gov/CBI/cbi.json>
+- GLBRC:
+- JBEI:
