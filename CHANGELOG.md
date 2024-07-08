@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial vue app for client side rendering
 - Initial express server for server side rendering
 - Initial docker configuration
+- GitHub Actions QC workflow
+- Initial ESLint config file (eslint.config.js)
+- Initial top-level package metadata files (package.json, package-lock.json)
 
 [unreleased]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.2...HEAD
 [0.0.2]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.1...v0.0.2
