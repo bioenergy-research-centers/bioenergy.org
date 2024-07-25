@@ -1,0 +1,190 @@
+{
+    "$defs": {
+        "AnalysisType": {
+            "description": "",
+            "enum": [
+                "shotgun_proteomics",
+                "cross_linking",
+                "affinity_purification",
+                "srm_mrm",
+                "swath_ms",
+                "Ms_imaging"
+            ],
+            "title": "AnalysisType",
+            "type": "string"
+        },
+        "BRCEnum": {
+            "description": "",
+            "enum": [
+                "CABBI",
+                "CBI",
+                "GLBRC",
+                "JBEI"
+            ],
+            "title": "BRCEnum",
+            "type": "string"
+        },
+        "Dataset": {
+            "additionalProperties": false,
+            "description": "A dataset containing metabolomics and proteomics data.",
+            "properties": {
+                "analysisType": {
+                    "$ref": "#/$defs/AnalysisType",
+                    "description": "The type of analysis performed on the dataset."
+                },
+                "bibliographicCitation": {
+                    "description": "Citation for the dataset.",
+                    "type": "string"
+                },
+                "brc": {
+                    "$ref": "#/$defs/BRCEnum",
+                    "description": "Bioenergy Research Center affiliation."
+                },
+                "creator": {
+                    "description": "List of creators involved in the dataset, where one must be the primary contact.",
+                    "items": {
+                        "$ref": "#/$defs/Individual"
+                    },
+                    "type": "array"
+                },
+                "date": {
+                    "description": "The date the dataset was created or published.",
+                    "format": "date",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "A detailed description of the dataset.",
+                    "type": "string"
+                },
+                "identifier": {
+                    "description": "Unique identifier for the dataset.",
+                    "type": "string"
+                },
+                "keywords": {
+                    "description": "Keywords associated with the dataset.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "relatedItem": {
+                    "$ref": "#/$defs/RelatedItem",
+                    "description": "Related publication or item."
+                },
+                "repository": {
+                    "description": "The repository where the dataset is stored.",
+                    "type": "string"
+                },
+                "species": {
+                    "description": "Species information for the organism(s) studied.",
+                    "items": {
+                        "$ref": "#/$defs/Organism"
+                    },
+                    "type": "array"
+                },
+                "title": {
+                    "description": "The title of the dataset.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "title",
+                "date",
+                "creator",
+                "brc",
+                "bibliographicCitation",
+                "identifier",
+                "species"
+            ],
+            "title": "Dataset",
+            "type": "object"
+        },
+        "DatasetCollection": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "datasets": {
+                    "items": {
+                        "$ref": "#/$defs/Dataset"
+                    },
+                    "type": "array"
+                }
+            },
+            "title": "DatasetCollection",
+            "type": "object"
+        },
+        "Individual": {
+            "additionalProperties": false,
+            "description": "An individual involved in the dataset.",
+            "properties": {
+                "affiliation": {
+                    "description": "Affiliation of the creator.",
+                    "type": "string"
+                },
+                "creatorName": {
+                    "description": "Name of the creator.",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "Email address of the creator.",
+                    "type": "string"
+                },
+                "primaryContact": {
+                    "description": "Indicates if the creator is the primary contact.",
+                    "type": "boolean"
+                }
+            },
+            "title": "Individual",
+            "type": "object"
+        },
+        "Organism": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "NCBITaxID": {
+                    "description": "NCBI taxonomy ID for the organism.",
+                    "type": "integer"
+                },
+                "scientificName": {
+                    "description": "Scientific name of the organism.",
+                    "type": "string"
+                }
+            },
+            "title": "Organism",
+            "type": "object"
+        },
+        "RelatedItem": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "relatedItemIdentifier": {
+                    "description": "Identifier or URL for the related item.",
+                    "type": "string"
+                },
+                "relatedItemType": {
+                    "description": "Type of the related item, e.g., JournalArticle.",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Title of the related item.",
+                    "type": "string"
+                }
+            },
+            "title": "RelatedItem",
+            "type": "object"
+        }
+    },
+    "$id": "https://w3id.org/brc/metaprot-datasets-schema",
+    "additionalProperties": true,
+    "description": "",
+    "properties": {
+        "datasets": {
+            "items": {
+                "$ref": "#/$defs/Dataset"
+            },
+            "type": "array"
+        }
+    },
+    "title": "datasets",
+    "type": "object"
+}
