@@ -86,4 +86,4 @@ The following command will run a postgres container with the password `mysecretp
 - CABBI: <https://cabbitools.igb.illinois.edu/brc/cabbi.json>
 - CBI: <https://fair.ornl.gov/CBI/cbi.json>
 - GLBRC: <https://fair-data.glbrc.org/glbrc.json>
-- JBEI:
+- JBEI: <https://hello.bioenergy.org/JBEI/jbei.json>
