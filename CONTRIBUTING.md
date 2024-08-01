@@ -44,11 +44,10 @@ Follow the process described in the creative-commons [PR Guidelines](https://ope
 
 Briefly:
 - **Create a branch** for your code changes. Push your branch to the repository early and often to avoid losing any work and share your progress.
-- **Verify Tests Pass** locally and new contribtions have proper coverage. 
+- **Verify Tests Pass** locally and new contributions have proper coverage. 
 - **Open a Pull Request** from your branch against the `main` branch of bioenergy.org.
 - **Describe your change** by filling out the pull request template. Make sure to reference the associated issue and fully describe the work done. The creative-commons PR guide says: "Too much detail is better than too little".
-
-A code **Reviewer** will be assigned automatically. Verify your PR has a reviewer assigned and wait for Code Review feedback.
+- **Assign a reviewer** to your pull request and wait for Code Review feedback.
 
 ### General PR Guidelines
 Contributors should strive for small, focused changes to expedite the review process. Unrelated features and bugfixes should be added to new pull requests. For more details, read the kubernetes community [best practices for faster reviews](https://github.com/kubernetes/community/blob/master/contributors/guide/pull-requests.md#best-practices-for-faster-reviews).
