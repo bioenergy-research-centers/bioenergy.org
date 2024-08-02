@@ -1,0 +1,24 @@
+{
+    "urls": [
+        {
+            "name": "TEST",
+            "url": "https://doe.gov/random"
+        },
+        {
+            "name": "JBEI",
+            "url": null
+        },
+        {
+            "name": "CABBI",
+            "url": "https://cabbitools.igb.illinois.edu/brc/cabbi.json"
+        },
+        {
+            "name": "CBI",
+            "url": "https://fair.ornl.gov/CBI/cbi.json"
+        },
+        {
+            "name": "GLBRC",
+            "url": "https://fair-data.glbrc.org/glbrc.json"
+        }
+    ]
+}
