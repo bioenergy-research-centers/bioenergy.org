@@ -33,14 +33,14 @@ exports.create = (req, res) => {
 // Retrieve all Datasets from the database.
 exports.findAll = (req, res) => {
   const term = req.query.title;
-  let condition = term ? { 'json.Title': { [Op.iLike]: `%${term}%` } } : null;
+  const condition = term ? { 'json.title': { [Op.iLike]: `%${term}%` } } : null;
 
 //  const term = req.query.brc;
-//  let condition = term ? { 'json.BRC': `${term}` } : null;
+//  let condition = term ? { 'json.brc': `${term}` } : null;
 
   Dataset.findAll({ where: condition })
     .then(data => {
-      res.send(data);
+      res.send(data.map(x => x.json));
     })
     .catch(err => {
       res.status(500).send({
@@ -54,7 +54,7 @@ exports.findAll = (req, res) => {
 exports.findOne = (req, res) => {
   const id = req.params.id;
 
-  let condition = `${id}`;
+  const condition = `${id}`;
 
   Dataset.findByPk(condition)
     .then(data => {
@@ -79,7 +79,7 @@ exports.findOne = (req, res) => {
 exports.findAllPublished = (req, res) => {
   Dataset.findAll({ where: { 'json.bibliographicCitation': { [Op.notIn]: [ "" ] } } })
     .then(data => {
-      res.send(data);
+      res.send(data.map(x => x.json));
     })
     .catch(err => {
       res.status(500).send({
