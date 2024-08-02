@@ -1,12 +1,8 @@
 {
     "urls": [
         {
-            "name": "TEST",
-            "url": "https://doe.gov/random"
-        },
-        {
             "name": "JBEI",
-            "url": null
+            "url": "https://hello.bioenergy.org/JBEI/jbei.json"
         },
         {
             "name": "CABBI",
