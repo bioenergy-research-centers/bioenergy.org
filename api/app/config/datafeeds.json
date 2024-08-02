@@ -1,0 +1,20 @@
+{
+    "urls": [
+        {
+            "name": "JBEI",
+            "url": "https://hello.bioenergy.org/JBEI/jbei.json"
+        },
+        {
+            "name": "CABBI",
+            "url": "https://cabbitools.igb.illinois.edu/brc/cabbi.json"
+        },
+        {
+            "name": "CBI",
+            "url": "https://fair.ornl.gov/CBI/cbi.json"
+        },
+        {
+            "name": "GLBRC",
+            "url": "https://fair-data.glbrc.org/glbrc.json"
+        }
+    ]
+}
