@@ -5,18 +5,16 @@ const Op = db.Sequelize.Op;
 // Create and Save a new Dataset
 exports.create = (req, res) => {
   // Validate request
-  if (!req.body.title) {
+  if (!req.body.dataset) {
     res.status(400).send({
-      message: "Content can not be empty!"
+      message: "Dataset cannot be empty!"
     });
     return;
   }
 
   // Create a Dataset
   const dataset = {
-    title: req.body.title,
-    description: req.body.description,
-    published: req.body.published ? req.body.published : false
+    json: req.body.dataset
   };
 
   // Save Dataset in the database
@@ -34,8 +32,11 @@ exports.create = (req, res) => {
 
 // Retrieve all Datasets from the database.
 exports.findAll = (req, res) => {
-  const title = req.query.title;
-  var condition = title ? { title: { [Op.iLike]: `%${title}%` } } : null;
+  const term = req.query.title;
+  let condition = term ? { 'json.Title': { [Op.iLike]: `%${term}%` } } : null;
+
+//  const term = req.query.brc;
+//  let condition = term ? { 'json.BRC': `${term}` } : null;
 
   Dataset.findAll({ where: condition })
     .then(data => {
@@ -44,7 +45,7 @@ exports.findAll = (req, res) => {
     .catch(err => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving datasets."
+          err.message || "Some error occurred while retrieving Datasets."
       });
     });
 };
@@ -53,33 +54,37 @@ exports.findAll = (req, res) => {
 exports.findOne = (req, res) => {
   const id = req.params.id;
 
-  Dataset.findByPk(id)
+  let condition = `${id}`;
+
+  Dataset.findByPk(condition)
     .then(data => {
       if (data) {
-        res.send(data);
+        res.send(data.json);
+//        res.send(data);
       } else {
         res.status(404).send({
-          message: `Cannot find Dataset with id=${id}.`
+          message: `Cannot find Dataset with identifier: ${id}`
         });
       }
     })
     .catch(err => {
+      console.error(err.message);
       res.status(500).send({
-        message: "Error retrieving Dataset with id=" + id
+        message: `Error retrieving Dataset with identifier: ${id}`
       });
     });
 };
 
 // Find all published Datasets
 exports.findAllPublished = (req, res) => {
-  Dataset.findAll({ where: { published: true } })
+  Dataset.findAll({ where: { 'json.bibliographicCitation': { [Op.notIn]: [ "" ] } } })
     .then(data => {
       res.send(data);
     })
     .catch(err => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving datasets."
+          err.message || "Some error occurred while retrieving Datasets."
       });
     });
 };

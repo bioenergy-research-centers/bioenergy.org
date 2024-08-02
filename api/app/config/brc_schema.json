@@ -29,8 +29,16 @@
             "description": "A dataset containing metabolomics and proteomics data.",
             "properties": {
                 "analysisType": {
-                    "$ref": "#/$defs/AnalysisType",
-                    "description": "The type of analysis performed on the dataset."
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/AnalysisType"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "The type of analysis performed on the dataset.",
+                    "type": "string"
                 },
                 "bibliographicCitation": {
                     "description": "Citation for the dataset.",
@@ -46,6 +54,10 @@
                         "$ref": "#/$defs/Individual"
                     },
                     "type": "array"
+                },
+                "datasetname": {
+                    "description": "\"Name of a overall dataset to which this data entry belongs.\"",
+                    "type": "string"
                 },
                 "date": {
                     "description": "The date the dataset was created or published.",
@@ -72,8 +84,8 @@
                     "description": "Related publication or item."
                 },
                 "repository": {
-                    "description": "The repository where the dataset is stored.",
-                    "type": "string"
+                    "$ref": "#/$defs/RepositoryEnum",
+                    "description": "The repository where the dataset is stored."
                 },
                 "species": {
                     "description": "Species information for the organism(s) studied.",
@@ -118,6 +130,14 @@
             "description": "An individual involved in the dataset.",
             "properties": {
                 "affiliation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Organization"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
                     "description": "Affiliation of the creator.",
                     "type": "string"
                 },
@@ -153,6 +173,30 @@
             "title": "Organism",
             "type": "object"
         },
+        "Organization": {
+            "additionalProperties": false,
+            "description": "An organization involved in the dataset.",
+            "properties": {
+                "organizationName": {
+                    "description": "Name of the organization.",
+                    "type": "string"
+                },
+                "parentOrganization": {
+                    "$ref": "#/$defs/Organization",
+                    "description": "Higher-level parent of this organization."
+                },
+                "ror_id": {
+                    "description": "ROR identifier for the organization.",
+                    "type": "string"
+                },
+                "wikidata_id": {
+                    "description": "Wikidata identifier for the organization.",
+                    "type": "string"
+                }
+            },
+            "title": "Organization",
+            "type": "object"
+        },
         "RelatedItem": {
             "additionalProperties": false,
             "description": "",
@@ -172,11 +216,28 @@
             },
             "title": "RelatedItem",
             "type": "object"
+        },
+        "RepositoryEnum": {
+            "description": "",
+            "enum": [
+                "GEO",
+                "ICE",
+                "iProX",
+                "jPOST",
+                "MassIVE",
+                "PanoramaPublic",
+                "PedtideAtlas",
+                "PRIDE"
+            ],
+            "title": "RepositoryEnum",
+            "type": "string"
         }
     },
-    "$id": "https://w3id.org/brc/metaprot-datasets-schema",
+    "$id": "https://w3id.org/brc/brc_schema",
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
     "additionalProperties": true,
     "description": "",
+    "metamodel_version": "1.7.0",
     "properties": {
         "datasets": {
             "items": {
@@ -185,6 +246,7 @@
             "type": "array"
         }
     },
-    "title": "datasets",
-    "type": "object"
+    "title": "brc_schema",
+    "type": "object",
+    "version": null
 }
