@@ -24,7 +24,10 @@
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.0",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
+    "swagger-ui-express": "^5.0.0",
+    "sync-fetch": "^0.5.2",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1"

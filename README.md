@@ -58,7 +58,8 @@ The application is a monorepo with two main components. The client is a Vue.js a
 ### Running a postgres container
 
 The following command will run a postgres container with the password `mysecretpassword` and expose the database on port 6432.
-`docker run --name postgres -e POSTGRES_PASSWORD=mysecretpassword -d -p 6432:5432 postgres` 
+
+`docker run --name postgres -e POSTGRES_PASSWORD=mysecretpassword -d -p 6432:5432 postgres`
 
 ### Running the application
 
