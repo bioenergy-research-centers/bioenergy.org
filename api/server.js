@@ -8,7 +8,7 @@ require("dotenv").config( {path: ['.env','../.env'] } );
 const app = express();
 
 var corsOptions = {
-  origin: [process.env.VITE_BIOENERGY_ORG_API_URI, "https://api.bioenergy.org", "http://localhost:3000", "http://localhost:8081", "http://localhost:8080", "https://bioenergy.org", "https://www.bioenergy.org"]
+  origin: [process.env.BIOENERGY_ORG_CLIENT_URI, "https://api.bioenergy.org", "http://localhost:3000", "http://localhost:8081", "http://localhost:8080", "https://bioenergy.org", "https://www.bioenergy.org"]
 };
 
 app.use(cors(corsOptions));
@@ -62,7 +62,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:8080",
+        url: process.env.VITE_BIOENERGY_ORG_API_URI,
       },
     ],
   },
