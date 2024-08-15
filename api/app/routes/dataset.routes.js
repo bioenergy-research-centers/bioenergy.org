@@ -33,17 +33,17 @@
  *   get:
  *    summary: Returns the list of all the datasets
  *    tags: [Datasets]
- *   responses:
- *    200:
- *     description: The list of the datasets
- *    content:
- *      application/json:
- *        schema:
- *          type: array
- *          items:
- *            $ref: '#/components/schemas/Dataset'
- *   500:
- *     description: Some server error
+ *    responses:
+ *      200:
+ *        description: The list of the datasets
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: array
+ *              items:
+ *                 $ref: '#/components/schemas/Dataset'
+ *      500:
+ *        description: Some server error
  * /api/datasets/{id}:
  *  get:
  *    summary: Get the dataset by id
