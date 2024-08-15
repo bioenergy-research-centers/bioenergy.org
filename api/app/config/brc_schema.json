@@ -1,20 +1,24 @@
 {
     "$defs": {
         "AnalysisType": {
-            "description": "",
+            "description": "Type of analysis performed on the dataset.",
             "enum": [
-                "shotgun_proteomics",
-                "cross_linking",
                 "affinity_purification",
+                "cross_linking",
+                "Expression profiling",
+                "Genomic - SNP calling",
+                "image_analysis",
+                "Ms_imaging",
+                "shotgun_proteomics",
                 "srm_mrm",
                 "swath_ms",
-                "Ms_imaging"
+                "Targeted Locus (Loci)"
             ],
             "title": "AnalysisType",
             "type": "string"
         },
         "BRCEnum": {
-            "description": "",
+            "description": "Bioenergy Research Center affiliation.",
             "enum": [
                 "CABBI",
                 "CBI",
@@ -22,6 +26,23 @@
                 "JBEI"
             ],
             "title": "BRCEnum",
+            "type": "string"
+        },
+        "CitedItemType": {
+            "description": "Type of cited item, e.g., journal article.",
+            "enum": [
+                "JournalArticle",
+                "Book",
+                "Dataset",
+                "Software",
+                "Thesis",
+                "Patent",
+                "Preprint",
+                "Presentation",
+                "Report",
+                "Webpage"
+            ],
+            "title": "CitedItemType",
             "type": "string"
         },
         "Dataset": {
@@ -55,7 +76,7 @@
                     },
                     "type": "array"
                 },
-                "datasetname": {
+                "datasetName": {
                     "description": "\"Name of a overall dataset to which this data entry belongs.\"",
                     "type": "string"
                 },
@@ -66,6 +87,10 @@
                 },
                 "description": {
                     "description": "A detailed description of the dataset.",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Unique identifier for the dataset, assigned prior to inclusion in bioenergy.org.",
                     "type": "string"
                 },
                 "identifier": {
@@ -105,17 +130,17 @@
                 "creator",
                 "brc",
                 "bibliographicCitation",
-                "identifier",
-                "species"
+                "identifier"
             ],
             "title": "Dataset",
             "type": "object"
         },
         "DatasetCollection": {
             "additionalProperties": false,
-            "description": "",
+            "description": "Container class for defining a collection of datasets.",
             "properties": {
                 "datasets": {
+                    "description": "List of datasets in the collection.",
                     "items": {
                         "$ref": "#/$defs/Dataset"
                     },
@@ -159,7 +184,7 @@
         },
         "Organism": {
             "additionalProperties": false,
-            "description": "",
+            "description": "An organism studied in the dataset.",
             "properties": {
                 "NCBITaxID": {
                     "description": "NCBI taxonomy ID for the organism.",
@@ -199,15 +224,15 @@
         },
         "RelatedItem": {
             "additionalProperties": false,
-            "description": "",
+            "description": "A related publication or item, including cited publications.",
             "properties": {
                 "relatedItemIdentifier": {
                     "description": "Identifier or URL for the related item.",
                     "type": "string"
                 },
                 "relatedItemType": {
-                    "description": "Type of the related item, e.g., JournalArticle.",
-                    "type": "string"
+                    "$ref": "#/$defs/CitedItemType",
+                    "description": "Type of the related item, e.g., JournalArticle."
                 },
                 "title": {
                     "description": "Title of the related item.",
@@ -218,13 +243,15 @@
             "type": "object"
         },
         "RepositoryEnum": {
-            "description": "",
+            "description": "Repository where the dataset is stored.",
             "enum": [
                 "GEO",
                 "ICE",
                 "iProX",
                 "jPOST",
                 "MassIVE",
+                "NCBI BioProject",
+                "OSTI",
                 "PanoramaPublic",
                 "PedtideAtlas",
                 "PRIDE"
@@ -236,10 +263,11 @@
     "$id": "https://w3id.org/brc/brc_schema",
     "$schema": "https://json-schema.org/draft/2019-09/schema",
     "additionalProperties": true,
-    "description": "",
+    "description": "Container class for defining a collection of datasets.",
     "metamodel_version": "1.7.0",
     "properties": {
         "datasets": {
+            "description": "List of datasets in the collection.",
             "items": {
                 "$ref": "#/$defs/Dataset"
             },
@@ -248,5 +276,5 @@
     },
     "title": "brc_schema",
     "type": "object",
-    "version": null
+    "version": "2024-08-15"
 }
