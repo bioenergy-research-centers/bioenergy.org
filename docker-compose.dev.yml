@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   api:
-    build: ./api
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
     restart: unless-stopped
     env_file:
       - .env
@@ -12,6 +14,7 @@ services:
     tty: true
     volumes:
       - ./api:/api
+      - /install/node_modules/
   client:
     depends_on:
       - api
