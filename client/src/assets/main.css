@@ -1,4 +1,5 @@
-@import "bootstrap/dist/css/bootstrap.min.css";
+@import url("bootstrap/dist/css/bootstrap.min.css");
+@import url("bootstrap-icons/font/bootstrap-icons.css");
 
 body {
     background-color: #f7f7f7;
@@ -6,7 +7,6 @@ body {
 }
 
 .form-control:focus {
-    border-color: #0d6efd;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0) inset;
 }
 
