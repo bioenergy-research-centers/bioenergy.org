@@ -2,16 +2,15 @@
 import DatasetDataService from "../services/DatasetDataService";
 import {onBeforeMount, ref, watch} from "vue";
 
-let results = [];
+let results = ref([]);
 let selectedResult = ref();
-selectedResult.value = results[0];
 
 onBeforeMount(() => {
   DatasetDataService.getAll()
       .then(response => {
-        results = response.data;
-        if (results && results.length)
-          selectedResult.value = results[0];
+        results.value = response.data;
+        if (response.data && response.data.length)
+          selectedResult.value = results.value[0];
       })
       .catch(e => {
         console.error(e);
@@ -30,7 +29,7 @@ const props = defineProps({
 
 watch(() => props.filter, (value) => {
   DatasetDataService.findByTitle(value).then(response => {
-    results = response.data;
+    results.value = response.data;
   })
 })
 
