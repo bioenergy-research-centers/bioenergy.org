@@ -45,7 +45,7 @@ watch(() => props.filter, (value) => {
 
       <div class="list-group">
         <a href="#" class="list-group-item d-flex justify-content-between list-group-item-action"
-           v-for="result in results"
+           v-for="result in results" :class="{'active': selectedResult.identifier === result.identifier}"
            @click="onSelectResult(result)">
           <div class="ms-2 me-auto">
             <div class="mb-2 fw-bold">{{ result.identifier }}</div>
