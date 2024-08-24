@@ -33,12 +33,65 @@ exports.create = (req, res) => {
 // Retrieve all Datasets from the database.
 exports.findAll = (req, res) => {
   const term = req.query.title;
-  const condition = term ? { 'json.title': { [Op.iLike]: `%${term}%` } } : null;
+
+  // Setup a search across all JSON data using postgres built-in full text search.
+  // This works okay for matching multiple terms after manually adding a wildcard prefix to support partial matches.
+  // Supporting special characters makes the token processing more complicated.
+  // https://www.postgresql.org/docs/15/textsearch-controls.html#TEXTSEARCH-PARSING-QUERIES
+  // https://www.postgresql.org/docs/15/datatype-textsearch.html#DATATYPE-TSQUERY
+
+  // NOT and OR boolean terms are supported along with characters '!' and '|'
+  // Parenthesis can be used to group and set precedence  term1 and term2 OR (term3 NOT term4)
+
+  // Split the input into terms on whitespace
+  const specialTokens = ['OR', '|', '!', '(', ')'];
+  const searchTerms = term ? term.trim().match(/(\(|\)|\bOR\b|\bNOT\b|[^\s()]+)/gi) : [''];
+  const tokenizedSearchTerms = searchTerms.filter(t => t).map(token => {
+    // convert keywords to characters
+    if (token == 'OR') {
+      return '|'
+    }
+    if (token == 'NOT') {
+      return '!'
+    }
+    if (token == ')') {
+      return ') &'
+    }
+    // don't add wildcard to special tokens
+    if (specialTokens.includes(token.toUpperCase())) {
+      return token;
+    } 
+    else {
+      // Add wildcard for partial matching
+      return `${token}:* &`;
+    }
+  });
+  tokenizedSearchTerm = tokenizedSearchTerms.join(' ');
+  console.log('pre-cleaned tokenized',tokenizedSearchTerm )
+  // remove any extra trailing &. Quick hack to avoid more complicated processing of the terms
+  tokenizedSearchTerm = tokenizedSearchTerm.replace(/\&$/, "").replace(/\&\s+\|/g, "|").replace(/\&\s+\)/g,")")
+  const searchQuery = term ? db.Sequelize.where(
+    db.Sequelize.fn(
+      'to_tsvector',
+      'simple',
+      db.Sequelize.cast(db.Sequelize.col('json'), 'text')
+    ),
+    {
+      [Op.match]: db.Sequelize.fn(
+        'to_tsquery',
+        'simple',
+        tokenizedSearchTerm
+      )
+    }
+  ) : null;
 
 //  const term = req.query.brc;
 //  let condition = term ? { 'json.brc': `${term}` } : null;
 
-  Dataset.findAll({ where: condition })
+  Dataset.findAll({
+    //where: condition,
+    where: searchQuery,
+  })
     .then(data => {
       res.send(data.map(x => x.json));
     })
