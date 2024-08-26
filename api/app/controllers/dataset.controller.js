@@ -56,13 +56,13 @@ exports.findAll = (req, res) => {
     const tokenizedSearchTerms = searchTerms.filter(t => t).map(token => {
       // convert keywords to characters
       if (token.toUpperCase() == 'OR') {
-        return '|'
+        return '|';
       }
       if (token.toUpperCase() == 'NOT') {
-        return '!'
+        return '!';
       }
       if (token == ')') {
-        return ') &'
+        return ') &';
       }
       // don't add wildcard to special tokens
       if (specialTokens.includes(token.toUpperCase())) {
@@ -75,7 +75,7 @@ exports.findAll = (req, res) => {
     });
     let tokenizedSearchTerm = tokenizedSearchTerms.join(' ');
     // remove any extra trailing &. Quick hack to avoid more complicated processing of the terms
-    tokenizedSearchTerm = tokenizedSearchTerm.replace(/\&$/, "").replace(/\&\s+\|/g, "|").replace(/\&\s+\)/g,")")
+    tokenizedSearchTerm = tokenizedSearchTerm.replace(/\&$/, "").replace(/\&\s+\|/g, "|").replace(/\&\s+\)/g,")");
     const textSearchQuery = where(
       db.Sequelize.fn(
         'to_tsvector',
@@ -89,21 +89,21 @@ exports.findAll = (req, res) => {
           tokenizedSearchTerm
         )
       }
-    )
+    );
     conditions.push(textSearchQuery);
   }
   
   if (titleQueryTerm) {
     const titleSearchQuery = {
       'json.title': { [Op.iLike]: `%${titleQueryTerm}%`}
-    }
-    conditions.push(titleSearchQuery)
+    };
+    conditions.push(titleSearchQuery);
   }
   if (brcQueryTerm) {
     const brcSearchQuery = {
       'json.brc': { [Op.iLike]: `${brcQueryTerm}`} 
-    }
-    conditions.push(brcSearchQuery)
+    };
+    conditions.push(brcSearchQuery);
   }
 
   // Use Op.and to merge conditions

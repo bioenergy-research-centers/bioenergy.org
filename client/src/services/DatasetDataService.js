@@ -18,8 +18,8 @@ class DatasetDataService {
     return http.get(`/datasets?title=${title}`);
   }
 
-  findByBRC(title) {
-    return http.get(`/datasets?title=${title}`);
+  findByBRC(brc) {
+    return http.get(`/datasets?brc=${brc}`);
   }
 
   findByFullText(full_text) {
@@ -28,7 +28,7 @@ class DatasetDataService {
 
   // Query for datasets using multiple filters
   findByParams(params) {
-    var queryParams = new URLSearchParams()
+    var queryParams = new URLSearchParams();
     for (const key in params) {
       queryParams.append(key, params[key])
     }
