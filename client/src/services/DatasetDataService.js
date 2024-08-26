@@ -30,7 +30,7 @@ class DatasetDataService {
   findByParams(params) {
     var queryParams = new URLSearchParams();
     for (const key in params) {
-      queryParams.append(key, params[key])
+      queryParams.append(key, params[key]);
     }
     return http.get(`/datasets?${queryParams.toString()}`);
   }
