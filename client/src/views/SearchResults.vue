@@ -30,6 +30,7 @@ const props = defineProps({
 watch(() => props.filter, (value) => {
   DatasetDataService.findByTitle(value).then(response => {
     results.value = response.data;
+    selectedResult.value = results.value[0]
   })
 })
 
@@ -114,6 +115,14 @@ watch(() => props.filter, (value) => {
     </div>
   </div>
 
+  <div class="page-container" v-else=>
+    <div class="left-column">
+      <div class="fw-bold text-center small">0 results found</div>
+    </div>
+    <div class="right-column">
+      <div class="fw-bold large"> Uh oh! Your search did not match any records. Please refine your query and try again.</div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -124,15 +133,18 @@ body {
 .page-container {
   display: flex;
   height: 100vh;
+  overflow-x: scroll;
 }
 
 .left-column {
+  min-width: 300px;
   width: 400px;
   overflow-y: scroll;
   padding: 20px;
 }
 
 .right-column {
+  min-width: 600px;
   flex: 1;
   padding: 20px;
 }
