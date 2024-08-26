@@ -28,7 +28,7 @@ const props = defineProps({
 })
 
 watch(() => props.filter, (value) => {
-  DatasetDataService.findByTitle(value).then(response => {
+  DatasetDataService.findByParams({fulltext: value}).then(response => {
     results.value = response.data;
     selectedResult.value = results.value[0]
   })

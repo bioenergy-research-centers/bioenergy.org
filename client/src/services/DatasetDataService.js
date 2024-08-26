@@ -17,6 +17,23 @@ class DatasetDataService {
   findByTitle(title) {
     return http.get(`/datasets?title=${title}`);
   }
+
+  findByBRC(title) {
+    return http.get(`/datasets?title=${title}`);
+  }
+
+  findByFullText(full_text) {
+    return http.get(`/datasets?fulltext=${full_text}`);
+  }
+
+  // Query for datasets using multiple filters
+  findByParams(params) {
+    var queryParams = new URLSearchParams()
+    for (const key in params) {
+      queryParams.append(key, params[key])
+    }
+    return http.get(`/datasets?${queryParams.toString()}`);
+  }
 }
 
 export default new DatasetDataService();
