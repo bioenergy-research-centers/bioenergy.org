@@ -15,3 +15,9 @@ body {
     align-items: center;
     justify-content: center;
 }
+
+.navbar-brand {
+    color: #72a530;
+    font-weight: bold;
+    font-size: 3em;
+}
