@@ -65,42 +65,42 @@ watch(() => props.filter, (value) => {
       </div>
 
       <div class="mt-4">
-        <b class="small">Date</b><br>
+        <div class="small text-uppercase mt-5 fw-bold">Date</div>
         {{ selectedResult.date }}
       </div>
 
       <div class="mt-4">
-        <b class="small">Creator</b><br>
+        <div class="small text-uppercase mt-5 fw-bold">Creator</div>
         <div>{{ selectedResult.creator[0].creatorName }}</div>
       </div>
 
       <div class="mt-4">
-        <b class="small">BRC</b><br>
+        <div class="small text-uppercase mt-5 fw-bold">BRC</div>
         <div>{{ selectedResult.brc }}</div>
       </div>
 
       <div class="mt-4">
-        <b class="small">Repository</b><br>
+        <div class="small text-uppercase mt-5 fw-bold">Repository</div>
         <div>{{ selectedResult.repository }}</div>
       </div>
 
       <div class="mt-4" v-if="selectedResult.analysisType">
-        <b class="small">Analysis Type</b><br>
+        <div class="small text-uppercase mt-5 fw-bold">Analysis Type</div>
         <div>{{ selectedResult.analysisType }}</div>
       </div>
 
-      <div class="mt-4">
-        <b class="small">Description</b><br>
+      <div class="mt-4" v-if="selectedResult.description">
+        <div class="small text-uppercase mt-5 fw-bold">Description</div>
         {{ selectedResult.description }}
       </div>
 
       <div class="mt-4" v-if="selectedResult.keywords && selectedResult.keywords.length">
-        <b class="small">Keywords</b><br>
+        <div class="small text-uppercase mt-5 fw-bold">Keywords</div>
         {{ Array.from(selectedResult.keywords).join(', ') }}
       </div>
 
       <div class="mt-4" v-if="selectedResult.species">
-        <b class="small">Species</b><br>
+        <div class="small text-uppercase mt-5 fw-bold">Species</div>
         <div class="d-flex justify-content-start">
 
           <div v-for="species in selectedResult.species">
@@ -112,10 +112,16 @@ watch(() => props.filter, (value) => {
         </div>
       </div>
 
+      <div class="mt-4" v-if="selectedResult.relatedItem">
+        <div class="small text-uppercase mt-5 fw-bold">Related Item</div>
+        <div class="text-muted italic fw-bold"> {{selectedResult.relatedItem.relatedItemType}} <i class="bi bi-box-arrow-up-right"></i></div>
+        <a v-bind:href="selectedResult.relatedItem.relatedItemIdentifier" target="_blank">{{selectedResult.relatedItem.title}}</a>
+      </div>
+
     </div>
   </div>
 
-  <div class="page-container" v-else=>
+  <div class="page-container" v-else>
     <div class="left-column">
       <div class="fw-bold text-center small">0 results found</div>
     </div>
