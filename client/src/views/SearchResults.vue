@@ -114,8 +114,8 @@ watch(() => props.filter, (value) => {
 
       <div class="mt-4" v-if="selectedResult.relatedItem">
         <div class="small text-uppercase mt-5 fw-bold">Related Item</div>
-        <div class="text-muted italic fw-bold"> {{test.relatedItemType}} <i class="bi bi-box-arrow-up-right"></i></div>
-        <a v-bind:href="test.relatedItemIdentifier" target="_blank">{{test.title}}</a>
+        <div class="text-muted italic fw-bold"> {{selectedResult.relatedItemType}} <i class="bi bi-box-arrow-up-right"></i></div>
+        <a v-bind:href="selectedResult.relatedItemIdentifier" target="_blank">{{selectedResult.title}}</a>
       </div>
 
     </div>
