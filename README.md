@@ -88,3 +88,26 @@ The following command will run a postgres container with the password `mysecretp
 - CBI: <https://fair.ornl.gov/CBI/cbi.json>
 - GLBRC: <https://fair-data.glbrc.org/glbrc.json>
 - JBEI: <https://hello.bioenergy.org/JBEI/jbei.json>
+
+## Validating Data
+
+Validating data against the BRC schema can be done with the LinkML framework.
+
+- Install the [LinkML Python package as detailed here](https://linkml.io/linkml/intro/install.html).
+- Retrieve a local copy of the data collection in JSON format. For example, run `wget https://hello.bioenergy.org/JBEI/jbei.json`
+- Retrieve the most recent version of the schema in YAML format. The schema is here: <https://github.com/bioenergy-research-centers/brc-schema/blob/main/src/brc_schema/schema/brc_schema.yaml>
+- Run the following `linkml` command: `linkml validate --schema brc_schema.yaml -C Dataset <datafile>`, replacing `<datafile>` with the path to your data in JSON.
+  - For example, a fully valid `jbei.json` will yield the following result:
+    ```
+    $ linkml validate --schema brc_schema.yaml -C Dataset jbei.json
+    No issues found
+    ```
+  - Places where the data does not comply with the schema will be indicated like below:
+    ```
+    $ linkml validate --schema src/brc_schema/schema/brc_schema.yaml -C Dataset jbei-bad.json 
+    [ERROR] [jbei-bad.json/0] Additional properties are not allowed ('DATE' was unexpected) in /
+    [ERROR] [jbei-bad.json/0] 'date' is a required property in /
+    [ERROR] [jbei-bad.json/1] 'yes' is not of type 'boolean', 'null' in /creator/0/primaryContact
+    [ERROR] [jbei-bad.json/8] Additional properties are not allowed ('BRC' was unexpected) in /
+    [ERROR] [jbei-bad.json/8] 'brc' is a required property in /
+    ```
