@@ -89,6 +89,17 @@
                         "null"
                     ]
                 },
+                "datasetType": {
+                    "$ref": "#/$defs/DatasetTypeCodes",
+                    "description": "High-level type of the main content of the dataset."
+                },
+                "dataset_url": {
+                    "description": "URL for the dataset landing page.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "date": {
                     "description": "The date the dataset was created or published.",
                     "format": "date",
@@ -98,6 +109,16 @@
                     "description": "A detailed description of the dataset.",
                     "type": [
                         "string",
+                        "null"
+                    ]
+                },
+                "funding": {
+                    "description": "Funding source(s) for the dataset.",
+                    "items": {
+                        "$ref": "#/$defs/Funding"
+                    },
+                    "type": [
+                        "array",
                         "null"
                     ]
                 },
@@ -187,6 +208,62 @@
                 }
             },
             "title": "DatasetCollection",
+            "type": "object"
+        },
+        "DatasetTypeCodes": {
+            "description": "High-level type of the main content of the dataset, following OSTI categories. See https://www.osti.gov/elink/F2416instruct.jsp",
+            "enum": [
+                "AS",
+                "GD",
+                "IM",
+                "ND",
+                "IP",
+                "FP",
+                "SM",
+                "MM",
+                "I"
+            ],
+            "title": "DatasetTypeCodes",
+            "type": "string"
+        },
+        "Funding": {
+            "additionalProperties": false,
+            "description": "Funding source for the dataset. Each item corresponds to a single award or grant.",
+            "properties": {
+                "awardNumber": {
+                    "description": "Award number from the funding entity.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "awardTitle": {
+                    "description": "Title of the award.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "awardURI": {
+                    "description": "URI for the award. This may be a DOI. Include prefix.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "fundingOrganization": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Organization"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Details of the funding entity."
+                }
+            },
+            "title": "Funding",
             "type": "object"
         },
         "Individual": {
@@ -358,5 +435,5 @@
     },
     "title": "brc_schema",
     "type": "object",
-    "version": "0.0.3"
+    "version": "0.0.4"
 }
