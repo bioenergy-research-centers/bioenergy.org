@@ -73,10 +73,13 @@ for (const datafeed of datasources.urls) {
       continue; // only reject data sets that fail validation
     }
 
+    const uid = dataset.brc + '_' + dataset.identifier;
+
     const new_record = {
+      uid: uid,
       json: dataset
     };
 
-    Dataset.create(new_record);
+    Dataset.upsert(new_record);
   }
 }
