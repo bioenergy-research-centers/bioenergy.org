@@ -56,6 +56,9 @@
                         },
                         {
                             "type": "string"
+                        },
+                        {
+                            "type": "null"
                         }
                     ],
                     "description": "The type of analysis performed on the dataset.",
@@ -63,7 +66,10 @@
                 },
                 "bibliographicCitation": {
                     "description": "Citation for the dataset.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "brc": {
                     "$ref": "#/$defs/BRCEnum",
@@ -78,7 +84,21 @@
                 },
                 "datasetName": {
                     "description": "\"Name of a overall dataset to which this data entry belongs.\"",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "datasetType": {
+                    "$ref": "#/$defs/DatasetTypeCodes",
+                    "description": "High-level type of the main content of the dataset."
+                },
+                "dataset_url": {
+                    "description": "URL for the dataset landing page.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "date": {
                     "description": "The date the dataset was created or published.",
@@ -87,11 +107,37 @@
                 },
                 "description": {
                     "description": "A detailed description of the dataset.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "funding": {
+                    "description": "Funding source(s) for the dataset.",
+                    "items": {
+                        "$ref": "#/$defs/Funding"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "has_related_ids": {
+                    "description": "\"Related identifiers for the dataset. These should be identifiers to records in other repositories, and these records may be the same data or components of the dataset.\"",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "id": {
                     "description": "Unique identifier for the dataset, assigned prior to inclusion in bioenergy.org.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "identifier": {
                     "description": "Unique identifier for the dataset.",
@@ -102,11 +148,20 @@
                     "items": {
                         "type": "string"
                     },
-                    "type": "array"
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "relatedItem": {
-                    "$ref": "#/$defs/RelatedItem",
-                    "description": "Related publication or item."
+                    "description": "Related publications or items.",
+                    "items": {
+                        "$ref": "#/$defs/RelatedItem"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "repository": {
                     "$ref": "#/$defs/RepositoryEnum",
@@ -117,7 +172,10 @@
                     "items": {
                         "$ref": "#/$defs/Organism"
                     },
-                    "type": "array"
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "title": {
                     "description": "The title of the dataset.",
@@ -129,7 +187,6 @@
                 "date",
                 "creator",
                 "brc",
-                "bibliographicCitation",
                 "identifier"
             ],
             "title": "Dataset",
@@ -144,10 +201,69 @@
                     "items": {
                         "$ref": "#/$defs/Dataset"
                     },
-                    "type": "array"
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "title": "DatasetCollection",
+            "type": "object"
+        },
+        "DatasetTypeCodes": {
+            "description": "High-level type of the main content of the dataset, following OSTI categories. See https://www.osti.gov/elink/F2416instruct.jsp",
+            "enum": [
+                "AS",
+                "GD",
+                "IM",
+                "ND",
+                "IP",
+                "FP",
+                "SM",
+                "MM",
+                "I"
+            ],
+            "title": "DatasetTypeCodes",
+            "type": "string"
+        },
+        "Funding": {
+            "additionalProperties": false,
+            "description": "Funding source for the dataset. Each item corresponds to a single award or grant.",
+            "properties": {
+                "awardNumber": {
+                    "description": "Award number from the funding entity.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "awardTitle": {
+                    "description": "Title of the award.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "awardURI": {
+                    "description": "URI for the award. This may be a DOI. Include prefix.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "fundingOrganization": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Organization"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Details of the funding entity."
+                }
+            },
+            "title": "Funding",
             "type": "object"
         },
         "Individual": {
@@ -161,6 +277,9 @@
                         },
                         {
                             "type": "string"
+                        },
+                        {
+                            "type": "null"
                         }
                     ],
                     "description": "Affiliation of the creator.",
@@ -168,15 +287,24 @@
                 },
                 "creatorName": {
                     "description": "Name of the creator.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "email": {
                     "description": "Email address of the creator.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "primaryContact": {
                     "description": "Indicates if the creator is the primary contact.",
-                    "type": "boolean"
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
                 }
             },
             "title": "Individual",
@@ -188,11 +316,17 @@
             "properties": {
                 "NCBITaxID": {
                     "description": "NCBI taxonomy ID for the organism.",
-                    "type": "integer"
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
                 },
                 "scientificName": {
                     "description": "Scientific name of the organism.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "title": "Organism",
@@ -204,19 +338,35 @@
             "properties": {
                 "organizationName": {
                     "description": "Name of the organization.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "parentOrganization": {
-                    "$ref": "#/$defs/Organization",
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Organization"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
                     "description": "Higher-level parent of this organization."
                 },
                 "ror_id": {
                     "description": "ROR identifier for the organization.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "wikidata_id": {
                     "description": "Wikidata identifier for the organization.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "title": "Organization",
@@ -228,7 +378,10 @@
             "properties": {
                 "relatedItemIdentifier": {
                     "description": "Identifier or URL for the related item.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "relatedItemType": {
                     "$ref": "#/$defs/CitedItemType",
@@ -236,7 +389,10 @@
                 },
                 "title": {
                     "description": "Title of the related item.",
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "title": "RelatedItem",
@@ -271,10 +427,13 @@
             "items": {
                 "$ref": "#/$defs/Dataset"
             },
-            "type": "array"
+            "type": [
+                "array",
+                "null"
+            ]
         }
     },
     "title": "brc_schema",
     "type": "object",
-    "version": "2024-08-15"
+    "version": "0.0.4"
 }

@@ -13,13 +13,20 @@ exports.create = (req, res) => {
     return;
   }
 
+  const jsonds = req.body.dataset;
+
+  // Create the unique composite key using the BRC as the namespace.
+  // These two fields are guaranteed to be non-null because they have passed schema validation by this point.
+  const uid = jsonds.brc + '_' + jsonds.identifier;
+
   // Create a Dataset
   const dataset = {
-    json: req.body.dataset
+    uid: uid,
+    json: jsonds
   };
 
-  // Save Dataset in the database
-  Dataset.create(dataset)
+  // Save Dataset in the database (insert or update)
+  Dataset.upsert(dataset)
     .then(data => {
       res.send(data);
     })
