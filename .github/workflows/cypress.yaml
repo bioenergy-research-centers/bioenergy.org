@@ -40,6 +40,9 @@ jobs:
       - name: Run docker compose
         run: docker compose up -d
 
+      - name: Check running containers
+        run: docker ps
+
       - name: Wait for the server to start
         run: sleep 30
 
