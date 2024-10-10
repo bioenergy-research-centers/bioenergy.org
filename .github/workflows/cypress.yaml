@@ -1,0 +1,47 @@
+name: Bioenergy.org Automated Tests
+
+on:
+  push:
+    branches:
+      - main
+      - cypress-ci
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  cypress-run:
+    env:
+      BIOENERGY_ORG_API_LOCAL_PORT: 8080
+      VITE_BIOENERGY_ORG_API_URI: http://localhost:8080
+      BIOENERGY_ORG_CLIENT_LOCAL_PORT: 3000
+      BIOENERGY_ORG_CLIENT_URI: http://localhost:3000
+      BIOENERGY_ORG_DB_HOST: postgres
+      BIOENERGY_ORG_DB_LOCAL_PORT: 5432
+      BIOENERGY_ORG_DB_USER: postgres
+      BIOENERGY_ORG_DB_PASSWORD: postgres
+      BIOENERGY_ORG_DB_NAME: postgres
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3.0.2
+
+      - name: Run docker compose
+        run: docker-compose up -d
+
+      - name: Wait for the server to start
+        run: sleep 30
+
+      # - name: Run Cypress tests
+      #   run: docker-compose exec cypress cypress run --config baseUrl=http://localhost:3000
