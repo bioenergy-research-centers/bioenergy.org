@@ -70,6 +70,12 @@ The following command will run a postgres container with the password `mysecretp
   - You can run `docker-compose down` to stop the application and destroy the containers and volumes.
   - Running `docker-compose up --build` will rebuild the containers and restart the application.
 
+### Running the specs
+
+Specs are located in the `cypress` directory. End to end tests are nested under the `e2e` directory. See `cypress/e2e/spec.cy.js` for an example test.
+
+To run the specs: run `npx cypress open` from the root directory of the project. This will open the Cypress test runner. Click on e2e and the browser you want, followed by the spec you want to run to open it in the browser. Simply close the browser window to stop the tests.
+
 ### Import BRC Data Feeds
 
 - run `docker compose run api node seed_dev_db.js` from the root folder of the project.
@@ -104,7 +110,7 @@ Validating data against the BRC schema can be done with the LinkML framework.
     ```
   - Places where the data does not comply with the schema will be indicated like below:
     ```
-    $ linkml validate --schema src/brc_schema/schema/brc_schema.yaml -C Dataset jbei-bad.json 
+    $ linkml validate --schema src/brc_schema/schema/brc_schema.yaml -C Dataset jbei-bad.json
     [ERROR] [jbei-bad.json/0] Additional properties are not allowed ('DATE' was unexpected) in /
     [ERROR] [jbei-bad.json/0] 'date' is a required property in /
     [ERROR] [jbei-bad.json/1] 'yes' is not of type 'boolean', 'null' in /creator/0/primaryContact
