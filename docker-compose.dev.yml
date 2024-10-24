@@ -15,6 +15,12 @@ services:
     volumes:
       - ./api:/api
       - /install/node_modules/
+  api-cron-sidecar:
+    build: ./api
+    restart: unless-stopped
+    command: ["sh", "start_cron.sh"]
+    env_file:
+    - .env
   client:
     depends_on:
       - api
