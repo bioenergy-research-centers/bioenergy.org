@@ -1,20 +1,41 @@
-<script setup>
-import {RouterLink} from "vue-router";
+<script setup lang="ts">
+import {RouterLink, useRoute, useRouter} from "vue-router";
 import headerIcon from "@/assets/brc-bioenergy-icon.png"
-
-const emit = defineEmits(['searchFilterChange']);
+import {onBeforeMount, ref} from "vue";
+import {useSearchStore} from '@/store/searchStore';
 
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
 
-const onSearchInput = (event) => {
-  emit('searchFilterChange', event.target.value);
-}
+const router = useRouter();
+const route = useRoute();
+const searchStore = useSearchStore();
 
-// searchText is the default search field value provided by parent component
-const props = defineProps({
-  searchText: String
+const searchText = ref('');
+const dnaSequence = ref('');
+
+onBeforeMount(() => {
+  const query = route.query.q as string || '';
+  if (query)
+    searchText.value = query as string;
 })
 
+const onSubmit = () => {
+  // save sequence to the store
+  searchStore.setDnaSequence(dnaSequence.value);
+
+  // navigate to /data with search text in the URL
+  router.push({
+    path: '/data',
+    query: {
+      q: searchText.value,
+    },
+  });
+};
+
+const clearSequence = () => {
+  searchStore.clearSearchData();
+  dnaSequence.value = '';
+};
 </script>
 
 <template>
@@ -29,15 +50,39 @@ const props = defineProps({
         </div>
 
         <div class="col-md-12 col-lg-6 d-flex align-items-center">
-          <form action="/data" id="page-search-input" class="flex-grow-1">
+          <form @submit.prevent="onSubmit" class="flex-grow-1">
             <div class="input-group">
-              <input name='q' class="form-control form-control-sm"
-                     placeholder="Search Bioenergy.org" :value="searchText" @input="onSearchInput">
-              <button type='submit' class="btn btn-sm btn-outline-secondary"><i class="bi bi-search text-muted"></i>
+              <!-- Main Search Input -->
+              <input class="form-control" placeholder="Search bioenergy.gov" v-model="searchText"/>
+              <button type="submit" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-search text-muted"></i>
               </button>
+
+              <!-- Advanced Search Dropdown Toggle -->
+              <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"
+                      aria-expanded="false">
+                Advanced
+              </button>
+
+              <!-- Advanced Search Dropdown -->
+              <ul class="dropdown-menu p-3">
+                <li>
+                  <textarea class="form-control" rows="3" placeholder="Enter sequence..."
+                            v-model="dnaSequence"></textarea>
+                </li>
+                <li class="mt-2">
+                  <button type="submit" class="btn btn-sm btn-primary">
+                    Run Sequence Search
+                  </button>&nbsp;
+                  <button type="button" class="btn btn-sm btn-secondary" @click.prevent="clearSequence" v-if="searchStore.dnaSequence">
+                    Clear
+                  </button>
+                </li>
+              </ul>
             </div>
           </form>
         </div>
+
       </div>
       <div class="row mt-2">
         <hr>
@@ -48,10 +93,7 @@ const props = defineProps({
           <router-link to="/contact" class=" small text-muted me-3">
             Contact
           </router-link>
-          <!-- <div class=""> -->
-            <a :href="docs_link" class="small text-muted" target="_blank">API Docs</a>
-          <!-- </div> -->
-
+          <a :href="docs_link" class="small text-muted" target="_blank">API Docs</a>
         </div>
       </div>
     </div>
@@ -59,5 +101,21 @@ const props = defineProps({
 </template>
 
 <style scoped>
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+}
 
+.dropdown-menu.show {
+  display: block;
+}
+
+textarea {
+  resize: none;
+}
 </style>

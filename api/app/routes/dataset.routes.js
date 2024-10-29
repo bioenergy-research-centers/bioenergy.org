@@ -77,8 +77,8 @@
 
 module.exports = app => {
   const datasets = require("../controllers/dataset.controller.js");
-
-  var router = require("express").Router();
+  const router = require("express").Router();
+  const {search} = require("../controllers/searchController");
 
   // Retrieve all Tutorials
   router.get("/", datasets.findAll);
@@ -89,5 +89,9 @@ module.exports = app => {
   // Retrieve a single Tutorial with id
   router.get("/:id", datasets.findOne);
 
+  // POST /api/datasets -> search
+  router.post("/", search);
+
   app.use('/api/datasets', router);
 };
+
