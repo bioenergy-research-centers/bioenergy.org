@@ -24,12 +24,12 @@ addFormats(ajv); // required for supporting format: date in JSON schema
 const schema = require('./app/config/brc_schema.json');
 const validate = ajv.compile(schema);
 
-let feed_summary = {};
+const feed_summary = {};
 
 // query each URL expecting well-formed JSON matching the project schema structure
 for (const datafeed of datasources.urls) {
   // Initialize summary counts
-  let datafeed_counts = {valid:0,invalid:0};
+  const datafeed_counts = {valid:0,invalid:0};
 
   if (datafeed.url === null) {
     console.error(datafeed.name + " [" + datafeed.url + "]: DATA FEED REJECTED (reason: missing URL)");
@@ -74,7 +74,7 @@ for (const datafeed of datasources.urls) {
     } else {
       datafeed_counts.invalid += 1;
       console.error("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " FAILED VALIDATION - identifier: " + dataset.identifier);
-      console.error(validate.errors.map(function(error){ return { msg: error.instancePath + ": " + error.message, provided: error.data, required: error.schema} }));
+      console.error(validate.errors.map(function(error){ return { msg: error.instancePath + ": " + error.message, provided: error.data, required: error.schema}; }));
       return; // only reject data sets that fail validation
     }
 
@@ -86,7 +86,7 @@ for (const datafeed of datasources.urls) {
     };
 
     Dataset.upsert(new_record);
-  })
+  });
   feed_summary[datafeed.url]=datafeed_counts;
 }
-console.log("Data Import Summary:", feed_summary)
+console.log("Data Import Summary:", feed_summary);
