@@ -24,8 +24,12 @@ addFormats(ajv); // required for supporting format: date in JSON schema
 const schema = require('./app/config/brc_schema.json');
 const validate = ajv.compile(schema);
 
+const feed_summary = {};
+
 // query each URL expecting well-formed JSON matching the project schema structure
 for (const datafeed of datasources.urls) {
+  // Initialize summary counts
+  const datafeed_counts = {valid:0,invalid:0};
 
   if (datafeed.url === null) {
     console.error(datafeed.name + " [" + datafeed.url + "]: DATA FEED REJECTED (reason: missing URL)");
@@ -62,15 +66,16 @@ for (const datafeed of datasources.urls) {
   }
 
   // process each dataset in the data feed
-  for (const dataset of datafeed_json)
+  datafeed_json.forEach(function(dataset, dataset_index)
   {
     // handle malformed data gracefully (only reject individual datasets that fail validation, not entire data feeds)
     if (validate({ "datasets": [ dataset ] })) {
-      console.log("DATA SET PASSED VALIDATION");
+      datafeed_counts.valid += 1;
     } else {
-      console.error("[" + datafeed.url + "]: DATA SET FAILED VALIDATION:", dataset);
-      console.error("ERRORS:", validate.errors);
-      continue; // only reject data sets that fail validation
+      datafeed_counts.invalid += 1;
+      console.error("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " FAILED VALIDATION - identifier: " + dataset.identifier);
+      console.error(validate.errors.map(function(error){ return { msg: error.instancePath + ": " + error.message, provided: error.data, required: error.schema}; }));
+      return; // only reject data sets that fail validation
     }
 
     const uid = dataset.brc + '_' + dataset.identifier;
@@ -81,5 +86,7 @@ for (const datafeed of datasources.urls) {
     };
 
     Dataset.upsert(new_record);
-  }
+  });
+  feed_summary[datafeed.url]=datafeed_counts;
 }
+console.log("Data Import Summary:", feed_summary);
