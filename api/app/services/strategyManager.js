@@ -4,7 +4,7 @@ const {searchICEInstance} = require("./iceSearchService");
 // search functions (one for each third party api involved in federated search)
 const strategies = {
     ice: searchICEInstance
-}
+};
 
 async function runSearch(query, sequence) {
 
