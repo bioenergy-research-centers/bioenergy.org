@@ -143,3 +143,6 @@ dist
 .pnp.*
 /.idea/
 *.iml
+/package-lock.json
+/client/package-lock.json
+/api/package-lock.json
