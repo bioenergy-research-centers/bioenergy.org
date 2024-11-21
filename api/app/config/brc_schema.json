@@ -40,7 +40,8 @@
                 "Preprint",
                 "Presentation",
                 "Report",
-                "Webpage"
+                "Webpage",
+                "WebApplication"
             ],
             "title": "CitedItemType",
             "type": "string"
@@ -401,16 +402,31 @@
         "RepositoryEnum": {
             "description": "Repository where the dataset is stored.",
             "enum": [
+                "AmeriFlux",
+                "Bio-Protocol",
+                "Dryad",
+                "FigShare",
+                "GenBank",
                 "GEO",
+                "GLBRC Sustainability",
+                "Iowa State University FigShare",
                 "ICE",
+                "Illinois Data Bank",
                 "iProX",
+                "JGI Gold",
                 "jPOST",
                 "MassIVE",
+                "Mendeley Data",
                 "NCBI BioProject",
+                "NCBI SRA",
+                "ORNL DAAC",
                 "OSTI",
                 "PanoramaPublic",
                 "PedtideAtlas",
-                "PRIDE"
+                "PRIDE",
+                "Protein Data Bank",
+                "The Cambridge Crystallographic Data Centre",
+                "Zenodo"
             ],
             "title": "RepositoryEnum",
             "type": "string"
@@ -435,5 +451,5 @@
     },
     "title": "brc_schema",
     "type": "object",
-    "version": "0.0.4"
+    "version": "0.0.6"
 }

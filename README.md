@@ -93,6 +93,14 @@ The following command will run a postgres container with the password `mysecretp
 
 Validating data against the BRC schema can be done with the LinkML framework.
 
+This process, including installing LinkML, can be done with the validation script in this repo:
+
+```bash
+./validate.sh
+```
+
+Alternatively, the process may be done manually:
+
 - Install the [LinkML Python package as detailed here](https://linkml.io/linkml/intro/install.html).
 - Retrieve a local copy of the data collection in JSON format. For example, run `wget https://hello.bioenergy.org/JBEI/jbei.json`
 - Retrieve the most recent version of the schema in YAML format. The schema is here: <https://github.com/bioenergy-research-centers/brc-schema/blob/main/src/brc_schema/schema/brc_schema.yaml>
