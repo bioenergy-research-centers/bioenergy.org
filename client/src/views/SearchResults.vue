@@ -33,11 +33,6 @@ const handleSearch = async () => {
     );
     results.value = response.data;
     selectedResult.value = results.value.length > 0 ? results.value[0] : null;
-
-    if (props.dnaSequence !== '') {
-      emit('clear-dna-sequence');
-    }
-
   } catch (err) {
     results.value = [];
     console.error('error', err);
