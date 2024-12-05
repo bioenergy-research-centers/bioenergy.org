@@ -26,6 +26,11 @@ class DatasetDataService {
     return http.get(`/datasets?fulltext=${full_text}`);
   }
 
+  runAdvancedSearch(filter, sequence) {
+    const payload = { query: filter, sequence: sequence };
+    return http.post('/datasets/', payload);
+  }
+
   // Query for datasets using multiple filters
   findByParams(params) {
     var queryParams = new URLSearchParams();

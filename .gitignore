@@ -116,7 +116,6 @@ dist
 
 # vuepress v2.x temp and cache directory
 .temp
-.cache
 
 # Docusaurus cache and generated files
 .docusaurus
@@ -143,4 +142,7 @@ dist
 .yarn/install-state.gz
 .pnp.*
 /.idea/
+*.iml
+/package-lock.json
 /client/package-lock.json
+/api/package-lock.json

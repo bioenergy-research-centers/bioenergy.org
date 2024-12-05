@@ -24,17 +24,6 @@ const router = createRouter({
             // which is lazy-loaded when the route is visited.
             component: () => import('../views/AboutView.vue')
         },
-        // {
-        //     path: "/datasets",
-        //     alias: "/datasets",
-        //     name: "datasets",
-        //     component: () => import("../views/DatasetsList.vue")
-        // },
-        // {
-        //     path: "/datasets/:id",
-        //     name: "dataset",
-        //     component: () => import("../views/Dataset.vue")
-        // }
     ]
 });
 

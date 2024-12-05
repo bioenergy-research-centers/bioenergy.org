@@ -20,6 +20,8 @@
     "bootstrap-icons": "^1.11.3",
     "dotenv": "^16.4.5",
     "jquery": "^3.7.1",
+    "pinia": "^2.2.4",
+    "pinia-plugin-persistedstate": "^4.1.2",
     "vue": "^3.4.15",
     "vue-router": "^4.2.5"
   },
