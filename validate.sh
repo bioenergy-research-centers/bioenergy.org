@@ -5,7 +5,7 @@ BRC_SCHEMA_URL="https://github.com/bioenergy-research-centers/brc-schema/blob/ma
 CABBI_URL="https://cabbitools.igb.illinois.edu/brc/cabbi.json"
 CBI_URL="https://fair.ornl.gov/CBI/cbi.json"
 GLBRC_URL="https://fair-data.glbrc.org/glbrc.json"
-JBEI_URL="https://hello.bioenergy.org/JBEI/jbei.json"
+JBEI_URL="https://bioenergy.org/JBEI/jbei.json"
 
 ## Check if linkml is installed and install if not
 if [ -x "$(command -v linkml-validate)" ]; then

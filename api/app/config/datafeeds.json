@@ -2,7 +2,7 @@
     "urls": [
         {
             "name": "JBEI",
-            "url": "https://hello.bioenergy.org/JBEI/jbei.json"
+            "url": "https://bioenergy.org/JBEI/jbei.json"
         },
         {
             "name": "CABBI",
