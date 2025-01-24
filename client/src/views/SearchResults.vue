@@ -119,7 +119,7 @@ const onSelectResult = (result: any) => {
         <h3>{{ selectedResult.title }}</h3>
         <div>
           More information at:
-          <a :href="selectedResult.bibliographicCitation" target="_blank" class="btn btn-primary btn-sm">
+          <a :href="selectedResult.bibliographicCitation" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
             <i class="bi bi-box-arrow-up-right"></i> {{ selectedResult.identifier }}
           </a>
         </div>
@@ -178,7 +178,7 @@ const onSelectResult = (result: any) => {
               {{ item.relatedItemType }}
               <i class="bi bi-box-arrow-up-right"></i>
             </div>
-            <a :href="item.relatedItemIdentifier" target="_blank">
+            <a :href="item.relatedItemIdentifier" target="_blank" rel="noopener noreferrer">
               {{ item.title }}
             </a>
           </div>

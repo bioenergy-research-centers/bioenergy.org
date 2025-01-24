@@ -93,7 +93,7 @@ const clearSequence = () => {
           <router-link to="/contact" class=" small text-muted me-3">
             Contact
           </router-link>
-          <a :href="docs_link" class="small text-muted" target="_blank">API Docs</a>
+          <a :href="docs_link" class="small text-muted" target="_blank" rel="noopener noreferrer">API Docs</a>
         </div>
       </div>
     </div>
