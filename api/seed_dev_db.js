@@ -21,7 +21,7 @@ const ajv = new Ajv({ allErrors: 'true', verbose: 'true', strict: 'false' }); //
 addFormats(ajv); // required for supporting format: date in JSON schema
 
 // load the LinkML JSON schema
-const schema = require('./app/config/brc_schema_0.0.7.json');
+const schema = require('./app/config/brc_schema_0.0.8.json');
 const validate = ajv.compile(schema);
 
 const feed_summary = {};
