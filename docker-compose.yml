@@ -13,7 +13,7 @@ services:
   api-cron-sidecar:
     build: ./api
     restart: unless-stopped
-    command: ["sh", "start_cron.sh"]
+    command: ["sh", "scripts/start_cron.sh"]
     env_file:
     - .env
   client:

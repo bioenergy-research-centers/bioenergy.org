@@ -4,6 +4,8 @@ const cors = require("cors");
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 require("dotenv").config( {path: ['.env','../.env'] } );
+const datasetRoutes = require('./app/routes/dataset.routes');
+const messageRoutes = require('./app/routes/message.routes');
 
 const app = express();
 
@@ -11,6 +13,7 @@ var corsOptions = {
   origin: [process.env.BIOENERGY_ORG_CLIENT_URI, "https://api.bioenergy.org", "http://localhost:3000", "http://localhost:8081", "http://localhost:8080", "https://bioenergy.org", "https://www.bioenergy.org"]
 };
 
+// Apply global middleware for all routes first
 app.use(cors(corsOptions));
 
 // parse requests of content-type - application/json
@@ -28,21 +31,15 @@ db.sequelize.sync();
 //   console.log("Drop and re-sync db.");
 // });
 
+// register routes after global middleware
 // simple route
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to bioenergy.org." });
 });
 
-// set port, listen for requests
-const PORT = process.env.PORT || 8080;
-
-// import route
-require("./app/routes/dataset.routes")(app);
-// https://expressjs.com/en/guide/routing.html
-// alternate setup option. if we export dataset.routes without passing app or calling app.use
-// const datasets = require(./app/routes/dataset.routes)
-// app.use('/datasets', datasets)
-
+// https://expressjs.com/en/guide/routing.html#express-router
+app.use('/api/datasets', datasetRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Swagger setup
 
@@ -75,6 +72,9 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(specs, { explorer: true })
 );
+
+// set port, listen for requests
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);

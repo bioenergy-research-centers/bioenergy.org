@@ -1,6 +1,9 @@
 require("dotenv").config( {path: ['.env','../.env'] } );
 
-const db = require("./app/models");
+const { syncIssueComment } = require("../app/services/githubService");
+const { formatListWithSublistBlocks } = require("../app/utils/markdownFormatter");
+
+const db = require("../app/models");
 const Dataset = db.datasets;
 
 //db.sequelize.sync(); // This creates the table if it doesn't exist (and does nothing if it already exists).
@@ -9,7 +12,7 @@ const Dataset = db.datasets;
 // Begin data import.
 
 // read a set of hard-coded URLs from a file
-const datasources = require("./app/config/datafeeds.json"); // hard-coded data feed URLs
+const datasources = require("../app/config/datafeeds.json"); // hard-coded data feed URLs
 
 const fs = require('node:fs');
 const fetch = require('sync-fetch'); // synchronous fetch is easier for development and testing (can switch to async later if needed)
@@ -21,15 +24,18 @@ const ajv = new Ajv({ allErrors: 'true', verbose: 'true', strict: 'false' }); //
 addFormats(ajv); // required for supporting format: date in JSON schema
 
 // load the LinkML JSON schema
-const schema = require('./app/config/brc_schema_0.0.8.json');
+const schema = require('../app/config/brc_schema_0.0.8.json');
 const validate = ajv.compile(schema);
 
 const feed_summary = {};
+const invalid_feeds = {};
 
 // query each URL expecting well-formed JSON matching the project schema structure
 for (const datafeed of datasources.urls) {
   // Initialize summary counts
   const datafeed_counts = {valid:0,invalid:0};
+  // Initialize invalid record tracking
+  let invalid_records = [];
 
   if (datafeed.url === null) {
     console.error(datafeed.name + " [" + datafeed.url + "]: DATA FEED REJECTED (reason: missing URL)");
@@ -74,7 +80,9 @@ for (const datafeed of datasources.urls) {
     } else {
       datafeed_counts.invalid += 1;
       console.error("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " FAILED VALIDATION - identifier: " + dataset.identifier);
-      console.error(validate.errors.map(function(error){ return { msg: error.instancePath + ": " + error.message, provided: error.data, required: error.schema}; }));
+      const dataset_errors = validate.errors.map(function(error){ return { msg: error.instancePath + ": " + error.message, provided: error.data, required: error.schema}; });
+      console.error(dataset_errors);
+      invalid_records.push([dataset.identifier+" ("+(dataset_index+1)+")", JSON.stringify(dataset_errors)])
       return; // only reject data sets that fail validation
     }
 
@@ -88,5 +96,17 @@ for (const datafeed of datasources.urls) {
     Dataset.upsert(new_record);
   });
   feed_summary[datafeed.url]=datafeed_counts;
+  if (invalid_records.length > 0) {
+    invalid_feeds["Invalid Records - "+datafeed.name]=invalid_records;
+  };
 }
 console.log("Data Import Summary:", feed_summary);
+// Self executing async function
+(async () => {
+  // Sync invalid data to Github issues
+  Object.keys(invalid_feeds).forEach( title => {
+    const issueBody = formatListWithSublistBlocks(invalid_feeds[title], 'json');
+    syncIssueComment(title, issueBody, {labels: 'data-import'});
+  });
+
+})();

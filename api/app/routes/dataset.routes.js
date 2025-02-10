@@ -75,23 +75,21 @@
  *              $ref: '#/components/schemas/Dataset'
  */
 
-module.exports = app => {
-  const datasets = require("../controllers/dataset.controller.js");
-  const router = require("express").Router();
-  const {search} = require("../controllers/searchController");
 
-  // Retrieve all Tutorials
-  router.get("/", datasets.findAll);
+const datasets = require("../controllers/dataset.controller.js");
+const router = require("express").Router();
+const {search} = require("../controllers/searchController");
 
-  // Retrieve all published Tutorials
-  router.get("/published", datasets.findAllPublished);
+// Retrieve all Tutorials
+router.get("/", datasets.findAll);
 
-  // Retrieve a single Tutorial with id
-  router.get("/:id", datasets.findOne);
+// Retrieve all published Tutorials
+router.get("/published", datasets.findAllPublished);
 
-  // POST /api/datasets -> search
-  router.post("/", search);
+// Retrieve a single Tutorial with id
+router.get("/:id", datasets.findOne);
 
-  app.use('/api/datasets', router);
-};
+// POST /api/datasets -> search
+router.post("/", search);
 
+module.exports = router
