@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, onActivated, ref } from 'vue'
+import { onMounted, onUnmounted, onActivated, ref } from 'vue';
 
 export function useTurnstile(domSelector) {
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITEKEY;
@@ -10,14 +10,14 @@ export function useTurnstile(domSelector) {
     window.onloadTurnstileCallback = () => {
       turnstileWidgetID = turnstile.render(domSelector, {
         sitekey: turnstileSiteKey
-      })
-    }
+      });
+    };
     // load external JS package into dom
     if(window && !window.turnstile){
       // add turnstile source and run defined callback when ready
-      let turnstileScript = document.createElement('script');
+      const turnstileScript = document.createElement('script');
       turnstileScript.setAttribute('src', turnstileURL);
-      document.head.appendChild(turnstileScript)
+      document.head.appendChild(turnstileScript);
     }else if (window && window.turnstile && !turnstileWidgetID){
       // render turnstile again, after re-mounting this component
       window.onloadTurnstileCallback();
@@ -29,7 +29,7 @@ export function useTurnstile(domSelector) {
     if(window && window.turnstile && turnstileWidgetID){
       window.turnstile.remove(turnstileWidgetID);
     }
-  })
+  });
 
   // Using <KeepAlive> avoids re-mounting this component if the user navigates while filling out contact form
   // On activation, the turnstile captcha needs to be reset
@@ -38,5 +38,5 @@ export function useTurnstile(domSelector) {
       // reset active widget
       window.turnstile.reset(turnstileWidgetID);
     }
-  })
+  });
 }

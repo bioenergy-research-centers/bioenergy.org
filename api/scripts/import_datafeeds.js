@@ -82,7 +82,7 @@ for (const datafeed of datasources.urls) {
       console.error("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " FAILED VALIDATION - identifier: " + dataset.identifier);
       const dataset_errors = validate.errors.map(function(error){ return { msg: error.instancePath + ": " + error.message, provided: error.data, required: error.schema}; });
       console.error(dataset_errors);
-      invalid_records.push([dataset.identifier+" ("+(dataset_index+1)+")", JSON.stringify(dataset_errors)])
+      invalid_records.push([dataset.identifier+" ("+(dataset_index+1)+")", JSON.stringify(dataset_errors)]);
       return; // only reject data sets that fail validation
     }
 
