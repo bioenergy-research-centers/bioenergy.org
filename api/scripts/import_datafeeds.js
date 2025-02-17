@@ -35,7 +35,7 @@ for (const datafeed of datasources.urls) {
   // Initialize summary counts
   const datafeed_counts = {valid:0,invalid:0};
   // Initialize invalid record tracking
-  let invalid_records = [];
+  const invalid_records = [];
 
   if (datafeed.url === null) {
     console.error(datafeed.name + " [" + datafeed.url + "]: DATA FEED REJECTED (reason: missing URL)");

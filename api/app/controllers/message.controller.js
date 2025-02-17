@@ -19,7 +19,7 @@ async function create(req, res) {
     }
     // Create or update new message
     // Title and label are used to find existing comments
-    const title = `${sanitizeHtml(data.contact_name)} (${sanitizeHtml(data.contact_email)}) - ${data.contact_reason}`
+    const title = `${sanitizeHtml(data.contact_name)} (${sanitizeHtml(data.contact_email)}) - ${data.contact_reason}`;
     const formattedMessage = formatContactForm(data);
     const saveStatus = syncIssueComment(title, formattedMessage, {labels: 'contact-form'}); 
     

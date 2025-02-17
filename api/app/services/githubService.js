@@ -4,10 +4,10 @@
 // If neither match, creates a new comment with new 'formattedBody'.
 
 async function syncIssueComment(rawTitle, formattedBody, {state="open", labels='sync', maxIssueLimit=200, maxCommentLimit=100} = {}) {
-  title = rawTitle.substring(0,256)
+  title = rawTitle.substring(0,256);
   // Search expects single comma separated label string, while create expects array of labels, so we need both.
   labels_arr = labels.split(",").map(item => item.trim());
-  console.log("checking issue:", title, state, labels, labels_arr)
+  console.log("checking issue:", title, state, labels, labels_arr);
   try {  
     // dynamic import of ES module inside commonJS
     const { Octokit } = await import('@octokit/rest');
@@ -72,7 +72,7 @@ async function syncIssueComment(rawTitle, formattedBody, {state="open", labels='
           console.log(`Updated issue comment for: ${title}`);
           return true;
         } else {
-          console.log(`Write disabled. Skipping issue comment for: ${title}`)
+          console.log(`Write disabled. Skipping issue comment for: ${title}`);
           return true;
         }
         
@@ -90,7 +90,7 @@ async function syncIssueComment(rawTitle, formattedBody, {state="open", labels='
         console.log(`Created new issue for: ${title}`);
         return true;
       } else {
-        console.log(`Write disabled. Skipping new issue for: ${title}`)
+        console.log(`Write disabled. Skipping new issue for: ${title}`);
         return true;
       }
     }

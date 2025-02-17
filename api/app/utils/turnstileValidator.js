@@ -1,4 +1,4 @@
-const SECRET_KEY = process.env.TURNSTILE_SECRETKEY
+const SECRET_KEY = process.env.TURNSTILE_SECRETKEY;
 // Expects a request object with json formatted body
 // Returns boolean result of form validation
 // See: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
@@ -20,13 +20,13 @@ async function validateTurnstileForm(request) {
       headers: {
         'Content-Type': 'application/json'
       }
-    })
+    });
 
     const outcome = await result.json();
     if (outcome.success) {
       return true;
     } else {
-      console.error("Turnstile error:", outcome)
+      console.error("Turnstile error:", outcome);
       return false;
     }
 
