@@ -4,6 +4,7 @@
 # build stage
 FROM node:20 as build-stage
 ARG VITE_BIOENERGY_ORG_API_URI
+ARG VITE_TURNSTILE_SITEKEY
 WORKDIR /app
 COPY package*.json ./
 RUN npm install

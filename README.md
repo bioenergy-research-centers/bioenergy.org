@@ -72,7 +72,7 @@ The following command will run a postgres container with the password `mysecretp
 
 ### Import BRC Data Feeds
 
-- run `docker compose run api node seed_dev_db.js` from the root folder of the project.
+- run `docker compose run api node scripts/import_datafeeds.js` from the root folder of the project.
 
 ### Resources Used to Build This Application
 
