@@ -10,7 +10,7 @@ async function create(req, res) {
     // Validate CF turnstile key
     const cfValid = await validateTurnstileForm(req);
     if(!cfValid){
-      res.json({error: "Invalid form data. Please verify you human."});
+      res.json({error: "Invalid form data. Please verify you are human."});
       return;
     }
     if(!data.contact_name || !data.contact_email || !data.contact_reason || !data.contact_comment){
@@ -21,7 +21,7 @@ async function create(req, res) {
     // Title and label are used to find existing comments
     const title = `${sanitizeHtml(data.contact_name)} (${sanitizeHtml(data.contact_email)}) - ${data.contact_reason}`;
     const formattedMessage = formatContactForm(data);
-    const saveStatus = syncIssueComment(title, formattedMessage, {labels: 'contact-form'}); 
+    const saveStatus = await syncIssueComment(title, formattedMessage, {labels: 'contact-form'}); 
     
     if(saveStatus){
       res.json({success: true, message: 'Message saved.'});

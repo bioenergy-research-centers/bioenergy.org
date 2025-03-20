@@ -23,6 +23,7 @@ services:
       context: ./client
       args:
         VITE_BIOENERGY_ORG_API_URI: ${VITE_BIOENERGY_ORG_API_URI}
+        VITE_TURNSTILE_SITEKEY: ${VITE_TURNSTILE_SITEKEY}
     restart: unless-stopped
     env_file:
       - .env
