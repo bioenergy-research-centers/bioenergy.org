@@ -14,7 +14,10 @@ async function syncIssueComment(rawTitle, formattedBody, {state="open", labels='
     const octokit = new Octokit({ auth: process.env.GITHUB_INBOX_REPO_TOKEN });
     const serviceEnabled = process.env.GITHUB_SERVICE_ENABLED==='true';
     const serviceWriteEnabled = process.env.GITHUB_SERVICE_WRITE_ENABLED==='true';
-    if(!serviceEnabled) { return; }
+    if(!serviceEnabled) {
+      console.log(`Github Service not enabled. Skipping new issue for: ${title}`);
+      return false;
+    }
 
     // Fetch all open issues matching supplied labels and state
     const issues = await octokit.paginate(
@@ -73,7 +76,7 @@ async function syncIssueComment(rawTitle, formattedBody, {state="open", labels='
           return true;
         } else {
           console.log(`Write disabled. Skipping issue comment for: ${title}`);
-          return true;
+          return false;
         }
         
       }
@@ -91,7 +94,7 @@ async function syncIssueComment(rawTitle, formattedBody, {state="open", labels='
         return true;
       } else {
         console.log(`Write disabled. Skipping new issue for: ${title}`);
-        return true;
+        return false;
       }
     }
   } catch (error) {
