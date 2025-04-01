@@ -53,7 +53,7 @@ const clearSequence = () => {
           <form @submit.prevent="onSubmit" class="flex-grow-1">
             <div class="input-group">
               <!-- Main Search Input -->
-              <input class="form-control" placeholder="Search bioenergy.gov" v-model="searchText"/>
+              <input class="form-control" placeholder="Search bioenergy.org" v-model="searchText"/>
               <button type="submit" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-search text-muted"></i>
               </button>
