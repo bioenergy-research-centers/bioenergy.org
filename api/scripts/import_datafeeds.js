@@ -19,16 +19,12 @@ const fetch = require('sync-fetch'); // synchronous fetch is easier for developm
 const Ajv = require('ajv/dist/2019'); //require('ajv');
 const addFormats = require('ajv-formats');
 
-// initialize the JSON schema validator
-const ajv = new Ajv({ allErrors: 'true', verbose: 'true', strict: 'false' }); // must set option "strict: 'false'"" to produce specification-compliant behavior
-addFormats(ajv); // required for supporting format: date in JSON schema
-
-// load the LinkML JSON schema
-const schema = require('../app/config/brc_schema_0.1.0.json');
-const validate = ajv.compile(schema);
-
 const feed_summary = {};
 const invalid_feeds = {};
+
+// initialize the JSON schema validator
+const default_schema_version = "0.0.8"; // defaults to last version prior to the breaking change in 0.1.0 for backward compatibility
+const schema_folder = '../app/config/schema/'; // schemas are contained in their own folder
 
 // query each URL expecting well-formed JSON matching the project schema structure
 for (const datafeed of datasources.urls) {
@@ -61,9 +57,34 @@ for (const datafeed of datasources.urls) {
     continue; // skip entire data feed
   }
 
+  // Each feed might conform to a different schema version.
+  // Look for a schema version at the top level of the JSON feed.
+  var schema_version = (datafeed_json.schema_version === undefined) ? default_schema_version : datafeed_json.schema_version;
+  // Adding the schema_version field at the top level moves the dataset array into a top-level field named 'datasets'.
+  // But if this field is not found, assume this is an older feed where the dataset array is at the top level.
+  var datasets = (datafeed_json.datasets === undefined) ? datafeed_json : datafeed_json.datasets;
+
+  // load the LinkML JSON schema
+  const schema_filename = 'brc_schema_' + schema_version + '.json';
+
+  var validate; // the validator for this feed
+
+  try {
+    const schema = require(schema_folder + schema_filename);
+    const ajv = new Ajv({ allErrors: 'true', verbose: 'true', strict: 'false' }); // must set option "strict: 'false'"" to produce specification-compliant behavior
+    addFormats(ajv); // required for supporting format: date in JSON schema
+    validate = ajv.compile(schema);
+  } catch (err) {
+    console.error('Unable to load ' + schema_filename + ' - skipping ' + datafeed.name + ' feed.');
+    console.error(err.message);
+    continue; // skip to next feed
+  }
+
+  console.log('Validating ' + datafeed.name + ' against ' + schema_filename);
+
   // validate the entire feed
   try {
-    if (validate({ "datasets": [ datafeed_json ] })) {
+    if (validate({ "datasets": [ datasets ] })) {
       console.log(datafeed.name + "DATA FEED PASSED VALIDATION");
     }
   } catch (err) {
@@ -72,7 +93,7 @@ for (const datafeed of datasources.urls) {
   }
 
   // process each dataset in the data feed
-  datafeed_json.forEach(function(dataset, dataset_index)
+  datasets.forEach(function(dataset, dataset_index)
   {
     // handle malformed data gracefully (only reject individual datasets that fail validation, not entire data feeds)
     if (validate({ "datasets": [ dataset ] })) {
