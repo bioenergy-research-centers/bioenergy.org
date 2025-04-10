@@ -25,6 +25,24 @@ const invalid_feeds = {};
 // initialize the JSON schema validator
 const default_schema_version = "0.0.8"; // defaults to last version prior to the breaking change in 0.1.0 for backward compatibility
 const schema_folder = '../app/config/schema/'; // schemas are contained in their own folder
+const schema_index_path = schema_folder + 'schema_index.json'; // Controlled index of supported schemas.
+
+// Load the schema index.
+var schema_index_json;
+
+try {
+  schema_index_json = require(schema_index_path);
+} catch (err) {
+  console.error('Unable to load schema index ' + schema_index_path + '. Refusing to import feeds.');
+  console.error(err.message);
+  return;
+}
+
+// Convert the array of supported schemas to a map of filenames indexed by version number.
+const schemas = schema_index_json.reduce((map_entry, array_element) => {
+  map_entry[array_element.version] = array_element.filename;
+  return map_entry;
+}, {});
 
 // query each URL expecting well-formed JSON matching the project schema structure
 for (const datafeed of datasources.urls) {
@@ -57,21 +75,27 @@ for (const datafeed of datasources.urls) {
     continue; // skip entire data feed
   }
 
-  // Each feed might conform to a different schema version.
+  // Each feed might conform to a different schema version, and we need to accomodate both the old feed format and the new feed format for now.
   // Look for a schema version at the top level of the JSON feed.
   var schema_version = (datafeed_json.schema_version === undefined) ? default_schema_version : datafeed_json.schema_version;
   // Adding the schema_version field at the top level moves the dataset array into a top-level field named 'datasets'.
   // But if this field is not found, assume this is an older feed where the dataset array is at the top level.
   var datasets = (datafeed_json.datasets === undefined) ? datafeed_json : datafeed_json.datasets;
 
-  // load the LinkML JSON schema
-  const schema_filename = 'brc_schema_' + schema_version + '.json';
+  // Look up the LinkML JSON schema.
+  const schema_filename = schemas[schema_version];
+
+  if (schema_filename === undefined)
+  {
+    console.error('Unsupported schema version: ' + schema_version + ' - skipping ' + datafeed.name + ' feed.');
+    continue; // skip to next feed
+  }
 
   var validate; // the validator for this feed
 
   try {
     const schema = require(schema_folder + schema_filename);
-    const ajv = new Ajv({ allErrors: 'true', verbose: 'true', strict: 'false' }); // must set option "strict: 'false'"" to produce specification-compliant behavior
+    const ajv = new Ajv({ allErrors: 'true', verbose: 'true', strict: 'false' }); // must set option "strict: 'false'" to produce specification-compliant behavior
     addFormats(ajv); // required for supporting format: date in JSON schema
     validate = ajv.compile(schema);
   } catch (err) {
