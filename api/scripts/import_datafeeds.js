@@ -34,8 +34,7 @@ try {
   schema_index_json = require(schema_index_path);
 } catch (err) {
   console.error('Unable to load schema index ' + schema_index_path + '. Refusing to import feeds.');
-  console.error(err.message);
-  return;
+  throw err;
 }
 
 // Convert the array of supported schemas to a map of filenames indexed by version number.
