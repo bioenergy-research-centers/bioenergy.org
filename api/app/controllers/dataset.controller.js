@@ -8,12 +8,20 @@ exports.create = (req, res) => {
   // Validate request
   if (!req.body.dataset) {
     res.status(400).send({
-      message: "Dataset cannot be empty!"
+      message: "dataset cannot be empty!"
+    });
+    return;
+  }
+
+  if (!req.body.schema_version) {
+    res.status(400).send({
+      message: "schema_version is required!"
     });
     return;
   }
 
   const jsonds = req.body.dataset;
+  const schema_version = req.body.schema_version;
 
   // Create the unique composite key using the BRC as the namespace.
   // These two fields are guaranteed to be non-null because they have passed schema validation by this point.
@@ -22,11 +30,12 @@ exports.create = (req, res) => {
   // Create a Dataset
   const dataset = {
     uid: uid,
+    schema_version: schema_version,
     json: jsonds
   };
 
   // Save Dataset in the database (insert or update)
-  Dataset.upsert(dataset)
+  Dataset.scope('defaultScope').upsert(dataset)
     .then(data => {
       res.send(data);
     })
@@ -116,7 +125,7 @@ exports.findAll = (req, res) => {
   // Use Op.and to merge conditions
   const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
 
-  Dataset.findAll({
+  Dataset.scope('supportedOnly').findAll({
     where: mergedWhereConditions,
   })
     .then(data => {
@@ -136,7 +145,7 @@ exports.findOne = (req, res) => {
 
   const condition = `${id}`;
 
-  Dataset.findByPk(condition)
+  Dataset.scope('defaultScope').findByPk(condition)
     .then(data => {
       if (data) {
         res.send(data.json);
@@ -157,7 +166,7 @@ exports.findOne = (req, res) => {
 
 // Find all published Datasets
 exports.findAllPublished = (req, res) => {
-  Dataset.findAll({ where: { 'json.bibliographicCitation': { [Op.notIn]: [ "" ] } } })
+  Dataset.scope('supportedOnly').findAll({ where: { 'json.bibliographicCitation': { [Op.notIn]: [ "" ] } } })
     .then(data => {
       res.send(data.map(x => x.json));
     })

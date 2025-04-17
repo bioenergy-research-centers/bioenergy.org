@@ -22,4 +22,9 @@ db.sequelize = sequelize;
 
 db.datasets = require("./dataset.model.js")(sequelize, Sequelize);
 
+// Add a scope to the Dataset model that restricts queries to only the schema versions supported by the UI.
+const {Op, where} = db.Sequelize;
+const schemas = require("../schemas");
+db.datasets.addScope('supportedOnly', { where: { 'schema_version': { [Op.or]: schemas.supported } } });
+
 module.exports = db;

@@ -1,0 +1,13 @@
+[{
+	"version": "0.0.8",
+    "filename": "brc_schema_0.0.8.json",
+    "supported": true
+},{
+    "version": "0.1.0",
+    "filename": "brc_schema_0.1.0.json",
+    "supported": false
+},{
+    "version": "0.1.1",
+    "filename": "brc_schema_0.1.1.json",
+    "supported": false
+}]
