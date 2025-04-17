@@ -2,6 +2,7 @@ const {validateTurnstileForm} = require('../utils/turnstileValidator');
 const {formatContactForm} = require('../utils/markdownFormatter');
 const {syncIssueComment} = require("../services/githubService");
 const sanitizeHtml = require('sanitize-html');
+const messageMention = process.env.MESSAGE_MENTION_STRING;
 
 // Create new Message
 async function create(req, res) {
@@ -20,7 +21,10 @@ async function create(req, res) {
     // Create or update new message
     // Title and label are used to find existing comments
     const title = `${sanitizeHtml(data.contact_name)} (${sanitizeHtml(data.contact_email)}) - ${data.contact_reason}`;
-    const formattedMessage = formatContactForm(data);
+    const formattedMessage = formatContactForm(data) + `---\n\n${messageMention}\n
+    Assign to the person that will respond in email.
+    Comments are private to BRC organization members and can be used for discussion.
+    Close this issue when the request is addressed.`;
     const saveStatus = await syncIssueComment(title, formattedMessage, {labels: 'contact-form'}); 
     
     if(saveStatus){
