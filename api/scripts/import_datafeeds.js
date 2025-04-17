@@ -20,6 +20,7 @@ const feed_summary = {};
 const invalid_feeds = {};
 
 // initialize the JSON schema validator
+
 const schemas = require("../app/schemas");
 
 // query each URL expecting well-formed JSON matching the project schema structure
@@ -56,6 +57,7 @@ for (const datafeed of datasources.urls) {
   // Each feed might conform to a different schema version, and we need to accomodate both the old feed format and the new feed format for now.
   // Look for a schema version at the top level of the JSON feed.
   var schema_version = (datafeed_json.schema_version === undefined) ? schemas.default : datafeed_json.schema_version;
+
   // Adding the schema_version field at the top level moves the dataset array into a top-level field named 'datasets'.
   // But if this field is not found, assume this is an older feed where the dataset array is at the top level.
   var datasets = (datafeed_json.datasets === undefined) ? datafeed_json : datafeed_json.datasets;
