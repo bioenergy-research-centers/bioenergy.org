@@ -85,7 +85,7 @@ async function searchLocalDatasets(filters) {
     // Use Op.and to merge conditions
     const mergedWhereConditions = conditions.length > 0 ? {[Op.and]: conditions} : {};
     try {
-        const datasets = await Dataset.findAll({
+        const datasets = await Dataset.scope('supportedOnly').findAll({
             where: mergedWhereConditions,
         });
         return datasets.map(x => x.json);

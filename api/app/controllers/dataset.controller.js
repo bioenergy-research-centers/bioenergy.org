@@ -35,7 +35,7 @@ exports.create = (req, res) => {
   };
 
   // Save Dataset in the database (insert or update)
-  Dataset.upsert(dataset)
+  Dataset.scope('defaultScope').upsert(dataset)
     .then(data => {
       res.send(data);
     })
@@ -125,7 +125,7 @@ exports.findAll = (req, res) => {
   // Use Op.and to merge conditions
   const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
 
-  Dataset.findAll({
+  Dataset.scope('supportedOnly').findAll({
     where: mergedWhereConditions,
   })
     .then(data => {
@@ -145,7 +145,7 @@ exports.findOne = (req, res) => {
 
   const condition = `${id}`;
 
-  Dataset.findByPk(condition)
+  Dataset.scope('defaultScope').findByPk(condition)
     .then(data => {
       if (data) {
         res.send(data.json);
@@ -166,7 +166,7 @@ exports.findOne = (req, res) => {
 
 // Find all published Datasets
 exports.findAllPublished = (req, res) => {
-  Dataset.findAll({ where: { 'json.bibliographicCitation': { [Op.notIn]: [ "" ] } } })
+  Dataset.scope('supportedOnly').findAll({ where: { 'json.bibliographicCitation': { [Op.notIn]: [ "" ] } } })
     .then(data => {
       res.send(data.map(x => x.json));
     })

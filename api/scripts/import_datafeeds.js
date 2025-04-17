@@ -6,9 +6,6 @@ const { formatListWithSublistBlocks } = require("../app/utils/markdownFormatter"
 const db = require("../app/models");
 const Dataset = db.datasets;
 
-//db.sequelize.sync(); // This creates the table if it doesn't exist (and does nothing if it already exists).
-//db.sequelize.sync({ alter: true }); // This checks what is the current state of the table in the database (which columns it has, what are their data types, etc), and then performs the necessary changes in the table to make it match the model.
-
 // Begin data import.
 
 // read a set of hard-coded URLs from a file
@@ -16,32 +13,14 @@ const datasources = require("../app/config/datafeeds.json"); // hard-coded data 
 
 const fs = require('node:fs');
 const fetch = require('sync-fetch'); // synchronous fetch is easier for development and testing (can switch to async later if needed)
-const Ajv = require('ajv/dist/2019'); //require('ajv');
+const Ajv = require('ajv/dist/2019'); // this specific path is required to support the BRC schemas (rather than simply 'ajv');
 const addFormats = require('ajv-formats');
 
 const feed_summary = {};
 const invalid_feeds = {};
 
 // initialize the JSON schema validator
-const default_schema_version = "0.0.8"; // defaults to last version prior to the breaking change in 0.1.0 for backward compatibility
-const schema_folder = '../app/config/schema/'; // schemas are contained in their own folder
-const schema_index_path = schema_folder + 'schema_index.json'; // Controlled index of supported schemas.
-
-// Load the schema index.
-var schema_index_json;
-
-try {
-  schema_index_json = require(schema_index_path);
-} catch (err) {
-  console.error('Unable to load schema index ' + schema_index_path + '. Refusing to import feeds.');
-  throw err;
-}
-
-// Convert the array of supported schemas to a map of filenames indexed by version number.
-const schemas = schema_index_json.reduce((map_entry, array_element) => {
-  map_entry[array_element.version] = array_element.filename;
-  return map_entry;
-}, {});
+const schemas = require("../app/schemas");
 
 // query each URL expecting well-formed JSON matching the project schema structure
 for (const datafeed of datasources.urls) {
@@ -76,13 +55,13 @@ for (const datafeed of datasources.urls) {
 
   // Each feed might conform to a different schema version, and we need to accomodate both the old feed format and the new feed format for now.
   // Look for a schema version at the top level of the JSON feed.
-  var schema_version = (datafeed_json.schema_version === undefined) ? default_schema_version : datafeed_json.schema_version;
+  var schema_version = (datafeed_json.schema_version === undefined) ? schemas.default : datafeed_json.schema_version;
   // Adding the schema_version field at the top level moves the dataset array into a top-level field named 'datasets'.
   // But if this field is not found, assume this is an older feed where the dataset array is at the top level.
   var datasets = (datafeed_json.datasets === undefined) ? datafeed_json : datafeed_json.datasets;
 
   // Look up the LinkML JSON schema.
-  const schema_filename = schemas[schema_version];
+  const schema_filename = schemas.index[schema_version];
 
   if (schema_filename === undefined)
   {
@@ -93,7 +72,7 @@ for (const datafeed of datasources.urls) {
   var validate; // the validator for this feed
 
   try {
-    const schema = require(schema_folder + schema_filename);
+    const schema = require('../app/schemas/' + schema_filename);
     const ajv = new Ajv({ allErrors: 'true', verbose: 'true', strict: 'false' }); // must set option "strict: 'false'" to produce specification-compliant behavior
     addFormats(ajv); // required for supporting format: date in JSON schema
     validate = ajv.compile(schema);
@@ -138,7 +117,7 @@ for (const datafeed of datasources.urls) {
       json: dataset
     };
 
-    Dataset.upsert(new_record);
+    Dataset.scope('defaultScope').upsert(new_record);
   });
   feed_summary[datafeed.url]=datafeed_counts;
   if (invalid_records.length > 0) {
