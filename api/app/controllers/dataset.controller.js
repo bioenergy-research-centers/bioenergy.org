@@ -8,12 +8,20 @@ exports.create = (req, res) => {
   // Validate request
   if (!req.body.dataset) {
     res.status(400).send({
-      message: "Dataset cannot be empty!"
+      message: "dataset cannot be empty!"
+    });
+    return;
+  }
+
+  if (!req.body.schema_version) {
+    res.status(400).send({
+      message: "schema_version is required!"
     });
     return;
   }
 
   const jsonds = req.body.dataset;
+  const schema_version = req.body.schema_version;
 
   // Create the unique composite key using the BRC as the namespace.
   // These two fields are guaranteed to be non-null because they have passed schema validation by this point.
@@ -22,6 +30,7 @@ exports.create = (req, res) => {
   // Create a Dataset
   const dataset = {
     uid: uid,
+    schema_version: schema_version,
     json: jsonds
   };
 

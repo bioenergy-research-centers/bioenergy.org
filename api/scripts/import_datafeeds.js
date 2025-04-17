@@ -134,6 +134,7 @@ for (const datafeed of datasources.urls) {
 
     const new_record = {
       uid: uid,
+      schema_version: schema_version,
       json: dataset
     };
 

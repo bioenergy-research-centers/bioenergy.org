@@ -7,6 +7,10 @@ module.exports = (sequelize, Sequelize) => {
       allowNull: false,
       primaryKey: true
     },
+    schema_version: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     json: {
       type: DataTypes.JSONB,
       allowNull: false
