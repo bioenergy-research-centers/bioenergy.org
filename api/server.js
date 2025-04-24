@@ -25,7 +25,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // use sequelize
 const db = require("./app/models");
 // TODO: replace/update with migrations
-db.sequelize.sync();
+//db.sequelize.sync();
+db.sequelize.sync({ alter: { drop: false } });
 // For development
 // db.sequelize.sync({ force: true }).then(() => {
 //   console.log("Drop and re-sync db.");
