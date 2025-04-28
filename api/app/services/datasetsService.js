@@ -88,7 +88,7 @@ async function searchLocalDatasets(filters) {
         const datasets = await Dataset.scope('supportedOnly').findAll({
             where: mergedWhereConditions,
         });
-        return datasets.map(x => x.json);
+        return datasets.map(x => x.toClientJSON());
     } catch (err) {
         console.error(err.message);
         throw new Error("Some error occurred while retrieving Datasets.");
