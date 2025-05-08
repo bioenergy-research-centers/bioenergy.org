@@ -12,9 +12,16 @@ services:
       - ${BIOENERGY_ORG_API_LOCAL_PORT}:8080
     stdin_open: true
     tty: true
-    volumes:
-      - ./api:/api
-      - /install/node_modules/
+    develop:
+      watch: # https://docs.docker.com/compose/how-tos/file-watch/
+        - action: sync
+          path: ./api
+          target: /api
+          ignore:
+            - node_modules/
+            - package-lock.json
+        - action: rebuild
+          path: package.json
   api-cron-sidecar:
     build: ./api
     restart: unless-stopped
@@ -31,9 +38,16 @@ services:
       - ${BIOENERGY_ORG_CLIENT_LOCAL_PORT}:3000
     environment:
       - BIOENERGY_ORG_CLIENT_LOCAL_PORT
-    volumes:
-      - ./client:/app
-      - /app/node_modules/
+    develop:
+      watch:
+        - action: sync
+          path: ./client
+          target: /app
+          ignore:
+            - node_modules/
+            - package-lock.json
+        - action: rebuild
+          path: package.json
     restart: unless-stopped
     env_file:
       - .env

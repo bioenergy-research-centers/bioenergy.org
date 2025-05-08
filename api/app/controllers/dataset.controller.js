@@ -129,7 +129,7 @@ exports.findAll = (req, res) => {
     where: mergedWhereConditions,
   })
     .then(data => {
-      res.send(data.map(x => x.json));
+      res.send(data.map(x => x.toClientJSON()));
     })
     .catch(err => {
       res.status(500).send({
@@ -148,7 +148,7 @@ exports.findOne = (req, res) => {
   Dataset.scope('defaultScope').findByPk(condition)
     .then(data => {
       if (data) {
-        res.send(data.json);
+        res.send(data.toClientJSON());
 //        res.send(data);
       } else {
         res.status(404).send({
@@ -168,7 +168,7 @@ exports.findOne = (req, res) => {
 exports.findAllPublished = (req, res) => {
   Dataset.scope('supportedOnly').findAll({ where: { 'json.bibliographicCitation': { [Op.notIn]: [ "" ] } } })
     .then(data => {
-      res.send(data.map(x => x.json));
+      res.send(data.map(x => x.toClientJSON()));
     })
     .catch(err => {
       res.status(500).send({
