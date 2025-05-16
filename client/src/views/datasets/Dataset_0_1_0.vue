@@ -1,5 +1,6 @@
 <script setup>
   import { computed } from 'vue';
+  import OrganismLink from '@/components/OrganismLink.vue';
   const props = defineProps(['selectedResult']);
   const primaryCreators = computed(() => {
     const creators = props.selectedResult?.creator
@@ -56,16 +57,41 @@
           {{ Array.from(selectedResult.keywords).join(', ') }}
         </div>
 
-        <div v-if="selectedResult.species" class="mt-4">
+        <div v-if="selectedResult.species && selectedResult.species.length" class="mt-4">
           <div class="small text-uppercase mt-5 fw-bold">Species</div>
           <div class="d-flex justify-content-start">
             <div v-for="species in selectedResult.species" :key="species.NCBITaxID">
               <div class="me-5">
-                <b class="fs-7 text-uppercase text-muted">Scientific Name: </b>{{ species.scientificName }}<br>
-                <b class="fs-7 text-uppercase text-muted">NCBITaxID: </b>{{ species.NCBITaxID }}
+                <OrganismLink :organism="species"/>
               </div>
             </div>
           </div>
+        </div>
+
+        <div v-if="selectedResult.plasmid_features && selectedResult.plasmid_features.length" class="mt-4">
+          <div class="small text-uppercase mt-5 fw-bold">Plasmid Features</div>
+          <table class="table table-light">
+            <thead>
+              <tr>
+                <th scope="col">Backbone</th>
+                <th scope="col">Selection Marker</th>
+                <th scope="col">Promoters</th>
+                <th scope="col">Origin of Replication</th>
+                <th scope="col">Replicates In</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="plasmid in selectedResult.plasmid_features">
+                <td>{{ plasmid.backbone }}</td>
+                <td>{{ Array.from(plasmid.selection_markers).join(', ') }}</td>
+                <td>{{ Array.from(plasmid.promoters).join(', ') }}</td>
+                <td>{{ plasmid.ori }}</td>
+                <td>
+                  <OrganismLink :organism="plasmid.replicates_in"/>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div v-if="selectedResult.relatedItem" class="mt-4">
