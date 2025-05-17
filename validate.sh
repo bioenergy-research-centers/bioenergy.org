@@ -48,9 +48,30 @@ for url in $CABBI_URL $CBI_URL $GLBRC_URL $JBEI_URL; do
 done
 
 ## Validate each of the JSON data sources against the BRC schema
+FAILED_SOURCES=""
+PASSED_SOURCES=""
+
 for source_url in $CABBI_URL $CBI_URL $GLBRC_URL $JBEI_URL; do
-    echo "Validating $(basename $source_url)..."
-    linkml-validate -s brc_schema.yaml -C Dataset $(basename $source_url)
+    source_file=$(basename $source_url)
+    echo "Validating $source_file..."
+    if linkml-validate -s brc_schema.yaml -C Dataset $source_file; then
+        echo "$source_file validation successful."
+        PASSED_SOURCES="$PASSED_SOURCES $source_file"
+    else
+        echo "$source_file validation failed."
+        FAILED_SOURCES="$FAILED_SOURCES $source_file"
+    fi
 done
+
+# Report validation results summary
+echo ""
+echo "===== Validation Summary ====="
+if [ -n "$PASSED_SOURCES" ]; then
+    echo "Passed validation:$PASSED_SOURCES"
+fi
+if [ -n "$FAILED_SOURCES" ]; then
+    echo "Failed validation:$FAILED_SOURCES"
+    exit 1
+fi
 
 exit 0;
