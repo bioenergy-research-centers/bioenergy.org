@@ -54,7 +54,7 @@ PASSED_SOURCES=""
 for source_url in $CABBI_URL $CBI_URL $GLBRC_URL $JBEI_URL; do
     source_file=$(basename $source_url)
     echo "Validating $source_file..."
-    if linkml-validate -s brc_schema.yaml -C Dataset $source_file; then
+    if linkml-validate -s brc_schema.yaml -C DatasetCollection $source_file; then
         echo "$source_file validation successful."
         PASSED_SOURCES="$PASSED_SOURCES $source_file"
     else
