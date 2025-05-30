@@ -94,6 +94,13 @@ The following command will run a postgres container with the password `mysecretp
 
 Validating data against the BRC schema can be done with the LinkML framework.
 
+Note for Windows users: To run the validator script on Windows:
+- First install WSL: wsl --install
+- Then run the Ubuntu terminal: wsl -d Ubuntu
+- Then follow the Unix instructions below.
+- Note that WSL does not (by default) route traffic through VPNs. If you encounter connection timeouts when running this script under WSL,
+  either disconnect from your VPN or follow these instructions: https://learn.microsoft.com/en-us/windows/wsl/troubleshooting#wsl-has-no-network-connectivity-once-connected-to-a-vpn
+
 This process, including installing LinkML, can be done with the validation script in this repo:
 
 ```bash
