@@ -8,7 +8,21 @@ CBI_URL="https://fair.ornl.gov/CBI/cbi.json"
 GLBRC_URL="https://fair-data.glbrc.org/glbrc.json"
 JBEI_URL="https://bioenergy.org/JBEI/jbei.json"
 
-## Check if linkml is installed and install if not
+# Create a temp directory for downloaded files
+TEMP_DIR=$(mktemp -d)
+echo "Using temporary directory: $TEMP_DIR"
+
+# Function to clean up the temp directory on exit
+cleanup() {
+    echo "Cleaning up temporary directory..."
+    rm -rf "$TEMP_DIR"
+    echo "Done."
+}
+
+# Register the cleanup function to be called on exit
+trap cleanup EXIT
+
+## Check if LinkML is installed and install if not
 if [ -x "$(command -v linkml-validate)" ]; then
     echo "LinkML is ready."
 else
@@ -18,33 +32,27 @@ else
     echo "    sudo apt install pipx"
     echo "    pipx install linkml"
     echo "    pipx ensurepath"
+    cleanup # Make sure to clean up before exiting
     exit 1;
 fi
 
 ## Check to see if the BRC schema is in the local directory.
-## Retrieve if necessary.
-if [ ! -f brc_schema.yaml ]; then
-    echo "Did not find local copy of brc_schema.yaml."
-    echo "Downloading $BRC_SCHEMA_URL..."
-    wget $BRC_SCHEMA_URL -O brc_schema.yaml
-fi
+## Download to temp directory.
+BRC_SCHEMA_PATH="$TEMP_DIR/brc_schema.yaml"
+echo "Downloading BRC schema to temp directory..."
+wget $BRC_SCHEMA_URL -O "$BRC_SCHEMA_PATH"
 
 ## Check to see if the BRC repository schema is in the local directory.
-## Retrieve if necessary.
-if [ ! -f brc_repositories.yaml ]; then
-    echo "Did not find local copy of brc_repositories.yaml."
-    echo "Downloading $BRC_REPO_SCHEMA_URL..."
-    wget $BRC_REPO_SCHEMA_URL -O brc_repositories.yaml
-fi
+## Download to temp directory.
+BRC_REPO_SCHEMA_PATH="$TEMP_DIR/brc_repositories.yaml"
+echo "Downloading BRC repository schema to temp directory..."
+wget $BRC_REPO_SCHEMA_URL -O "$BRC_REPO_SCHEMA_PATH"
 
-## Get each of the JSON data sources, iterating over the list of them
+## Download each of the JSON data sources to the temp directory
 for url in $CABBI_URL $CBI_URL $GLBRC_URL $JBEI_URL; do
-    if [ -f $(basename $url) ]; then
-        echo "Found $(basename $url)."
-    else
-        echo "Downloading $url..."
-        wget $url -O $(basename $url)
-    fi
+    filename=$(basename $url)
+    echo "Downloading $url to temp directory..."
+    wget $url -O "$TEMP_DIR/$filename"
 done
 
 ## Validate each of the JSON data sources against the BRC schema
@@ -53,8 +61,9 @@ PASSED_SOURCES=""
 
 for source_url in $CABBI_URL $CBI_URL $GLBRC_URL $JBEI_URL; do
     source_file=$(basename $source_url)
+    source_path="$TEMP_DIR/$source_file"
     echo "Validating $source_file..."
-    if linkml-validate -s brc_schema.yaml -C DatasetCollection $source_file; then
+    if linkml-validate -s "$BRC_SCHEMA_PATH" -C DatasetCollection "$source_path"; then
         echo "$source_file validation successful."
         PASSED_SOURCES="$PASSED_SOURCES $source_file"
     else
@@ -74,4 +83,5 @@ if [ -n "$FAILED_SOURCES" ]; then
     exit 1
 fi
 
+# Exit will trigger the cleanup function via the trap
 exit 0;
