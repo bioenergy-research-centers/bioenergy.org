@@ -1,6 +1,9 @@
 #!/bin/bash
+#!/bin/bash
 # Validation script for all bioenergy.org sources
 
+BRC_SCHEMA_URL="https://raw.githubusercontent.com/bioenergy-research-centers/brc-schema/refs/heads/main/src/brc_schema/schema/brc_schema.yaml"
+BRC_REPO_SCHEMA_URL="https://raw.githubusercontent.com/bioenergy-research-centers/brc-schema/refs/heads/main/src/brc_schema/schema/brc_repositories.yaml"
 BRC_SCHEMA_URL="https://raw.githubusercontent.com/bioenergy-research-centers/brc-schema/refs/heads/main/src/brc_schema/schema/brc_schema.yaml"
 BRC_REPO_SCHEMA_URL="https://raw.githubusercontent.com/bioenergy-research-centers/brc-schema/refs/heads/main/src/brc_schema/schema/brc_repositories.yaml"
 CABBI_URL="https://cabbitools.igb.illinois.edu/brc/cabbi.json"
