@@ -40,19 +40,28 @@ fi
 ## Download to temp directory.
 BRC_SCHEMA_PATH="$TEMP_DIR/brc_schema.yaml"
 echo "Downloading BRC schema to temp directory..."
-wget $BRC_SCHEMA_URL -O "$BRC_SCHEMA_PATH"
+if ! wget -q $BRC_SCHEMA_URL -O "$BRC_SCHEMA_PATH"; then
+    echo "Error: Failed to download BRC schema from $BRC_SCHEMA_URL"
+    exit 1
+fi
 
 ## Check to see if the BRC repository schema is in the local directory.
 ## Download to temp directory.
 BRC_REPO_SCHEMA_PATH="$TEMP_DIR/brc_repositories.yaml"
 echo "Downloading BRC repository schema to temp directory..."
-wget $BRC_REPO_SCHEMA_URL -O "$BRC_REPO_SCHEMA_PATH"
+if ! wget -q $BRC_REPO_SCHEMA_URL -O "$BRC_REPO_SCHEMA_PATH"; then
+    echo "Error: Failed to download BRC repository schema from $BRC_REPO_SCHEMA_URL"
+    exit 1
+fi
 
 ## Download each of the JSON data sources to the temp directory
 for url in $CABBI_URL $CBI_URL $GLBRC_URL $JBEI_URL; do
     filename=$(basename $url)
-    echo "Downloading $url to temp directory..."
-    wget $url -O "$TEMP_DIR/$filename"
+    echo "Downloading $filename to temp directory..."
+    if ! wget -q $url -O "$TEMP_DIR/$filename"; then
+        echo "Error: Failed to download $url"
+        exit 1
+    fi
 done
 
 ## Validate each of the JSON data sources against the BRC schema
