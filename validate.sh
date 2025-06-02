@@ -76,6 +76,35 @@ check_json_syntax_issues() {
         results="${results}Warning: The file may have mismatched brackets. Please check opening and closing braces.\n"
     fi
     
+    # Check for potential unclosed strings by analyzing lines that might have unbalanced quotes
+    # This is a heuristic approach that may produce false positives/negatives
+    unclosed_strings=$(grep -n '"' "$file_path" | 
+                      awk -F':' '{print $1 ":" $2}' | 
+                      awk '{
+                          line=$0;
+                          count=0;
+                          instring=0;
+                          for(i=1; i<=length($0); i++) {
+                              c=substr($0,i,1);
+                              if(c=="\"" && (i==1 || substr($0,i-1,1)!="\\")) {
+                                  count++;
+                              }
+                          }
+                          if(count%2==1) print $0;
+                      }' | 
+                      grep -v '//' |
+                      cut -d: -f1)
+                      
+    if [ -n "$unclosed_strings" ]; then
+        results="${results}Found potential unclosed strings (unmatched quotes) at lines:\n"
+        for line in $unclosed_strings; do
+            # Get context around the line with unclosed strings
+            context=$(head -n $((line+2)) "$file_path" | tail -n 5)
+            results="${results}  Line $line: Possible unclosed string:\n"
+            results="${results}$(echo "$context" | sed 's/^/    /')\n"
+        done
+    fi
+    
     echo -e "$results"
 }
 
