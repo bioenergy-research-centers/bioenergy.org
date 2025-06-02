@@ -21,6 +21,64 @@ cleanup() {
     echo "Done."
 }
 
+# Function to check for empty dictionaries in JSON files that could cause TypeErrors
+check_empty_dictionaries() {
+    local file_path="$1"
+    local line_numbers=""
+    
+    # Use grep to find empty dictionaries ({}) and return their line numbers
+    line_numbers=$(grep -n "{}" "$file_path" | cut -d: -f1)
+    
+    if [ -n "$line_numbers" ]; then
+        echo "Found potential empty dictionaries at lines:"
+        for line in $line_numbers; do
+            # Get context around the empty dictionary
+            context=$(head -n $((line+2)) "$file_path" | tail -n 5)
+            echo "  Line $line: Empty dictionary {} found in context:"
+            echo "$context" | sed 's/^/    /'
+        done
+    else
+        echo "No empty dictionaries found in the file."
+    fi
+}
+
+# Function to check for common JSON syntax issues
+check_json_syntax_issues() {
+    local file_path="$1"
+    local issues=""
+    local results=""
+    
+    # Check for trailing commas (not allowed in JSON)
+    trailing_commas=$(grep -n ",[ \t]*[}\]]" "$file_path" | cut -d: -f1)
+    if [ -n "$trailing_commas" ]; then
+        results="${results}Found potential trailing commas at lines:\n"
+        for line in $trailing_commas; do
+            context=$(head -n $((line+1)) "$file_path" | tail -n 3)
+            results="${results}  Line $line: Possible trailing comma before closing bracket:\n"
+            results="${results}$(echo "$context" | sed 's/^/    /')\n"
+        done
+    fi
+    
+    # Check for missing commas between elements
+    # Look for patterns like "}" followed by "{" without a comma
+    missing_commas=$(grep -n -E '}[ \t]*{|"][ \t]*"' "$file_path" | cut -d: -f1)
+    if [ -n "$missing_commas" ]; then
+        results="${results}Found potential missing commas at lines:\n"
+        for line in $missing_commas; do
+            context=$(head -n $((line+1)) "$file_path" | tail -n 3)
+            results="${results}  Line $line: Possible missing comma between elements:\n"
+            results="${results}$(echo "$context" | sed 's/^/    /')\n"
+        done
+    fi
+    
+    # Check for mismatched brackets
+    if ! grep -q '^{.*}$' "$file_path" && grep -q '{' "$file_path" && grep -q '}' "$file_path"; then
+        results="${results}Warning: The file may have mismatched brackets. Please check opening and closing braces.\n"
+    fi
+    
+    echo -e "$results"
+}
+
 # Register the cleanup function to be called on exit
 trap cleanup EXIT
 
@@ -170,6 +228,41 @@ for source_url in $CABBI_URL $CBI_URL $GLBRC_URL $JBEI_URL; do
         elif echo "$validation_output" | grep -q "TypeError"; then
             type_error=$(echo "$validation_output" | grep -o "TypeError:.*" | head -1)
             ERROR_DETAILS[$source_file]=$(extract_line_info "$type_error" "$source_path" "TypeError" "$validation_output")
+            
+            # Since TypeErrors often don't point to the exact location in the input file,
+            # check for common issues like empty dictionaries that might be causing the error
+            echo "Checking for potential causes of TypeError in $source_file..."
+            
+            # Check for empty dictionaries
+            empty_dict_check=$(check_empty_dictionaries "$source_path")
+            
+            # Check for JSON syntax issues
+            syntax_issues=$(check_json_syntax_issues "$source_path")
+            
+            # Append the issue checks to the error details
+            if [ -n "$empty_dict_check" ] || [ -n "$syntax_issues" ]; then
+                ERROR_DETAILS[$source_file]="${ERROR_DETAILS[$source_file]}
+
+Potential causes found:
+"
+                if [ -n "$empty_dict_check" ]; then
+                    ERROR_DETAILS[$source_file]="${ERROR_DETAILS[$source_file]}
+Empty Dictionaries:
+$empty_dict_check
+"
+                fi
+                
+                if [ -n "$syntax_issues" ]; then
+                    ERROR_DETAILS[$source_file]="${ERROR_DETAILS[$source_file]}
+JSON Syntax Issues:
+$syntax_issues
+"
+                fi
+            else
+                ERROR_DETAILS[$source_file]="${ERROR_DETAILS[$source_file]}
+
+No common JSON issues found. The error might be in the schema validation logic."
+            fi
             
         # Look for other common error patterns
         elif echo "$validation_output" | grep -q "ValidationException"; then
