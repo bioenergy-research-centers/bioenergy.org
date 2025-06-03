@@ -1,7 +1,12 @@
 <script setup>
-  import { computed } from 'vue';
+  import { ref, computed } from 'vue';
   import OrganismLink from '@/components/OrganismLink.vue';
   const props = defineProps(['selectedResult']);
+  const expandedIndex=ref(null);
+  function toggleDesc(idx) {
+    expandedIndex.value = expandedIndex.value === idx ? null : idx;
+  }
+
   const primaryCreators = computed(() => {
     const creators = props.selectedResult?.creator
     if(!Array.isArray(creators)) { return []; }
@@ -69,27 +74,45 @@
         </div>
 
         <div v-if="selectedResult.plasmid_features && selectedResult.plasmid_features.length" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Plasmid Features</div>
-          <table class="table table-light">
-            <thead>
+          <div class="small text-uppercase fw-bold mb-2">Plasmid Features</div>
+          <table class="table table-bordered">
+            <thead class="table-light">
               <tr>
                 <th scope="col">Backbone</th>
                 <th scope="col">Selection Marker</th>
                 <th scope="col">Promoters</th>
                 <th scope="col">Origin of Replication</th>
                 <th scope="col">Replicates In</th>
+                <th scope="col" class="text-center">Description</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="plasmid in selectedResult.plasmid_features">
-                <td>{{ plasmid.backbone }}</td>
-                <td>{{ Array.from(plasmid.selection_markers).join(', ') }}</td>
-                <td>{{ Array.from(plasmid.promoters).join(', ') }}</td>
-                <td>{{ plasmid.ori }}</td>
-                <td>
-                  <OrganismLink :organism="plasmid.replicates_in"/>
-                </td>
-              </tr>
+              <template v-for="(plasmid, idx) in selectedResult.plasmid_features" :key="plasmid.id ?? idx">
+                <tr :class="{ 'bg-light': expandedIndex === idx }">
+                  <td>{{ plasmid.backbone }}</td>
+                  <td>{{ Array.from(plasmid.selection_markers).join(', ') }}</td>
+                  <td>{{ Array.from(plasmid.promoters).join(', ') }}</td>
+                  <td>{{ plasmid.ori }}</td>
+                  <td>
+                    <OrganismLink :organism="plasmid.replicates_in"/>
+                  </td>
+                  <td class="text-center">
+                    <!-- Toggle button: show/hide description -->
+                    <button v-if="plasmid.description && plasmid.description.length" class="btn btn-sm btn-outline-primary" @click="toggleDesc(idx)">
+                      <span v-if="expandedIndex === idx">– Hide</span>
+                      <span v-else>+ Show</span>
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="expandedIndex === idx" class="bg-light">
+                  <td colspan="6">
+                    <strong>Description:</strong>
+                    <div class="mt-1">
+                      {{ plasmid.description ?? 'No description provided.' }}
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
