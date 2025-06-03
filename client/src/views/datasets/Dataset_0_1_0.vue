@@ -98,7 +98,7 @@
                   </td>
                   <td class="text-center">
                     <!-- Toggle button: show/hide description -->
-                    <button class="btn btn-sm btn-outline-primary" @click="toggleDesc(idx)">
+                    <button v-if="plasmid.description && plasmid.description.length" class="btn btn-sm btn-outline-primary" @click="toggleDesc(idx)">
                       <span v-if="expandedIndex === idx">– Hide</span>
                       <span v-else>+ Show</span>
                     </button>
