@@ -2,9 +2,12 @@
 import DatasetDataService from "../services/DatasetDataService";
 import {ref, watch, onMounted, nextTick} from "vue";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
+import { useRouter } from 'vue-router';
 
 // Add D3 imports
 import { select, scaleLinear, scaleBand, axisBottom, axisLeft, pie, arc, schemeCategory10 } from 'd3';
+
+const router = useRouter();
 
 const results = ref([]);
 const loading = ref(true);
@@ -21,15 +24,25 @@ const props = defineProps({
   dnaSequence: String,
 });
 
-const emit = defineEmits(['clear-dna-sequence']);
+// New emit for search updates
+const emit = defineEmits(['clear-dna-sequence', 'update-search']);
 
 // Add a reactive trigger for visualization updates
 const visualizationTrigger = ref(0);
 
 // In handleSearch function, add this after setting results:
 const handleSearch = async () => {
-  // ... existing code ...
-  
+  // If both filter and dnaSequence are empty, fetch all data
+  if (!props.filter && !props.dnaSequence) {
+    await fetchAllData();
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+  results.value = [];
+  selectedResult.value = null;
+
   try {
     const response = await DatasetDataService.runAdvancedSearch(
         props.filter,
@@ -51,18 +64,9 @@ const handleSearch = async () => {
     error.value = 'Failed to fetch search results.';
   } finally {
     loading.value = false;
+    await forceVisualizationUpdate();
   }
 };
-
-// And add this watcher:
-watch(visualizationTrigger, () => {
-  if (showChart.value && results.value.length > 0) {
-    nextTick(() => {
-      createVisualization();
-    });
-  }
-});
-
 
 const fetchAllData = async () => {
   loading.value = true;
@@ -72,6 +76,9 @@ const fetchAllData = async () => {
     const response = await DatasetDataService.getAll();
     results.value = response.data;
     selectedResult.value = results.value.length > 0 ? results.value[0] : null;
+    
+    // Trigger visualization update
+    visualizationTrigger.value++;
     
     await nextTick();
     if (showChart.value) {
@@ -83,6 +90,15 @@ const fetchAllData = async () => {
     results.value = [];
   } finally {
     loading.value = false;
+    // Force visualization update as backup
+    await forceVisualizationUpdate();
+  }
+};
+
+const forceVisualizationUpdate = async () => {
+  if (showChart.value && results.value.length > 0) {
+    await nextTick();
+    createVisualization();
   }
 };
 
@@ -108,6 +124,12 @@ const createVisualization = () => {
       break;
     case 'resources':
       createResourcesVisualization();
+      break;
+    case 'species':
+      createSpeciesVisualization();
+      break;
+    case 'analysis':
+      createAnalysisVisualization();
       break;
     default:
       createCountVisualization();
@@ -159,13 +181,14 @@ const createSourcesVisualization = () => {
     brcCount[brc] = (brcCount[brc] || 0) + 1;
   });
 
-  console.log('BRC distribution:', brcCount); // Debug log
+  console.log('BRC distribution:', brcCount);
 
   const chartData = Object.entries(brcCount)
     .map(([brc, count]) => ({ label: brc, value: count }))
     .sort((a, b) => b.value - a.value);
 
-  createPieChart(chartData, 'Dataset Distribution by BRC (Bioenergy Research Center)');
+  // Enable clickable labels for Sources chart
+  createPieChart(chartData, 'Dataset Distribution by BRC (Bioenergy Research Center)', true);
 };
 
 // 3. Topics Visualization
@@ -173,41 +196,120 @@ const createTopicsVisualization = () => {
   const topicCount = {};
   
   results.value.forEach(result => {
-    // Extract topics from title, description, or specific topic fields
     let topics = [];
     
-    if (result.topics) {
-      topics = Array.isArray(result.topics) ? result.topics : [result.topics];
-    } else if (result.keywords) {
+    // 1. Try to extract from keywords field (if it exists and has content)
+    if (result.keywords && result.keywords.length > 0) {
       topics = Array.isArray(result.keywords) ? result.keywords : result.keywords.split(',');
-    } else if (result.title) {
-      // Extract potential topics from title (simple keyword extraction)
-      const commonTopics = ['bioenergy', 'biomass', 'enzyme', 'fermentation', 'biofuel', 'cellulose', 'lignin', 'metabolic', 'genomic', 'protein'];
-      topics = commonTopics.filter(topic => 
-        result.title.toLowerCase().includes(topic.toLowerCase())
-      );
     }
     
+    // 2. Extract from plasmid features
+    else if (result.plasmid_features && result.plasmid_features.length > 0) {
+      const featureTopics = new Set();
+      
+      result.plasmid_features.forEach(feature => {
+        // Extract from promoters
+        if (feature.promoters && feature.promoters.length > 0) {
+          feature.promoters.forEach(promoter => {
+            featureTopics.add(`Promoter: ${promoter}`);
+          });
+        }
+        
+        // Extract from selection markers
+        if (feature.selection_markers && feature.selection_markers.length > 0) {
+          feature.selection_markers.forEach(marker => {
+            featureTopics.add(`Selection: ${marker}`);
+          });
+        }
+        
+        // Extract from origins of replication
+        if (feature.ori) {
+          featureTopics.add(`Origin: ${feature.ori}`);
+        }
+        
+        // Extract from backbone types
+        if (feature.backbone) {
+          // Extract meaningful parts from backbone names
+          const backboneName = feature.backbone.toLowerCase();
+          if (backboneName.includes('gfp')) featureTopics.add('GFP Reporter');
+          if (backboneName.includes('rfp')) featureTopics.add('RFP Reporter');
+          if (backboneName.includes('biobrick') || backboneName.includes('pbb')) featureTopics.add('BioBrick');
+          if (backboneName.includes('pet')) featureTopics.add('Expression Vector');
+        }
+      });
+      
+      topics = Array.from(featureTopics);
+    }
+    
+    // 3. Extract from species (if available)
+    else if (result.species && result.species.length > 0) {
+      topics = result.species.map(species => `Species: ${species}`);
+    }
+    
+    // 4. Extract from title analysis (as fallback)
+    else if (result.title) {
+      const biologicalTerms = [
+        'plasmid', 'vector', 'expression', 'promoter', 'gene', 'protein',
+        'enzyme', 'fermentation', 'biofuel', 'bioenergy', 'biomass',
+        'cellulose', 'lignin', 'metabolic', 'genomic', 'synthetic biology',
+        'engineering', 'production', 'pathway', 'biosynthesis',
+        'cloning', 'transformation', 'assembly', 'construction'
+      ];
+      
+      const titleLower = result.title.toLowerCase();
+      topics = biologicalTerms.filter(term => 
+        titleLower.includes(term.toLowerCase())
+      );
+      
+      // Also extract year-based topics from titles
+      const yearMatch = result.title.match(/\b(19|20)\d{2}\b/);
+      if (yearMatch) {
+        topics.push(`Study Year: ${yearMatch[0]}`);
+      }
+    }
+    
+    // 5. Extract from analysis type
+    if (result.analysisType && result.analysisType !== 'not specified') {
+      topics.push(`Analysis: ${result.analysisType}`);
+    }
+    
+    // 6. Extract from dataset type
+    if (result.datasetType) {
+      const typeMap = {
+        'GD': 'Genetic Data',
+        'MD': 'Metabolic Data',
+        'PD': 'Protein Data',
+        'CD': 'Chemical Data'
+      };
+      topics.push(`Type: ${typeMap[result.datasetType] || result.datasetType}`);
+    }
+    
+    // 7. Default fallback
     if (topics.length === 0) {
       topics = ['General'];
     }
     
+    // Count each topic
     topics.forEach(topic => {
       const cleanTopic = topic.toString().trim();
-      topicCount[cleanTopic] = (topicCount[cleanTopic] || 0) + 1;
+      if (cleanTopic) {
+        topicCount[cleanTopic] = (topicCount[cleanTopic] || 0) + 1;
+      }
     });
   });
+
+  console.log('Topic distribution:', topicCount); // Debug log
 
   const chartData = Object.entries(topicCount)
     .map(([topic, count]) => ({ label: topic, value: count }))
     .sort((a, b) => b.value - a.value)
-    .slice(0, 10); // Show top 10 topics
+    .slice(0, 15); // Show top 15 topics 
 
   createBarChart(
     chartData.map(d => ({ category: d.label, count: d.value })), 
     'category', 
     'count', 
-    'Top Topics Distribution', 
+    'Research Topics Distribution', 
     'Topics', 
     'Number of Datasets'
   );
@@ -227,13 +329,97 @@ const createResourcesVisualization = () => {
     repositoryCount[repository] = (repositoryCount[repository] || 0) + 1;
   });
 
-  console.log('Repository distribution:', repositoryCount); // Debug log
+  console.log('Repository distribution:', repositoryCount);
 
   const chartData = Object.entries(repositoryCount)
     .map(([repository, count]) => ({ label: repository, value: count }))
     .sort((a, b) => b.value - a.value);
 
-  createPieChart(chartData, 'Dataset Distribution by Repository');
+  // Enable clickable labels for Resources chart
+  createPieChart(chartData, 'Dataset Distribution by Repository', true);
+};
+
+const createSpeciesVisualization = () => {
+  const speciesCount = {};
+  
+  results.value.forEach(result => {
+    if (result.species && result.species.length > 0) {
+      result.species.forEach(species => {
+        let speciesName = 'Unknown';
+        
+        // Handle different data structures for species
+        if (typeof species === 'string') {
+          // If it's already a string, use it directly
+          speciesName = species.trim();
+        } else if (typeof species === 'object' && species !== null) {
+          // If it's an object, try to extract meaningful information
+          if (species.name) {
+            speciesName = species.name;
+          } else if (species.scientificName) {
+            speciesName = species.scientificName;
+          } else if (species.commonName) {
+            speciesName = species.commonName;
+          } else if (species.organism) {
+            speciesName = species.organism;
+          } else if (species.species) {
+            speciesName = species.species;
+          } else {
+            // If we can't find a meaningful field, show what fields are available
+            const keys = Object.keys(species);
+            if (keys.length > 0) {
+              // Use the first available field
+              speciesName = `${keys[0]}: ${species[keys[0]]}`;
+            } else {
+              speciesName = 'Unknown Species Object';
+            }
+          }
+        }
+        
+        if (speciesName && speciesName !== 'Unknown') {
+          speciesCount[speciesName] = (speciesCount[speciesName] || 0) + 1;
+        } else {
+          speciesCount['Unknown'] = (speciesCount['Unknown'] || 0) + 1;
+        }
+      });
+    } else {
+      // If no species specified, categorize as "Not Specified"
+      speciesCount['Not Specified'] = (speciesCount['Not Specified'] || 0) + 1;
+    }
+  });
+
+  console.log('Species distribution:', speciesCount);
+
+  const chartData = Object.entries(speciesCount)
+    .map(([species, count]) => ({ label: species, value: count }))
+    .sort((a, b) => b.value - a.value);
+
+  // Enable clickable labels for Species chart
+  createPieChart(chartData, 'Dataset Distribution by Species', true);
+};
+
+
+// 6. Analysis Type Visualization - New chart
+const createAnalysisVisualization = () => {
+  const analysisCount = {};
+  
+  results.value.forEach(result => {
+    let analysisType = 'Not Specified';
+    
+    if (result.analysisType && result.analysisType !== 'not specified') {
+      analysisType = result.analysisType;
+    }
+    
+    analysisCount[analysisType] = (analysisCount[analysisType] || 0) + 1;
+  });
+
+  console.log('Analysis type distribution:', analysisCount);
+
+  const chartData = Object.entries(analysisCount)
+    .map(([analysis, count]) => ({ label: analysis, value: count }))
+    .sort((a, b) => b.value - a.value);
+
+  // Enable clickable labels for Analysis chart
+  createPieChart(chartData, 'Dataset Distribution by Analysis Type', true);
 };
 
 // Helper function to create bar charts
@@ -322,7 +508,8 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel) => {
 };
 
 // Helper function to create pie charts
-const createPieChart = (data, title) => {
+// Updated Helper function to create pie charts with clickable legends
+const createPieChart = (data, title, enableClickableLabels = false) => {
   const width = 700;
   const height = 400;
   const radius = Math.min(width, height) / 2 - 40;
@@ -361,7 +548,7 @@ const createPieChart = (data, title) => {
     .style('font-size', '12px')
     .text(d => d.data.value);
 
-  // Add legend
+  // Add legend with optional clickable functionality
   const legend = svg.append('g')
     .attr('transform', `translate(20, 20)`);
 
@@ -369,18 +556,40 @@ const createPieChart = (data, title) => {
     .data(data)
     .enter().append('g')
     .attr('class', 'legend-item')
-    .attr('transform', (d, i) => `translate(0, ${i * 20})`);
+    .attr('transform', (d, i) => `translate(0, ${i * 20})`)
+    .style('cursor', enableClickableLabels ? 'pointer' : 'default');
 
   legendItems.append('rect')
     .attr('width', 15)
     .attr('height', 15)
     .attr('fill', (d, i) => color[i % color.length]);
 
-  legendItems.append('text')
+  const legendText = legendItems.append('text')
     .attr('x', 20)
     .attr('y', 12)
     .style('font-size', '12px')
     .text(d => `${d.label} (${d.value})`);
+
+  // Add click functionality if enabled
+  if (enableClickableLabels) {
+    legendItems
+      .on('mouseover', function() {
+        select(this).select('text')
+          .style('font-weight', 'bold')
+          .style('text-decoration', 'underline');
+      })
+      .on('mouseout', function() {
+        select(this).select('text')
+          .style('font-weight', 'normal')
+          .style('text-decoration', 'none');
+      })
+      .on('click', function(event, d) {
+        handleLegendClick(d.label);
+      });
+
+    // Add visual indicator that items are clickable
+    legendText.style('color', '#0066cc');
+  }
 
   // Add title
   svg.append('text')
@@ -390,6 +599,67 @@ const createPieChart = (data, title) => {
     .style('font-size', '16px')
     .style('font-weight', 'bold')
     .text(title);
+};
+
+// Function to handle legend clicks
+const handleLegendClick = (legendValue) => {
+  console.log('Legend clicked:', legendValue);
+  
+  // Get current search filter
+  const currentFilter = props.filter || '';
+  
+  // Create new search term by appending the legend value
+  const newFilter = currentFilter.trim() 
+    ? `${currentFilter.trim()} ${legendValue}` 
+    : legendValue;
+  
+  console.log('New search filter:', newFilter);
+  
+  // Update the URL with the new search term
+  // This will trigger the HeaderView to update and your component to re-fetch data
+  router.push({
+    path: '/data',
+    query: {
+      q: newFilter,
+    },
+  });
+};
+
+// New function to handle internal search updates
+const handleInternalSearchUpdate = async (newFilter) => {
+  console.log('Updating internal search to:', newFilter);
+  
+  loading.value = true;
+  error.value = null;
+  results.value = [];
+  selectedResult.value = null;
+
+  try {
+    const response = await DatasetDataService.runAdvancedSearch(
+        newFilter,
+        props.dnaSequence // Keep the existing DNA sequence if any
+    );
+    results.value = response.data;
+    selectedResult.value = results.value.length > 0 ? results.value[0] : null;
+    
+    // Trigger visualization update
+    visualizationTrigger.value++;
+    
+    await nextTick();
+    if (showChart.value) {
+      createVisualization();
+    }
+    
+    // Also emit to parent component so it can update its search state if needed
+    emit('update-search', newFilter);
+    
+  } catch (err) {
+    results.value = [];
+    console.error('error', err);
+    error.value = 'Failed to fetch search results.';
+  } finally {
+    loading.value = false;
+  }
 };
 
 // Watch for changes in props to trigger search
@@ -486,7 +756,9 @@ const setActiveTab = (tab: string) => {
                   { key: 'count', label: 'Dataset Count' },
                   { key: 'sources', label: 'Sources' },
                   { key: 'topics', label: 'Topics' },
-                  { key: 'resources', label: 'Resources' }
+                  { key: 'resources', label: 'Resources' },
+                  { key: 'species', label: 'Species' },
+                  { key: 'analysis', label: 'Analysis Type' }
                 ]"
                 :key="tab.key"
                 @click="setActiveTab(tab.key)"

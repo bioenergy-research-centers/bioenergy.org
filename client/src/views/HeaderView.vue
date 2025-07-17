@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {RouterLink, useRoute, useRouter} from "vue-router";
 import headerIcon from "@/assets/brc-bioenergy-icon.png"
-import {onBeforeMount, ref} from "vue";
+import {onBeforeMount, ref, watch} from "vue"; // Add watch import
 import {useSearchStore} from '@/store/searchStore';
 
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
@@ -18,6 +18,14 @@ onBeforeMount(() => {
   if (query)
     searchText.value = query as string;
 })
+
+// Watch for URL query changes and update search text
+watch(() => route.query.q, (newQuery) => {
+  const queryString = newQuery as string || '';
+  if (queryString !== searchText.value) {
+    searchText.value = queryString;
+  }
+}, { immediate: true });
 
 const onSubmit = () => {
   // save sequence to the store
