@@ -6,7 +6,7 @@
 async function syncIssueComment(rawTitle, formattedBody, {state="open", labels='sync', maxIssueLimit=200, maxCommentLimit=100} = {}) {
   const title = rawTitle.substring(0,256);
   // Search expects single comma separated label string, while create expects array of labels, so we need both.
-  labels_arr = labels.split(",").map(item => item.trim());
+  const labels_arr = labels.split(",").map(item => item.trim());
   console.log("checking issue:", title, state, labels, labels_arr);
   try {  
     // dynamic import of ES module inside commonJS
