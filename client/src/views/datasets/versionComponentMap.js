@@ -5,7 +5,7 @@ import Dataset_0_1_0 from "./Dataset_0_1_0.vue";
 // Keys should match versions returned from api with datasets
 // Any non-matching version will fallback to the default version
 const versionMappings = [
-  { versions: ['default', '0.1.0', '0.1.1', '0.1.2'], component: Dataset_0_1_0 }
+  { versions: ['default', '0.1.0', '0.1.1', '0.1.2', '0.1.3'], component: Dataset_0_1_0 }
 ];
 
 // Build lookup table from version mappings
