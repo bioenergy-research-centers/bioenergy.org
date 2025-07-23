@@ -19,6 +19,13 @@ const chartContainer = ref<HTMLElement>();
 const showChart = ref(false);
 const activeTab = ref('count'); // 'count', 'sources', 'topics', 'resources'
 
+const activeFilters = ref({
+  brc: null,        // For sources chart
+  repository: null, // For resources chart
+  species: null,    // For species chart
+  analysisType: null, // For analysis type chart
+});
+
 const props = defineProps({
   filter: String,
   dnaSequence: String,
@@ -30,7 +37,7 @@ const emit = defineEmits(['clear-dna-sequence', 'update-search']);
 // Add a reactive trigger for visualization updates
 const visualizationTrigger = ref(0);
 
-// In handleSearch function, add this after setting results:
+// Updated handleSearch to ensure proper chart updates after filtering
 const handleSearch = async () => {
   // If both filter and dnaSequence are empty, fetch all data
   if (!props.filter && !props.dnaSequence) {
@@ -48,52 +55,135 @@ const handleSearch = async () => {
         props.filter,
         props.dnaSequence
     );
-    results.value = response.data;
+    
+    // Apply client-side filtering based on active filters
+    let filteredResults = response.data;
+    
+    if (activeFilters.value.brc) {
+      filteredResults = filteredResults.filter(result => result.brc === activeFilters.value.brc);
+    }
+    
+    if (activeFilters.value.repository) {
+      filteredResults = filteredResults.filter(result => result.repository === activeFilters.value.repository);
+    }
+    
+    if (activeFilters.value.species) {
+      filteredResults = filteredResults.filter(result => {
+        if (activeFilters.value.species === 'Not Specified') {
+          return !result.species || result.species.length === 0;
+        }
+        // Check if any species in the array matches the filter
+        return result.species && result.species.some(species => {
+          if (typeof species === 'string') {
+            return species.trim() === activeFilters.value.species;
+          } else if (typeof species === 'object' && species !== null) {
+            // Handle object species data
+            const speciesName = species.name || species.scientificName || species.commonName || species.organism || species.species;
+            return speciesName === activeFilters.value.species;
+          }
+          return false;
+        });
+      });
+    }
+    
+    if (activeFilters.value.analysisType) {
+      filteredResults = filteredResults.filter(result => {
+        if (activeFilters.value.analysisType === 'Not Specified') {
+          return !result.analysisType || result.analysisType === 'not specified';
+        }
+        return result.analysisType === activeFilters.value.analysisType;
+      });
+    }
+    
+    results.value = filteredResults;
     selectedResult.value = results.value.length > 0 ? results.value[0] : null;
     
-    // Trigger visualization update
-    visualizationTrigger.value++;
+    console.log('Filtered results count:', results.value.length); // Debug log
     
-    await nextTick();
-    if (showChart.value) {
-      createVisualization();
-    }
   } catch (err) {
     results.value = [];
     console.error('error', err);
     error.value = 'Failed to fetch search results.';
   } finally {
     loading.value = false;
-    await forceVisualizationUpdate();
+    
+    // Force visualization update after filtering is complete
+    await nextTick();
+    if (showChart.value) {
+      console.log('Creating visualization after filtering');
+      createVisualization();
+    }
   }
 };
 
 const fetchAllData = async () => {
+  console.log('fetchAllData called');
   loading.value = true;
   error.value = null;
 
   try {
     const response = await DatasetDataService.getAll();
-    results.value = response.data;
+    
+    // Apply client-side filtering based on active filters
+    let filteredResults = response.data;
+    
+    if (activeFilters.value.brc) {
+      filteredResults = filteredResults.filter(result => result.brc === activeFilters.value.brc);
+    }
+    
+    if (activeFilters.value.repository) {
+      filteredResults = filteredResults.filter(result => result.repository === activeFilters.value.repository);
+    }
+    
+    if (activeFilters.value.species) {
+      filteredResults = filteredResults.filter(result => {
+        if (activeFilters.value.species === 'Not Specified') {
+          return !result.species || result.species.length === 0;
+        }
+        // Check if any species in the array matches the filter
+        return result.species && result.species.some(species => {
+          if (typeof species === 'string') {
+            return species.trim() === activeFilters.value.species;
+          } else if (typeof species === 'object' && species !== null) {
+            // Handle object species data
+            const speciesName = species.name || species.scientificName || species.commonName || species.organism || species.species;
+            return speciesName === activeFilters.value.species;
+          }
+          return false;
+        });
+      });
+    }
+    
+    if (activeFilters.value.analysisType) {
+      filteredResults = filteredResults.filter(result => {
+        if (activeFilters.value.analysisType === 'Not Specified') {
+          return !result.analysisType || result.analysisType === 'not specified';
+        }
+        return result.analysisType === activeFilters.value.analysisType;
+      });
+    }
+    
+    results.value = filteredResults;
     selectedResult.value = results.value.length > 0 ? results.value[0] : null;
     
-    // Trigger visualization update
-    visualizationTrigger.value++;
+    console.log('fetchAllData - filtered results count:', results.value.length); // Debug log
     
-    await nextTick();
-    if (showChart.value) {
-      createVisualization();
-    }
   } catch (e) {
     error.value = 'There was an error while fetching search results.';
     console.error(e);
     results.value = [];
   } finally {
     loading.value = false;
-    // Force visualization update as backup
-    await forceVisualizationUpdate();
+    
+    // Force visualization update after filtering is complete
+    await nextTick();
+    if (showChart.value) {
+      console.log('fetchAllData - creating visualization after filtering');
+      createVisualization();
+    }
   }
 };
+
 
 const forceVisualizationUpdate = async () => {
   if (showChart.value && results.value.length > 0) {
@@ -187,9 +277,10 @@ const createSourcesVisualization = () => {
     .map(([brc, count]) => ({ label: brc, value: count }))
     .sort((a, b) => b.value - a.value);
 
-  // Enable clickable labels for Sources chart
-  createPieChart(chartData, 'Dataset Distribution by BRC (Bioenergy Research Center)', true);
+  // Enable clickable labels for Sources chart with chart type
+  createPieChart(chartData, 'Dataset Distribution by BRC (Bioenergy Research Center)', true, 'sources');
 };
+
 
 // 3. Topics Visualization
 const createTopicsVisualization = () => {
@@ -335,8 +426,8 @@ const createResourcesVisualization = () => {
     .map(([repository, count]) => ({ label: repository, value: count }))
     .sort((a, b) => b.value - a.value);
 
-  // Enable clickable labels for Resources chart
-  createPieChart(chartData, 'Dataset Distribution by Repository', true);
+  // Enable clickable labels for Resources chart with chart type
+  createPieChart(chartData, 'Dataset Distribution by Repository', true, 'resources');
 };
 
 const createSpeciesVisualization = () => {
@@ -349,10 +440,8 @@ const createSpeciesVisualization = () => {
         
         // Handle different data structures for species
         if (typeof species === 'string') {
-          // If it's already a string, use it directly
           speciesName = species.trim();
         } else if (typeof species === 'object' && species !== null) {
-          // If it's an object, try to extract meaningful information
           if (species.name) {
             speciesName = species.name;
           } else if (species.scientificName) {
@@ -364,10 +453,8 @@ const createSpeciesVisualization = () => {
           } else if (species.species) {
             speciesName = species.species;
           } else {
-            // If we can't find a meaningful field, show what fields are available
             const keys = Object.keys(species);
             if (keys.length > 0) {
-              // Use the first available field
               speciesName = `${keys[0]}: ${species[keys[0]]}`;
             } else {
               speciesName = 'Unknown Species Object';
@@ -382,7 +469,6 @@ const createSpeciesVisualization = () => {
         }
       });
     } else {
-      // If no species specified, categorize as "Not Specified"
       speciesCount['Not Specified'] = (speciesCount['Not Specified'] || 0) + 1;
     }
   });
@@ -393,8 +479,8 @@ const createSpeciesVisualization = () => {
     .map(([species, count]) => ({ label: species, value: count }))
     .sort((a, b) => b.value - a.value);
 
-  // Enable clickable labels for Species chart
-  createPieChart(chartData, 'Dataset Distribution by Species', true);
+  // Enable clickable labels for Species chart with chart type
+  createPieChart(chartData, 'Dataset Distribution by Species', true, 'species');
 };
 
 
@@ -418,8 +504,8 @@ const createAnalysisVisualization = () => {
     .map(([analysis, count]) => ({ label: analysis, value: count }))
     .sort((a, b) => b.value - a.value);
 
-  // Enable clickable labels for Analysis chart
-  createPieChart(chartData, 'Dataset Distribution by Analysis Type', true);
+  // Enable clickable labels for Analysis chart with chart type
+  createPieChart(chartData, 'Dataset Distribution by Analysis Type', true, 'analysis');
 };
 
 // Helper function to create bar charts
@@ -509,7 +595,8 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel) => {
 
 // Helper function to create pie charts
 // Updated Helper function to create pie charts with clickable legends
-const createPieChart = (data, title, enableClickableLabels = false) => {
+// Updated createPieChart to handle chart types
+const createPieChart = (data, title, enableClickableLabels = false, chartType = null) => {
   const width = 700;
   const height = 400;
   const radius = Math.min(width, height) / 2 - 40;
@@ -571,7 +658,7 @@ const createPieChart = (data, title, enableClickableLabels = false) => {
     .text(d => `${d.label} (${d.value})`);
 
   // Add click functionality if enabled
-  if (enableClickableLabels) {
+  if (enableClickableLabels && chartType) {
     legendItems
       .on('mouseover', function() {
         select(this).select('text')
@@ -584,7 +671,7 @@ const createPieChart = (data, title, enableClickableLabels = false) => {
           .style('text-decoration', 'none');
       })
       .on('click', function(event, d) {
-        handleLegendClick(d.label);
+        handleLegendClick(d.label, chartType);
       });
 
     // Add visual indicator that items are clickable
@@ -602,27 +689,82 @@ const createPieChart = (data, title, enableClickableLabels = false) => {
 };
 
 // Function to handle legend clicks
-const handleLegendClick = (legendValue) => {
-  console.log('Legend clicked:', legendValue);
+// const handleLegendClick = (legendValue) => {
+//     console.log('Legend clicked:', legendValue);
+    
+//     // Get current search filter
+//     const currentFilter = props.filter || '';
+    
+//     // Create new search term by appending the legend value
+//     const newFilter = currentFilter.trim() 
+//       ? `${currentFilter.trim()} ${legendValue}` 
+//       : legendValue;
+    
+//     console.log('New search filter:', newFilter);
+    
+//     // Update the URL with the new search term
+//     // This will trigger the HeaderView to update and your component to re-fetch data
+//     router.push({
+//       path: '/data',
+//       query: {
+//         q: newFilter,
+//       },
+//     });
+//   };
+
+// Updated legend click handler for filtering
+const handleLegendClick = (legendValue, chartType) => {
+  console.log('Legend clicked:', legendValue, 'for chart:', chartType);
   
-  // Get current search filter
-  const currentFilter = props.filter || '';
+  // Update the appropriate filter
+  if (chartType === 'sources') {
+    activeFilters.value.brc = legendValue;
+    console.log('Set BRC filter to:', legendValue);
+  } else if (chartType === 'resources') {
+    activeFilters.value.repository = legendValue;
+    console.log('Set Repository filter to:', legendValue);
+  } else if (chartType === 'species') {
+    activeFilters.value.species = legendValue;
+    console.log('Set Species filter to:', legendValue);
+  } else if (chartType === 'analysis') {
+    activeFilters.value.analysisType = legendValue;
+    console.log('Set Analysis Type filter to:', legendValue);
+  }
   
-  // Create new search term by appending the legend value
-  const newFilter = currentFilter.trim() 
-    ? `${currentFilter.trim()} ${legendValue}` 
-    : legendValue;
+  console.log('Current active filters:', activeFilters.value);
   
-  console.log('New search filter:', newFilter);
+  // Trigger data refresh with new filters
+  if (!props.filter && !props.dnaSequence) {
+    fetchAllData();
+  } else {
+    handleSearch();
+  }
+};
+
+
+
+// Function to remove a specific filter
+const removeFilter = (filterType) => {
+  console.log('Removing filter:', filterType);
   
-  // Update the URL with the new search term
-  // This will trigger the HeaderView to update and your component to re-fetch data
-  router.push({
-    path: '/data',
-    query: {
-      q: newFilter,
-    },
-  });
+  if (filterType === 'brc') {
+    activeFilters.value.brc = null;
+  } else if (filterType === 'repository') {
+    activeFilters.value.repository = null;
+  } else if (filterType === 'species') {
+    activeFilters.value.species = null;
+  } else if (filterType === 'analysisType') {
+    activeFilters.value.analysisType = null;
+  }
+  
+  console.log('Active filters after removal:', activeFilters.value);
+  
+  // Trigger data refresh without the removed filter
+  if (!props.filter && !props.dnaSequence) {
+    fetchAllData();
+  } else {
+    handleSearch();
+  }
 };
 
 // New function to handle internal search updates
@@ -674,6 +816,24 @@ watch(
 // Watch for tab changes to update visualization
 watch(activeTab, () => {
   if (showChart.value) {
+    nextTick(() => {
+      createVisualization();
+    });
+  }
+});
+
+watch(activeFilters, () => {
+  console.log('Active filters changed:', activeFilters.value);
+  if (showChart.value) {
+    nextTick(() => {
+      console.log('Updating visualization due to filter change');
+      createVisualization();
+    });
+  }
+}, { deep: true });
+
+watch(visualizationTrigger, () => {
+  if (showChart.value && results.value.length > 0) {
     nextTick(() => {
       createVisualization();
     });
@@ -767,6 +927,47 @@ const setActiveTab = (tab: string) => {
                 {{ tab.label }}
               </button>
             </div>
+            
+            <!-- Filter Tags -->
+              <div v-if="activeFilters.brc || activeFilters.repository || activeFilters.species || activeFilters.analysisType" class="filter-tags">
+                <span class="filter-label">Active Filters:</span>
+                <span 
+                  v-if="activeFilters.brc" 
+                  class="filter-tag"
+                  @click="removeFilter('brc')"
+                  title="Click to remove filter"
+                >
+                  BRC: {{ activeFilters.brc }}
+                  <i class="bi bi-x"></i>
+                </span>
+                <span 
+                  v-if="activeFilters.repository" 
+                  class="filter-tag"
+                  @click="removeFilter('repository')"
+                  title="Click to remove filter"
+                >
+                  Repository: {{ activeFilters.repository }}
+                  <i class="bi bi-x"></i>
+                </span>
+                <span 
+                  v-if="activeFilters.species" 
+                  class="filter-tag"
+                  @click="removeFilter('species')"
+                  title="Click to remove filter"
+                >
+                  Species: {{ activeFilters.species }}
+                  <i class="bi bi-x"></i>
+                </span>
+                <span 
+                  v-if="activeFilters.analysisType" 
+                  class="filter-tag"
+                  @click="removeFilter('analysisType')"
+                  title="Click to remove filter"
+                >
+                  Analysis: {{ activeFilters.analysisType }}
+                  <i class="bi bi-x"></i>
+                </span>
+              </div>
           </div>
           <div class="chart-container">
             <div ref="chartContainer" class="d3-chart"></div>
@@ -975,4 +1176,50 @@ const setActiveTab = (tab: string) => {
     padding: 6px 12px;
   }
 }
+
+/* Add these new styles to your existing CSS */
+
+.filter-tags {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #72a530;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 4px;
+}
+
+.filter-tag:hover {
+  background-color: #5d8a26;
+  transform: translateY(-1px);
+}
+
+.filter-tag i {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.filter-tag i:hover {
+  opacity: 1;
+}
+
 </style>
