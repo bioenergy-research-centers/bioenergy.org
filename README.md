@@ -5,7 +5,7 @@ A site dedicated to creating FAIR datasets to share across bioenergy research ce
 ## Resources
 
 - [Github group](https://github.com/bioenergy-research-centers)
-- [Slack workspace](https://join.slack.com/t/cross-brc/shared_invite/zt-2a6ibcqpy-mEIh6dFEA0X07WM~KRSz4w)
+- [Slack workspace](https://join.slack.com/t/cross-brc/shared_invite/zt-3axq9jgvp-GjNN9RlDPwLSDVXC9fZUkw)
 - [Mailing list - Developers (google group)](dev@bioenergy.org)
 - [Contribution Guide](CONTRIBUTING.md)
 - [Contributors (have emailed license agreement to Nathan Hillson)](CONTRIBUTING.txt)
