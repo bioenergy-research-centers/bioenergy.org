@@ -1009,6 +1009,12 @@ watch(visualizationTrigger, () => {
 
 const onSelectResult = (result: any) => {
   selectedResult.value = result;
+  
+  // Auto-hide analytics when user selects a dataset
+  if (showChart.value) {
+    showChart.value = false;
+    console.log('Auto-hiding analytics because user selected a dataset');
+  }
 }
 
 const toggleChart = () => {
