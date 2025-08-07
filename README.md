@@ -93,6 +93,7 @@ The following command will run a postgres container with the password `mysecretp
 ## Validating Data
 
 Validating data against the BRC schema can be done with the LinkML framework.
+- LinkML has a docker image available here: https://hub.docker.com/r/linkml/linkml
 
 Note for Windows users: To run the validator script on Windows:
 - First install WSL: wsl --install
