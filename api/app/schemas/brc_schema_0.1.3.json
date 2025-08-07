@@ -46,10 +46,117 @@
             "title": "CitedItemType",
             "type": "string"
         },
+        "Contributor": {
+            "additionalProperties": false,
+            "description": "An individual who contributed to the dataset in some manner, not necessarily as an author.",
+            "properties": {
+                "affiliation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Organization"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Affiliation of the individual.",
+                    "type": "string"
+                },
+                "contributorType": {
+                    "$ref": "#/$defs/ContributorTypeCodes",
+                    "description": "The contribution type."
+                },
+                "email": {
+                    "description": "Email address of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "name": {
+                    "description": "Name of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "orcid": {
+                    "description": "ORCID for the individual. This should include the full URI with prefix, e.g., https://orcid.org/0000-0002-1825-0097.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "primaryContact": {
+                    "description": "Indicates if the individual is a primary contact.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Contributor",
+            "type": "object"
+        },
+        "ContributorTypeCodes": {
+            "description": "The type of contribution. These values are based on the OSTI schema (ELINK 241.6).",
+            "enum": [
+                "ContactPerson",
+                "DataCollector",
+                "DataCurator",
+                "DataManager",
+                "Distributor",
+                "Editor",
+                "HostingInstitution",
+                "Producer",
+                "ProjectLeader",
+                "ProjectManager",
+                "ProjectMember",
+                "RegistrationAgency",
+                "RegistrationAuthority",
+                "RelatedPerson",
+                "Researcher",
+                "ResearchGroup",
+                "RightsHolder",
+                "Sponsor",
+                "Supervisor",
+                "WorkPackageLeader",
+                "Other"
+            ],
+            "title": "ContributorTypeCodes",
+            "type": "string"
+        },
         "Dataset": {
             "additionalProperties": false,
-            "description": "A dataset containing metabolomics and proteomics data.",
+            "description": "A body of structured information describing some topic or topics of interest. This includes metadata about the dataset.",
             "properties": {
+                "active": {
+                    "description": "Indicates whether the dataset is active or inactive. This is a boolean field - true indicates active, false indicates inactive.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "additional_brcs": {
+                    "description": "Additional Bioenergy Research Center affiliations. This is a list of one or more additional BRC names, for instances in which the dataset is associated with multiple centers.",
+                    "items": {
+                        "$ref": "#/$defs/BRCEnum"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "alert": {
+                    "description": "Indicates whether availability of the dataset has encountered some inconsistency. This is a boolean field - true indicates alert, false indicates no alert. For example, if we have a Dataset object but the Dataset is missing from its source feed, this should be set to true.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
                 "analysisType": {
                     "anyOf": [
                         {
@@ -74,7 +181,17 @@
                 },
                 "brc": {
                     "$ref": "#/$defs/BRCEnum",
-                    "description": "Bioenergy Research Center affiliation."
+                    "description": "The primary Bioenergy Research Center affiliation. This is a single BRC name."
+                },
+                "contributors": {
+                    "description": "Contributors to the dataset who are not necessarily authors.",
+                    "items": {
+                        "$ref": "#/$defs/Contributor"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "creator": {
                     "description": "List of creators involved in the dataset, where one must be the primary contact.",
@@ -154,6 +271,16 @@
                         "null"
                     ]
                 },
+                "plasmid_features": {
+                    "description": "Description of plasmid features, if applicable. This is a multivalued field.",
+                    "items": {
+                        "$ref": "#/$defs/Plasmid"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "relatedItem": {
                     "description": "Related publications or items.",
                     "items": {
@@ -204,6 +331,13 @@
                     },
                     "type": [
                         "array",
+                        "null"
+                    ]
+                },
+                "schema_version": {
+                    "description": "Version of the schema used for the collection.",
+                    "type": [
+                        "string",
                         "null"
                     ]
                 }
@@ -283,25 +417,32 @@
                             "type": "null"
                         }
                     ],
-                    "description": "Affiliation of the creator.",
+                    "description": "Affiliation of the individual.",
                     "type": "string"
                 },
-                "creatorName": {
-                    "description": "Name of the creator.",
+                "email": {
+                    "description": "Email address of the individual.",
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "email": {
-                    "description": "Email address of the creator.",
+                "name": {
+                    "description": "Name of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "orcid": {
+                    "description": "ORCID for the individual. This should include the full URI with prefix, e.g., https://orcid.org/0000-0002-1825-0097.",
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "primaryContact": {
-                    "description": "Indicates if the creator is the primary contact.",
+                    "description": "Indicates if the individual is a primary contact.",
                     "type": [
                         "boolean",
                         "null"
@@ -373,6 +514,83 @@
             "title": "Organization",
             "type": "object"
         },
+        "Plasmid": {
+            "additionalProperties": false,
+            "description": "Description of plasmid or other molecular vector features.",
+            "properties": {
+                "backbone": {
+                    "description": "Name of the backbone of the plasmid, e.g., pUC19.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "description": "Description of the plasmid, including any relevant features not captured in other fields.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "host": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Organism"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Host organism for the plasmid, e.g., E. coli. Includes both the scientific name and NCBI Taxonomy ID."
+                },
+                "id": {
+                    "description": "Unique identifier for the plasmid. This must be unique within the dataset.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ori": {
+                    "description": "Origin of replication for the plasmid, e.g., ColE1.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "promoters": {
+                    "description": "Promoters for the plasmid, e.g., T7.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "replicates_in": {
+                    "description": "Organism(s) in which the plasmid replicates. Includes both the scientific name and NCBI Taxonomy ID.",
+                    "items": {
+                        "$ref": "#/$defs/Organism"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "selection_markers": {
+                    "description": "Selection markers for the plasmid, e.g, kan.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Plasmid",
+            "type": "object"
+        },
         "RelatedItem": {
             "additionalProperties": false,
             "description": "A related publication or item, including cited publications.",
@@ -408,6 +626,7 @@
                 "FigShare",
                 "GenBank",
                 "GEO",
+                "GitHub",
                 "GLBRC Sustainability",
                 "Iowa State University FigShare",
                 "ICE",
@@ -417,6 +636,7 @@
                 "jPOST",
                 "MassIVE",
                 "Mendeley Data",
+                "National Microbiome Data Collaborative",
                 "NCBI BioProject",
                 "NCBI SRA",
                 "ORNL DAAC",
@@ -447,9 +667,16 @@
                 "array",
                 "null"
             ]
+        },
+        "schema_version": {
+            "description": "Version of the schema used for the collection.",
+            "type": [
+                "string",
+                "null"
+            ]
         }
     },
     "title": "brc_schema",
     "type": "object",
-    "version": "0.0.6"
+    "version": "0.1.3"
 }

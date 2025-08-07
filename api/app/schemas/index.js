@@ -11,7 +11,4 @@ schema.index = schema_index.reduce((map_entry, array_element) => {
 // Extract an array of the schema versions supported by the UI (used by models/index.js to create Dataset scope).
 schema.supported = schema_index.filter(function(obj) { return obj.supported; }).map(function(obj) { return obj.version; });
 
-// Note: The idea of a default version may be dropped after all feeds migrate to providing version numbers.
-schema.default = "0.0.8"; // Default to last version prior to the breaking change in 0.1.0 for backward compatibility.
-
 module.exports = schema;
