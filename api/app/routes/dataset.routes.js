@@ -92,4 +92,6 @@ router.get("/:id", datasets.findOne);
 // POST /api/datasets -> search
 router.post("/", search);
 
+router.post("/filters", datasets.findByFilters);
+
 module.exports = router;

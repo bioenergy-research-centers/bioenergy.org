@@ -177,3 +177,166 @@ exports.findAllPublished = (req, res) => {
       });
     });
 };
+
+// Find datasets using advanced filters
+exports.findByFilters = (req, res) => {
+
+  const { textQuery, filters } = req.body;
+  
+  console.log('Running filtered search with:', { textQuery, filters });
+
+  console.log('=== BACKEND FILTER DEBUG ===');
+  console.log('Request body:', req.body);
+  console.log('textQuery:', textQuery);
+  console.log('filters:', filters);
+  if (filters && filters.species) {
+    console.log('Species filter value:', filters.species);
+  }
+  console.log('=== END BACKEND FILTER DEBUG ===');
+
+  // Initialize an empty array for search conditions
+  const conditions = [];
+
+  // Handle text query if provided
+  if (textQuery && textQuery.trim() !== '') {
+    // Use the same text search logic as findAll
+    const specialTokens = ['OR', '|', '!', '(', ')'];
+    const searchTerms = textQuery.trim().match(/(\(|\)|\bOR\b|\bNOT\b|[^\s()]+)/gi);
+    const tokenizedSearchTerms = searchTerms.filter(t => t).map(token => {
+      if (token.toUpperCase() == 'OR') {
+        return '|';
+      }
+      if (token.toUpperCase() == 'NOT') {
+        return '!';
+      }
+      if (token == ')') {
+        return ') &';
+      }
+      if (specialTokens.includes(token.toUpperCase())) {
+        return token;
+      } 
+      else {
+        return `${token}:* &`;
+      }
+    });
+    console.log('=== BACKEND FILTER DEBUG ===');
+    console.log('Request body:', req.body);
+    console.log('Filters received:', filters);
+    console.log('Species filter:', filters.species);
+    console.log('=== END BACKEND FILTER DEBUG ===');
+
+    let tokenizedSearchTerm = tokenizedSearchTerms.join(' ');
+    tokenizedSearchTerm = tokenizedSearchTerm.replace(/\&$/, "").replace(/\&\s+\|/g, "|").replace(/\&\s+\)/g,")");
+    
+    const textSearchQuery = where(
+      db.Sequelize.fn(
+        'to_tsvector',
+        'simple',
+        db.Sequelize.cast(db.Sequelize.col('json'), 'text')
+      ),
+      {
+        [Op.match]: db.Sequelize.fn(
+          'to_tsquery',
+          'simple',
+          tokenizedSearchTerm
+        )
+      }
+    );
+    conditions.push(textSearchQuery);
+
+  }
+
+  // Handle filters
+  if (filters) {
+    // BRC filter
+    if (filters.brc) {
+      const brcSearchQuery = {
+        'json.brc': { [Op.iLike]: `${filters.brc}`} 
+      };
+      conditions.push(brcSearchQuery);
+    }
+
+    // Repository filter
+    if (filters.repository) {
+      const repositorySearchQuery = {
+        'json.repository': { [Op.iLike]: `${filters.repository}`} 
+      };
+      conditions.push(repositorySearchQuery);
+    }
+
+    // Species filter 
+    if (filters.species) {
+      if (filters.species === 'Not Specified') {
+        console.log('Filtering for Not Specified species');
+        
+        const speciesSearchQuery = where(
+          db.Sequelize.cast(db.Sequelize.col('json'), 'text'),
+          {
+            [Op.or]: [
+              { [Op.like]: '%"species":[]%' },
+              { [Op.like]: '%"species": []%' },  // with space
+              { [Op.like]: '%"species":null%' },
+              { [Op.like]: '%"species": null%' }, // with space
+              { [Op.like]: '%"species":[ ]%' },   // with space inside brackets
+            ]
+          }
+        );
+        conditions.push(speciesSearchQuery);
+      } else {
+        console.log('Filtering for species:', filters.species);
+        
+        // Use the working text search
+        const speciesSearchQuery = where(
+          db.Sequelize.cast(db.Sequelize.col('json'), 'text'),
+          {
+            [Op.iLike]: `%${filters.species}%`
+          }
+        );
+        conditions.push(speciesSearchQuery);
+      }
+    }
+
+    // Analysis Type filter
+    if (filters.analysisType) {
+      if (filters.analysisType === 'Not Specified') {
+        const analysisSearchQuery = {
+          [Op.or]: [
+            { 'json.analysisType': { [Op.is]: null } },
+            { 'json.analysisType': { [Op.eq]: 'not specified' } }
+          ]
+        };
+        conditions.push(analysisSearchQuery);
+      } else {
+        const analysisSearchQuery = {
+          'json.analysisType': { [Op.iLike]: `${filters.analysisType}`} 
+        };
+        conditions.push(analysisSearchQuery);
+      }
+    }
+  }
+
+  // Use Op.and to merge conditions
+  const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
+
+  Dataset.scope('supportedOnly').findAll({
+    where: mergedWhereConditions,
+  })
+    .then(data => {
+      console.log(`Query returned ${data.length} results`);
+      if (filters && filters.species && data.length > 0) {
+        console.log('First result species:', data[0].toClientJSON().species);
+      }
+      if (filters && filters.species && data.length === 0) {
+        console.log('No results found for species filter:', filters.species);
+      }
+      
+      res.send(data.map(x => x.toClientJSON()));
+    })
+    .catch(err => {
+      console.error('Error in findByFilters:', err);
+      res.status(500).send({
+        message: err.message || "Some error occurred while retrieving filtered Datasets."
+      });
+    });
+
+};

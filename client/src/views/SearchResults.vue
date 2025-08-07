@@ -29,7 +29,72 @@ const activeFilters = ref({
 const props = defineProps({
   filter: String,
   dnaSequence: String,
+  filters: String, // Add this new prop
 });
+
+// Parse filters from URL
+const urlFilters = ref({});
+
+
+// Parse filters from URL and apply them
+watch(() => props.filters, async (newFilters) => {
+  console.log('URL filters changed:', newFilters);
+  
+  if (newFilters) {
+    try {
+      const parsedFilters = JSON.parse(newFilters);
+      console.log('Parsed filters:', parsedFilters);
+      
+      // Apply these filters to activeFilters
+      Object.keys(parsedFilters).forEach(key => {
+        if (activeFilters.value.hasOwnProperty(key)) {
+          activeFilters.value[key] = parsedFilters[key];
+          console.log(`Set ${key} filter to:`, parsedFilters[key]);
+        }
+      });
+      
+      console.log('Updated activeFilters:', activeFilters.value);
+      
+      // Wait for next tick to ensure filters are applied
+      await nextTick();
+      
+      // Trigger search with new filters
+      console.log('Triggering search with URL filters...');
+      if (!props.filter && !props.dnaSequence) {
+        console.log('Calling fetchAllData with filters...');
+        await fetchAllData();
+      } else {
+        console.log('Calling handleSearch with filters...');
+        await handleSearch();
+      }
+      
+    } catch (e) {
+      console.error('Error parsing filters from URL:', e);
+    }
+  } else {
+    // Clear filters if no filters in URL
+    console.log('No filters in URL, clearing activeFilters');
+    const oldFilters = { ...activeFilters.value };
+    activeFilters.value = {
+      brc: null,
+      repository: null,
+      species: null,
+      analysisType: null
+    };
+    
+    // Only trigger search if filters actually changed
+    const filtersChanged = Object.keys(oldFilters).some(key => oldFilters[key] !== null);
+    if (filtersChanged) {
+      console.log('Triggering search after clearing filters...');
+      await nextTick();
+      if (!props.filter && !props.dnaSequence) {
+        await fetchAllData();
+      } else {
+        await handleSearch();
+      }
+    }
+  }
+}, { immediate: true });
 
 // New emit for search updates
 const emit = defineEmits(['clear-dna-sequence', 'update-search']);
@@ -37,68 +102,68 @@ const emit = defineEmits(['clear-dna-sequence', 'update-search']);
 // Add a reactive trigger for visualization updates
 const visualizationTrigger = ref(0);
 
+// Add debugging watchers
+watch(() => props.filter, (newFilter) => {
+  console.log('Props filter changed:', newFilter);
+});
+
+watch(() => props.filters, (newFilters) => {
+  console.log('Props filters changed:', newFilters);
+});
+
+watch(() => props.dnaSequence, (newSequence) => {
+  console.log('Props dnaSequence changed:', newSequence);
+});
+
 // Updated handleSearch to ensure proper chart updates after filtering
 const handleSearch = async () => {
-  // If both filter and dnaSequence are empty, fetch all data
-  if (!props.filter && !props.dnaSequence) {
-    await fetchAllData();
-    return;
-  }
-
   loading.value = true;
   error.value = null;
   results.value = [];
   selectedResult.value = null;
 
   try {
-    const response = await DatasetDataService.runAdvancedSearch(
+    let response;
+    
+    // Check if we have any active filters
+    const hasActiveFilters = Object.values(activeFilters.value).some(filter => filter !== null);
+    
+    if (hasActiveFilters) {
+      // Use filtered search when filters are active
+      const filterPayload = {
+        textQuery: props.filter || '',
+        filters: {
+          brc: activeFilters.value.brc,
+          repository: activeFilters.value.repository,
+          species: activeFilters.value.species,
+          analysisType: activeFilters.value.analysisType
+        }
+      };
+      
+      // Remove null values from filters
+      Object.keys(filterPayload.filters).forEach(key => {
+        if (filterPayload.filters[key] === null) {
+          delete filterPayload.filters[key];
+        }
+      });
+      
+      console.log('Using filtered search with payload:', filterPayload);
+      response = await DatasetDataService.runFilteredSearch(filterPayload);
+    } else if (!props.filter && !props.dnaSequence) {
+      // Use getAll for empty search without filters
+      response = await DatasetDataService.getAll();
+    } else {
+      // Use advanced search for text/sequence search without filters
+      response = await DatasetDataService.runAdvancedSearch(
         props.filter,
         props.dnaSequence
-    );
-    
-    // Apply client-side filtering based on active filters
-    let filteredResults = response.data;
-    
-    if (activeFilters.value.brc) {
-      filteredResults = filteredResults.filter(result => result.brc === activeFilters.value.brc);
+      );
     }
     
-    if (activeFilters.value.repository) {
-      filteredResults = filteredResults.filter(result => result.repository === activeFilters.value.repository);
-    }
-    
-    if (activeFilters.value.species) {
-      filteredResults = filteredResults.filter(result => {
-        if (activeFilters.value.species === 'Not Specified') {
-          return !result.species || result.species.length === 0;
-        }
-        // Check if any species in the array matches the filter
-        return result.species && result.species.some(species => {
-          if (typeof species === 'string') {
-            return species.trim() === activeFilters.value.species;
-          } else if (typeof species === 'object' && species !== null) {
-            // Handle object species data
-            const speciesName = species.name || species.scientificName || species.commonName || species.organism || species.species;
-            return speciesName === activeFilters.value.species;
-          }
-          return false;
-        });
-      });
-    }
-    
-    if (activeFilters.value.analysisType) {
-      filteredResults = filteredResults.filter(result => {
-        if (activeFilters.value.analysisType === 'Not Specified') {
-          return !result.analysisType || result.analysisType === 'not specified';
-        }
-        return result.analysisType === activeFilters.value.analysisType;
-      });
-    }
-    
-    results.value = filteredResults;
+    results.value = response.data;
     selectedResult.value = results.value.length > 0 ? results.value[0] : null;
     
-    console.log('Filtered results count:', results.value.length); // Debug log
+    console.log('Search results count:', results.value.length);
     
   } catch (err) {
     results.value = [];
@@ -116,57 +181,48 @@ const handleSearch = async () => {
   }
 };
 
+
 const fetchAllData = async () => {
   console.log('fetchAllData called');
   loading.value = true;
   error.value = null;
 
   try {
-    const response = await DatasetDataService.getAll();
+    let response;
     
-    // Apply client-side filtering based on active filters
-    let filteredResults = response.data;
+    // Check if we have any active filters
+    const hasActiveFilters = Object.values(activeFilters.value).some(filter => filter !== null);
     
-    if (activeFilters.value.brc) {
-      filteredResults = filteredResults.filter(result => result.brc === activeFilters.value.brc);
-    }
-    
-    if (activeFilters.value.repository) {
-      filteredResults = filteredResults.filter(result => result.repository === activeFilters.value.repository);
-    }
-    
-    if (activeFilters.value.species) {
-      filteredResults = filteredResults.filter(result => {
-        if (activeFilters.value.species === 'Not Specified') {
-          return !result.species || result.species.length === 0;
+    if (hasActiveFilters) {
+      // Use filtered search when filters are active
+      const filterPayload = {
+        textQuery: '',
+        filters: {
+          brc: activeFilters.value.brc,
+          repository: activeFilters.value.repository,
+          species: activeFilters.value.species,
+          analysisType: activeFilters.value.analysisType
         }
-        // Check if any species in the array matches the filter
-        return result.species && result.species.some(species => {
-          if (typeof species === 'string') {
-            return species.trim() === activeFilters.value.species;
-          } else if (typeof species === 'object' && species !== null) {
-            // Handle object species data
-            const speciesName = species.name || species.scientificName || species.commonName || species.organism || species.species;
-            return speciesName === activeFilters.value.species;
-          }
-          return false;
-        });
-      });
-    }
-    
-    if (activeFilters.value.analysisType) {
-      filteredResults = filteredResults.filter(result => {
-        if (activeFilters.value.analysisType === 'Not Specified') {
-          return !result.analysisType || result.analysisType === 'not specified';
+      };
+      
+      // Remove null values from filters
+      Object.keys(filterPayload.filters).forEach(key => {
+        if (filterPayload.filters[key] === null) {
+          delete filterPayload.filters[key];
         }
-        return result.analysisType === activeFilters.value.analysisType;
       });
+      
+      console.log('fetchAllData - Using filtered search with payload:', filterPayload);
+      response = await DatasetDataService.runFilteredSearch(filterPayload);
+    } else {
+      // Use getAll for no filters
+      response = await DatasetDataService.getAll();
     }
     
-    results.value = filteredResults;
+    results.value = response.data;
     selectedResult.value = results.value.length > 0 ? results.value[0] : null;
     
-    console.log('fetchAllData - filtered results count:', results.value.length); // Debug log
+    console.log('fetchAllData - results count:', results.value.length);
     
   } catch (e) {
     error.value = 'There was an error while fetching search results.';
@@ -184,12 +240,50 @@ const fetchAllData = async () => {
   }
 };
 
-
 const forceVisualizationUpdate = async () => {
   if (showChart.value && results.value.length > 0) {
     await nextTick();
     createVisualization();
   }
+};
+
+// Updated legend click handler with better debugging
+const handleLegendClick = (legendValue, chartType) => {
+  console.log('=== LEGEND CLICK DEBUG ===');
+  console.log('Legend clicked:', legendValue, 'for chart:', chartType);
+  console.log('Current activeFilters before update:', JSON.stringify(activeFilters.value));
+  
+  // Update the appropriate filter
+  if (chartType === 'sources') {
+    activeFilters.value.brc = legendValue;
+    console.log('Set BRC filter to:', legendValue);
+  } else if (chartType === 'resources') {
+    activeFilters.value.repository = legendValue;
+    console.log('Set Repository filter to:', legendValue);
+  } else if (chartType === 'species') {
+    activeFilters.value.species = legendValue;
+    console.log('Set Species filter to:', legendValue);
+  } else if (chartType === 'analysis') {
+    activeFilters.value.analysisType = legendValue;
+    console.log('Set Analysis Type filter to:', legendValue);
+  }
+  
+  console.log('Current activeFilters after update:', JSON.stringify(activeFilters.value));
+  
+  // Trigger data refresh with new filters
+  console.log('Triggering data refresh...');
+  console.log('props.filter:', props.filter);
+  console.log('props.dnaSequence:', props.dnaSequence);
+  
+  if (!props.filter && !props.dnaSequence) {
+    console.log('Calling fetchAllData...');
+    fetchAllData();
+  } else {
+    console.log('Calling handleSearch...');
+    handleSearch();
+  }
+  
+  console.log('=== END LEGEND CLICK DEBUG ===');
 };
 
 // Main visualization function that routes to specific chart types
@@ -430,18 +524,39 @@ const createResourcesVisualization = () => {
   createPieChart(chartData, 'Dataset Distribution by Repository', true, 'resources');
 };
 
+// 5. Species Visualization - Add debugging
 const createSpeciesVisualization = () => {
   const speciesCount = {};
   
+  // DEBUG: Log first few species entries to see the structure
+  console.log('=== SPECIES DEBUG ===');
+  let debugCount = 0;
+  
   results.value.forEach(result => {
+    if (!result.species || result.species.length === 0) {
+      console.log('Not Specified species example:', result.species);
+      console.log('Full dataset for Not Specified:', result);
+      // Only log first few examples
+      if (debugCount < 2) debugCount++;
+    }
+
+    if (result.species && result.species.length > 0 && debugCount < 3) {
+      console.log(`Species sample ${debugCount + 1}:`, result.species);
+      debugCount++;
+    }
+    
     if (result.species && result.species.length > 0) {
       result.species.forEach(species => {
         let speciesName = 'Unknown';
+        
+        console.log('Processing species:', species, 'Type:', typeof species);
         
         // Handle different data structures for species
         if (typeof species === 'string') {
           speciesName = species.trim();
         } else if (typeof species === 'object' && species !== null) {
+          console.log('Species object keys:', Object.keys(species));
+          
           if (species.name) {
             speciesName = species.name;
           } else if (species.scientificName) {
@@ -462,6 +577,8 @@ const createSpeciesVisualization = () => {
           }
         }
         
+        console.log('Final species name:', speciesName);
+        
         if (speciesName && speciesName !== 'Unknown') {
           speciesCount[speciesName] = (speciesCount[speciesName] || 0) + 1;
         } else {
@@ -473,7 +590,8 @@ const createSpeciesVisualization = () => {
     }
   });
 
-  console.log('Species distribution:', speciesCount);
+  console.log('Final species distribution:', speciesCount);
+  console.log('=== END SPECIES DEBUG ===');
 
   const chartData = Object.entries(speciesCount)
     .map(([species, count]) => ({ label: species, value: count }))
@@ -482,7 +600,6 @@ const createSpeciesVisualization = () => {
   // Enable clickable labels for Species chart with chart type
   createPieChart(chartData, 'Dataset Distribution by Species', true, 'species');
 };
-
 
 // 6. Analysis Type Visualization - New chart
 const createAnalysisVisualization = () => {
@@ -594,8 +711,6 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel) => {
 };
 
 // Helper function to create pie charts
-// Updated Helper function to create pie charts with clickable legends
-// Updated createPieChart to handle chart types
 const createPieChart = (data, title, enableClickableLabels = false, chartType = null) => {
   const width = 700;
   const height = 400;
@@ -609,7 +724,19 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
   const g = svg.append('g')
     .attr('transform', `translate(${width / 2},${height / 2})`);
 
-  const color = schemeCategory10;
+  // Enhanced color palette with more unique colors
+  const enhancedColors = [
+    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
+    '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#aec7e8', '#ffbb78',
+    '#98df8a', '#ff9896', '#c5b0d5', '#c49c94', '#f7b6d3', '#c7c7c7',
+    '#dbdb8d', '#9edae5', '#393b79', '#5254a3', '#6b6ecf', '#9c9ede',
+    '#637939', '#8ca252', '#b5cf6b', '#cedb9c', '#8c6d31', '#bd9e39',
+    '#e7ba52', '#e7cb94', '#843c39', '#ad494a', '#d6616b', '#e7969c',
+    '#7b4173', '#a55194', '#ce6dbd', '#de9ed6', '#3182bd', '#6baed6',
+    '#9ecae1', '#c6dbef', '#e6550d', '#fd8d3c', '#fdae6b', '#fdd0a2',
+    '#31a354', '#74c476', '#a1d99b', '#c7e9c0', '#756bb1', '#9e9ac8',
+    '#bcbddc', '#dadaeb', '#636363', '#969696', '#bdbdbd', '#d9d9d9'
+  ];
 
   const pieGenerator = pie()
     .value(d => d.value)
@@ -619,64 +746,133 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
     .innerRadius(0)
     .outerRadius(radius);
 
+  const pieData = pieGenerator(data);
+  const totalValue = data.reduce((sum, d) => sum + d.value, 0);
+
   const arcs = g.selectAll('.arc')
-    .data(pieGenerator(data))
+    .data(pieData)
     .enter().append('g')
     .attr('class', 'arc');
 
   arcs.append('path')
     .attr('d', arcGenerator)
-    .attr('fill', (d, i) => color[i % color.length])
+    .attr('fill', (d, i) => enhancedColors[i % enhancedColors.length])
     .attr('opacity', 0.8);
 
+  // Add text labels only for slices that are large enough (more than 3% of total)
   arcs.append('text')
-    .attr('transform', d => `translate(${arcGenerator.centroid(d)})`)
+    .attr('transform', d => {
+      // Only show text for slices larger than 3% of the total
+      const percentage = (d.data.value / totalValue) * 100;
+      if (percentage < 3) return 'translate(0,0) scale(0)'; // Hide small labels
+      return `translate(${arcGenerator.centroid(d)})`;
+    })
     .attr('text-anchor', 'middle')
-    .style('font-size', '12px')
-    .text(d => d.data.value);
+    .style('font-size', d => {
+      // Dynamic font size based on slice size
+      const percentage = (d.data.value / totalValue) * 100;
+      if (percentage < 3) return '0px'; // Hide completely
+      if (percentage < 8) return '10px';
+      if (percentage < 15) return '11px';
+      return '12px';
+    })
+    .style('font-weight', 'bold')
+    .style('fill', 'white')
+    .style('text-shadow', '1px 1px 1px rgba(0,0,0,0.5)') // Add shadow for better readability
+    .text(d => {
+      const percentage = (d.data.value / totalValue) * 100;
+      return percentage >= 3 ? d.data.value : ''; // Only show numbers for slices >= 3%
+    });
 
-  // Add legend with optional clickable functionality
-  const legend = svg.append('g')
-    .attr('transform', `translate(20, 20)`);
+  // Determine if we need scrolling (only for more than 18 items that would exceed available space)
+  const needsScrolling = data.length > 18;
+  const legendItemHeight = 18;
+  const maxLegendHeight = needsScrolling ? 320 : (data.length * legendItemHeight + 10);
+  
+  // Position legend to the right of the pie chart with more width
+  const legendX = (width / 2) + radius + 15; // Slightly closer to pie
+  const legendWidth = Math.max(150, width - legendX - 10); // Minimum 300px width, use more available space
+  
+  // Create legend container (scrollable only when needed)
+  const legendContainer = svg.append('foreignObject')
+    .attr('x', legendX)
+    .attr('y', 40)
+    .attr('width', legendWidth)
+    .attr('height', maxLegendHeight);
 
-  const legendItems = legend.selectAll('.legend-item')
+  const legendDiv = legendContainer
+    .append('xhtml:div')
+    .style('width', '100%')
+    .style('height', '100%')
+    .style('overflow-y', needsScrolling ? 'auto' : 'visible') // Only scroll when needed
+    .style('overflow-x', 'hidden')
+    .style('background', 'transparent') // Always transparent background
+    .style('font-family', 'Arial, sans-serif');
+
+  // Add custom scrollbar styles only when needed
+  if (needsScrolling) {
+    legendDiv.style('scrollbar-width', 'thin')
+      .style('scrollbar-color', '#ccc #f0f0f0');
+  }
+
+  // Create legend items
+  const legendItems = legendDiv.selectAll('.legend-item')
     .data(data)
-    .enter().append('g')
-    .attr('class', 'legend-item')
-    .attr('transform', (d, i) => `translate(0, ${i * 20})`)
-    .style('cursor', enableClickableLabels ? 'pointer' : 'default');
+    .enter()
+    .append('div')
+    .style('display', 'flex')
+    .style('align-items', 'center')
+    .style('justify-content', 'flex-start') // Ensure left alignment
+    .style('margin-bottom', '3px')
+    .style('padding', '2px')
+    .style('cursor', enableClickableLabels ? 'pointer' : 'default')
+    .style('border-radius', '2px')
+    .style('transition', 'background-color 0.2s')
+    .style('text-align', 'left'); // Force left alignment
 
-  legendItems.append('rect')
-    .attr('width', 15)
-    .attr('height', 15)
-    .attr('fill', (d, i) => color[i % color.length]);
+  // Add color squares
+  legendItems.append('div')
+    .style('width', '12px')
+    .style('height', '12px')
+    .style('margin-right', '8px')
+    .style('flex-shrink', '0')
+    .style('background-color', (d, i) => enhancedColors[i % enhancedColors.length]);
 
-  const legendText = legendItems.append('text')
-    .attr('x', 20)
-    .attr('y', 12)
+  // Add text labels
+  const legendText = legendItems.append('div')
     .style('font-size', '12px')
-    .text(d => `${d.label} (${d.value})`);
+    .style('line-height', '1.2')
+    .style('color', enableClickableLabels ? '#0066cc' : '#333')
+    .style('word-wrap', 'break-word')
+    .style('overflow-wrap', 'break-word')
+    .style('text-align', 'left') // Ensure left alignment
+    .style('flex-grow', '1') // Take up remaining space
+    .text(d => `${d.label} (${d.value})`)
+    .attr('title', d => `${d.label} (${d.value})`); // Tooltip
 
   // Add click functionality if enabled
   if (enableClickableLabels && chartType) {
-    legendItems
-      .on('mouseover', function() {
-        select(this).select('text')
-          .style('font-weight', 'bold')
-          .style('text-decoration', 'underline');
-      })
-      .on('mouseout', function() {
-        select(this).select('text')
-          .style('font-weight', 'normal')
-          .style('text-decoration', 'none');
-      })
-      .on('click', function(event, d) {
-        handleLegendClick(d.label, chartType);
-      });
-
-    // Add visual indicator that items are clickable
-    legendText.style('color', '#0066cc');
-  }
+  legendItems
+    .on('mouseover', function(event, d) {
+      // Only highlight legend item (removed pie slice highlighting)
+      select(this)
+        .style('background-color', '#e3f2fd')
+        .select('div:last-child')
+        .style('font-weight', 'bold')
+        .style('text-decoration', 'underline');
+    })
+    .on('mouseout', function() {
+      // Only reset legend item (removed pie slice reset)
+      select(this)
+        .style('background-color', 'transparent')
+        .select('div:last-child')
+        .style('font-weight', 'normal')
+        .style('text-decoration', 'none');
+    })
+    .on('click', function(event, d) {
+      handleLegendClick(d.label, chartType);
+    });
+}
 
   // Add title
   svg.append('text')
@@ -686,61 +882,32 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
     .style('font-size', '16px')
     .style('font-weight', 'bold')
     .text(title);
-};
 
-// Function to handle legend clicks
-// const handleLegendClick = (legendValue) => {
-//     console.log('Legend clicked:', legendValue);
-    
-//     // Get current search filter
-//     const currentFilter = props.filter || '';
-    
-//     // Create new search term by appending the legend value
-//     const newFilter = currentFilter.trim() 
-//       ? `${currentFilter.trim()} ${legendValue}` 
-//       : legendValue;
-    
-//     console.log('New search filter:', newFilter);
-    
-//     // Update the URL with the new search term
-//     // This will trigger the HeaderView to update and your component to re-fetch data
-//     router.push({
-//       path: '/data',
-//       query: {
-//         q: newFilter,
-//       },
-//     });
-//   };
-
-// Updated legend click handler for filtering
-const handleLegendClick = (legendValue, chartType) => {
-  console.log('Legend clicked:', legendValue, 'for chart:', chartType);
-  
-  // Update the appropriate filter
-  if (chartType === 'sources') {
-    activeFilters.value.brc = legendValue;
-    console.log('Set BRC filter to:', legendValue);
-  } else if (chartType === 'resources') {
-    activeFilters.value.repository = legendValue;
-    console.log('Set Repository filter to:', legendValue);
-  } else if (chartType === 'species') {
-    activeFilters.value.species = legendValue;
-    console.log('Set Species filter to:', legendValue);
-  } else if (chartType === 'analysis') {
-    activeFilters.value.analysisType = legendValue;
-    console.log('Set Analysis Type filter to:', legendValue);
+  // Add summary text for charts with many small slices
+  if (data.length > 10) {
+    const smallSlices = data.filter(d => (d.value / totalValue) * 100 < 3).length;
+    if (smallSlices > 0) {
+      svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', height - 10)
+        .attr('text-anchor', 'middle')
+        .style('font-size', '11px')
+        .style('fill', '#666')
+        //.text(`Note: Numbers hidden on ${smallSlices} small slice${smallSlices > 1 ? 's' : ''} (< 3%)`);
+    }
   }
-  
-  console.log('Current active filters:', activeFilters.value);
-  
-  // Trigger data refresh with new filters
-  if (!props.filter && !props.dnaSequence) {
-    fetchAllData();
-  } else {
-    handleSearch();
+
+  // Add scroll indicator only when actually scrollable
+  if (needsScrolling) {
+    svg.append('text')
+      .attr('x', legendX + (legendWidth / 2))
+      .attr('y', height - 10)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '10px')
+      .style('fill', '#999')
+      .text('↕ Scroll for more');
   }
 };
-
 
 
 // Function to remove a specific filter

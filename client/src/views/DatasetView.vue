@@ -9,21 +9,30 @@ const route = useRoute();
 const searchStore = useSearchStore();
 
 const searchFilter = ref('');
+const searchFilters = ref(''); // Add this for filters
 const advancedSearchInput = computed(() => searchStore.dnaSequence);
 
 onMounted(() => {
   searchFilter.value = route.query.q as string || '';
-  // advancedSearchInput.value = searchStore.dnaSequence;
-  // console.log('onMounted - searchFilter:', searchFilter.value);
-  // console.log('onMounted - advancedSearchInput:', advancedSearchInput.value);
+  searchFilters.value = route.query.filters as string || ''; // Add this
+  console.log('onMounted - searchFilter:', searchFilter.value);
+  console.log('onMounted - searchFilters:', searchFilters.value); // Add this
 });
 
 watch(
     () => route.query.q,
     (newQuery) => {
       searchFilter.value = newQuery as string || '';
-      // console.log('watch - searchFilter:', searchFilter.value);
-      // console.log('watch - advancedSearchInput:', advancedSearchInput.value);
+      console.log('watch - searchFilter changed:', searchFilter.value);
+    }
+);
+
+// Add watcher for filters
+watch(
+    () => route.query.filters,
+    (newFilters) => {
+      searchFilters.value = newFilters as string || '';
+      console.log('watch - searchFilters changed:', searchFilters.value);
     }
 );
 
@@ -35,7 +44,12 @@ const handleClearDnaSequence = () => {
 <template>
   <HeaderView @clear-dna-sequence="handleClearDnaSequence" />
   <div class="container">
-    <SearchResults :filter="searchFilter" :dnaSequence="advancedSearchInput" @clear-dna-sequence="handleClearDnaSequence"/>
+    <SearchResults 
+      :filter="searchFilter" 
+      :dnaSequence="advancedSearchInput" 
+      :filters="searchFilters"
+      @clear-dna-sequence="handleClearDnaSequence"
+    />
   </div>
 </template>
 

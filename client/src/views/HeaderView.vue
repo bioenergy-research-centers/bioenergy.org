@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {RouterLink, useRoute, useRouter} from "vue-router";
 import headerIcon from "@/assets/brc-bioenergy-icon.png"
-import {onBeforeMount, ref, watch} from "vue"; // Add watch import
+import {onBeforeMount, ref, watch} from "vue";
 import {useSearchStore} from '@/store/searchStore';
 
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
@@ -12,6 +12,14 @@ const searchStore = useSearchStore();
 
 const searchText = ref('');
 const dnaSequence = ref('');
+
+// Advanced search filters
+const advancedFilters = ref({
+  brc: '',
+  repository: '',
+  species: '',
+  analysisType: ''
+});
 
 onBeforeMount(() => {
   const query = route.query.q as string || '';
@@ -40,9 +48,51 @@ const onSubmit = () => {
   });
 };
 
+const onAdvancedSearch = () => {
+  // Save sequence to store
+  searchStore.setDnaSequence(dnaSequence.value);
+  
+  // Create filter object with only non-empty values
+  const filters = {};
+  Object.keys(advancedFilters.value).forEach(key => {
+    if (advancedFilters.value[key] && advancedFilters.value[key].trim() !== '') {
+      filters[key] = advancedFilters.value[key].trim();
+    }
+  });
+  
+  // Navigate to /data with search text and filters
+  router.push({
+    path: '/data',
+    query: {
+      q: searchText.value,
+      filters: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined
+    },
+  });
+};
+
 const clearSequence = () => {
   searchStore.clearSearchData();
   dnaSequence.value = '';
+};
+
+const clearAdvancedFilters = () => {
+  advancedFilters.value = {
+    brc: '',
+    repository: '',
+    species: '',
+    analysisType: ''
+  };
+};
+
+const clearAll = () => {
+  clearSequence();
+  clearAdvancedFilters();
+  searchText.value = '';
+};
+
+// Prevent dropdown from closing when clicking inside
+const preventDropdownClose = (event) => {
+  event.stopPropagation();
 };
 </script>
 
@@ -73,18 +123,73 @@ const clearSequence = () => {
               </button>
 
               <!-- Advanced Search Dropdown -->
-              <ul class="dropdown-menu p-3">
-                <li>
+              <ul class="dropdown-menu p-3" @click="preventDropdownClose">
+                <!-- DNA Sequence Section -->
+                <li class="mb-3">
+                  <label class="form-label small fw-bold text-muted">DNA Sequence</label>
                   <textarea class="form-control" rows="3" placeholder="Enter sequence..."
                             v-model="dnaSequence"></textarea>
                 </li>
-                <li class="mt-2">
-                  <button type="submit" class="btn btn-sm btn-primary">
-                    Run Sequence Search
-                  </button>&nbsp;
-                  <button type="button" class="btn btn-sm btn-secondary" @click.prevent="clearSequence" v-if="searchStore.dnaSequence">
-                    Clear
-                  </button>
+                
+                <!-- Divider -->
+                <li><hr class="dropdown-divider"></li>
+                
+                <!-- Advanced Filters Section -->
+                <li class="mb-3">
+                  <label class="form-label small fw-bold text-muted">Filter by Fields</label>
+                  
+                  <!-- BRC Filter -->
+                  <div class="mb-2">
+                    <label class="form-label small">Bioenergy Research Center (BRC)</label>
+                    <select class="form-select form-select-sm" v-model="advancedFilters.brc">
+                      <option value="">Any BRC</option>
+                      <option value="JBEI">JBEI</option>
+                      <option value="GLBRC">GLBRC</option>
+                      <option value="CABBI">CABBI</option>
+                      <option value="CBI">CBI</option>
+                    </select>
+                  </div>
+                  
+                  <!-- Repository Filter -->
+                  <div class="mb-2">
+                    <label class="form-label small">Repository</label>
+                    <input type="text" class="form-control form-control-sm" 
+                          placeholder="e.g., ICE, Illinois Data Bank, NCBI" 
+                          v-model="advancedFilters.repository">
+                  </div>
+                  <!-- Species Filter -->
+                  <div class="mb-2">
+                    <label class="form-label small">Species</label>
+                    <input type="text" class="form-control form-control-sm" 
+                           placeholder="e.g., E. coli, Sorghum bicolor" 
+                           v-model="advancedFilters.species">
+                  </div>
+                  
+                  <!-- Analysis Type Filter -->
+                  <div class="mb-2">
+                    <label class="form-label small">Analysis Type</label>
+                    <input type="text" class="form-control form-control-sm" 
+                           placeholder="e.g., Genomic, Code" 
+                           v-model="advancedFilters.analysisType">
+                  </div>
+                </li>
+                
+                <!-- Action Buttons -->
+                <li class="mt-3">
+                  <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-sm btn-primary" @click="onAdvancedSearch">
+                      <i class="bi bi-search"></i> Advanced Search
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-outline-primary" v-if="dnaSequence.trim()">
+                      <i class="bi bi-dna"></i> Sequence Search
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearAdvancedFilters">
+                      Clear Filters
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" @click="clearAll">
+                      Clear All
+                    </button>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -125,5 +230,40 @@ const clearSequence = () => {
 
 textarea {
   resize: none;
+}
+
+/* Prevent dropdown from being too narrow */
+.dropdown-menu {
+  min-width: 400px;
+}
+
+/* Style for form elements in dropdown */
+.dropdown-menu .form-label {
+  margin-bottom: 0.25rem;
+}
+
+.dropdown-menu .form-control,
+.dropdown-menu .form-select {
+  font-size: 0.875rem;
+}
+
+/* Gap utility for older Bootstrap versions */
+.gap-2 > * + * {
+  margin-left: 0.5rem;
+}
+
+@media (max-width: 576px) {
+  .dropdown-menu {
+    min-width: 300px;
+  }
+  
+  .gap-2 {
+    flex-direction: column;
+  }
+  
+  .gap-2 > * + * {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
 }
 </style>
