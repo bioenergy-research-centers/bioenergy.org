@@ -1,0 +1,2268 @@
+{
+    "$defs": {
+        "AccessLimitationsEnum": {
+            "description": "Access limitation codes to describe the distribution rules and limitations for this work.",
+            "enum": [
+                "UNL",
+                "OPN",
+                "CPY",
+                "OUO",
+                "PROT",
+                "PDOUO",
+                "ECI",
+                "PDSH",
+                "USO",
+                "LRD",
+                "NAT",
+                "NNPI",
+                "INTL",
+                "PROP",
+                "PAT",
+                "OTHR",
+                "CUI"
+            ],
+            "title": "AccessLimitationsEnum",
+            "type": "string"
+        },
+        "Affiliation": {
+            "additionalProperties": false,
+            "description": "An affiliation for a person, such as an organization or institution.",
+            "properties": {
+                "name": {
+                    "description": "Name of the institution or laboratory with which this person is affiliated.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ror_id": {
+                    "description": "ROR ID of this affiliation, if any.  Will be validated against ROR organization authority if present.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Affiliation",
+            "type": "object"
+        },
+        "AnalysisType": {
+            "description": "Type of analysis performed on the dataset.",
+            "enum": [
+                "affinity_purification",
+                "cross_linking",
+                "Expression profiling",
+                "Genomic - SNP calling",
+                "image_analysis",
+                "Ms_imaging",
+                "shotgun_proteomics",
+                "srm_mrm",
+                "swath_ms",
+                "Targeted Locus (Loci)"
+            ],
+            "title": "AnalysisType",
+            "type": "string"
+        },
+        "AuditLog": {
+            "additionalProperties": false,
+            "description": "Indicates status and information about back-end processing on a given metadata record.",
+            "properties": {
+                "audit_date": {
+                    "description": "Timestamp of the operation detailed in this audit log.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "messages": {
+                    "description": "One or more messages pertaining to the action taken or results of worker processing for this audit log.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "status": {
+                    "description": "Indicates state or notification level of worker action detailed in this audit log.  Generally SUCCESS or FAIL, but may additionally indicate INFO, WARN, or ERROR status messages.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "type": {
+                    "description": "Indicates the source of the status message, generally the backend process performing the action in question.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "AuditLog",
+            "type": "object"
+        },
+        "BRCEnum": {
+            "description": "Bioenergy Research Center affiliation.",
+            "enum": [
+                "CABBI",
+                "CBI",
+                "GLBRC",
+                "JBEI"
+            ],
+            "title": "BRCEnum",
+            "type": "string"
+        },
+        "BRCOrganization": {
+            "additionalProperties": false,
+            "description": "An organization involved in the dataset. The name denotes this is the BRC-specific model of an organization, rather than that defined by OSTI, though the classes are similar.",
+            "properties": {
+                "organizationName": {
+                    "description": "Name of the organization.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "parentOrganization": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/BRCOrganization"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Higher-level parent of this organization."
+                },
+                "ror_id": {
+                    "description": "ROR identifier for the organization.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "wikidata_id": {
+                    "description": "Wikidata identifier for the organization.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "BRCOrganization",
+            "type": "object"
+        },
+        "CitedItemType": {
+            "description": "Type of cited item, e.g., journal article.",
+            "enum": [
+                "JournalArticle",
+                "Book",
+                "Dataset",
+                "Software",
+                "Thesis",
+                "Patent",
+                "Preprint",
+                "Presentation",
+                "Report",
+                "Webpage",
+                "WebApplication"
+            ],
+            "title": "CitedItemType",
+            "type": "string"
+        },
+        "CollectionTypeEnum": {
+            "description": "The OSTI collection type originally creating this record.",
+            "enum": [
+                "DOE_LAB",
+                "DOE_GRANT",
+                "CHORUS"
+            ],
+            "title": "CollectionTypeEnum",
+            "type": "string"
+        },
+        "Contributor": {
+            "additionalProperties": false,
+            "description": "An individual who contributed to the dataset in some manner, not necessarily as an author.",
+            "properties": {
+                "affiliation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/BRCOrganization"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Affiliation of the individual.",
+                    "type": "string"
+                },
+                "contributorType": {
+                    "$ref": "#/$defs/ContributorTypeCodes",
+                    "description": "The contribution type."
+                },
+                "email": {
+                    "description": "Email address of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "name": {
+                    "description": "Name of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "orcid": {
+                    "description": "ORCID for the individual. This should include the full URI with prefix, e.g., https://orcid.org/0000-0002-1825-0097.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "primaryContact": {
+                    "description": "Indicates if the individual is a primary contact.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Contributor",
+            "type": "object"
+        },
+        "ContributorType": {
+            "description": "Describes the type of contribution to the work.  Required for Persons or Organizations of CONTRIBUTING type.",
+            "enum": [
+                "Chair",
+                "DataCollector",
+                "DataCurator",
+                "DataManager",
+                "Distributor",
+                "Editor",
+                "HostingInstitution",
+                "Producer",
+                "ProjectLeader",
+                "ProjectManager",
+                "ProjectMember",
+                "RegistrationAgency",
+                "RegistrationAuthority",
+                "RelatedPerson",
+                "Reviewer",
+                "ReviewAssistant",
+                "ReviewerExternal",
+                "RightsHolder",
+                "StatsReviewer",
+                "Supervisor",
+                "Translator",
+                "WorkPackageLeader",
+                "Other"
+            ],
+            "title": "ContributorType",
+            "type": "string"
+        },
+        "ContributorTypeCodes": {
+            "description": "The type of contribution. These values are based on the OSTI schema (ELINK 241.6).",
+            "enum": [
+                "ContactPerson",
+                "DataCollector",
+                "DataCurator",
+                "DataManager",
+                "Distributor",
+                "Editor",
+                "HostingInstitution",
+                "Producer",
+                "ProjectLeader",
+                "ProjectManager",
+                "ProjectMember",
+                "RegistrationAgency",
+                "RegistrationAuthority",
+                "RelatedPerson",
+                "Researcher",
+                "ResearchGroup",
+                "RightsHolder",
+                "Sponsor",
+                "Supervisor",
+                "WorkPackageLeader",
+                "Other"
+            ],
+            "title": "ContributorTypeCodes",
+            "type": "string"
+        },
+        "Dataset": {
+            "additionalProperties": false,
+            "description": "A body of structured information describing some topic or topics of interest. This includes metadata about the dataset.",
+            "properties": {
+                "active": {
+                    "description": "Indicates whether the dataset is active or inactive. This is a boolean field - true indicates active, false indicates inactive.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "additional_brcs": {
+                    "description": "Additional Bioenergy Research Center affiliations. This is a list of one or more additional BRC names, for instances in which the dataset is associated with multiple centers.",
+                    "items": {
+                        "$ref": "#/$defs/BRCEnum"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "alert": {
+                    "description": "Indicates whether availability of the dataset has encountered some inconsistency. This is a boolean field - true indicates alert, false indicates no alert. For example, if we have a Dataset object but the Dataset is missing from its source feed, this should be set to true.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "analysisType": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/AnalysisType"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "The type of analysis performed on the dataset.",
+                    "type": "string"
+                },
+                "bibliographicCitation": {
+                    "description": "Citation for the dataset.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "brc": {
+                    "$ref": "#/$defs/BRCEnum",
+                    "description": "The primary Bioenergy Research Center affiliation. This is a single BRC name."
+                },
+                "contributors": {
+                    "description": "Contributors to the dataset who are not necessarily authors.",
+                    "items": {
+                        "$ref": "#/$defs/Contributor"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "creator": {
+                    "description": "List of creators involved in the dataset, where one must be the primary contact.",
+                    "items": {
+                        "$ref": "#/$defs/Individual"
+                    },
+                    "type": "array"
+                },
+                "datasetName": {
+                    "description": "\"Name of a overall dataset to which this data entry belongs.\"",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "datasetType": {
+                    "$ref": "#/$defs/DatasetTypeCodes",
+                    "description": "High-level type of the main content of the dataset."
+                },
+                "dataset_url": {
+                    "description": "URL for the dataset landing page.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date": {
+                    "description": "The date the dataset was created or published.",
+                    "format": "date",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "A detailed description of the dataset.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "funding": {
+                    "description": "Funding source(s) for the dataset.",
+                    "items": {
+                        "$ref": "#/$defs/Funding"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "has_related_ids": {
+                    "description": "\"Related identifiers for the dataset. These should be identifiers to records in other repositories, and these records may be the same data or components of the dataset.\"",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Unique identifier for the dataset, assigned prior to inclusion in bioenergy.org.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "identifier": {
+                    "description": "Unique identifier for the dataset.",
+                    "type": "string"
+                },
+                "keywords": {
+                    "description": "Keywords associated with the dataset.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "plasmid_features": {
+                    "description": "Description of plasmid features, if applicable. This is a multivalued field.",
+                    "items": {
+                        "$ref": "#/$defs/Plasmid"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "relatedItem": {
+                    "description": "Related publications or items.",
+                    "items": {
+                        "$ref": "#/$defs/RelatedItem"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "repository": {
+                    "$ref": "#/$defs/RepositoryEnum",
+                    "description": "The repository where the dataset is stored."
+                },
+                "species": {
+                    "description": "Species information for the organism(s) studied.",
+                    "items": {
+                        "$ref": "#/$defs/Organism"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "title": {
+                    "description": "The title of the dataset.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "title",
+                "date",
+                "creator",
+                "brc",
+                "identifier"
+            ],
+            "title": "Dataset",
+            "type": "object"
+        },
+        "DatasetCollection": {
+            "additionalProperties": false,
+            "description": "Container class for defining a collection of datasets.",
+            "properties": {
+                "datasets": {
+                    "description": "List of datasets in the collection.",
+                    "items": {
+                        "$ref": "#/$defs/Dataset"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "schema_version": {
+                    "description": "Version of the schema used for the collection.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "DatasetCollection",
+            "type": "object"
+        },
+        "DatasetTypeCodes": {
+            "description": "High-level type of the main content of the dataset, following OSTI categories. See https://www.osti.gov/elink/F2416instruct.jsp",
+            "enum": [
+                "AS",
+                "GD",
+                "IM",
+                "ND",
+                "IP",
+                "FP",
+                "SM",
+                "MM",
+                "I"
+            ],
+            "title": "DatasetTypeCodes",
+            "type": "string"
+        },
+        "Funding": {
+            "additionalProperties": false,
+            "description": "Funding source for the dataset. Each item corresponds to a single award or grant.",
+            "properties": {
+                "awardNumber": {
+                    "description": "Award number from the funding entity.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "awardTitle": {
+                    "description": "Title of the award.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "awardURI": {
+                    "description": "URI for the award. This may be a DOI. Include prefix.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "fundingOrganization": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/BRCOrganization"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Details of the funding entity."
+                }
+            },
+            "title": "Funding",
+            "type": "object"
+        },
+        "Geolocation": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "label": {
+                    "description": "Optional place name for this location or set of geolocation points.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "points": {
+                    "items": {
+                        "$ref": "#/$defs/Point"
+                    },
+                    "type": "array"
+                },
+                "type": {
+                    "$ref": "#/$defs/GeolocationType",
+                    "description": "Describes the shape of this geolocation attribute. (Optional, type may be determined by examination of the points.) Single point in 'points' indicates this is a POINT; two points, indicating NW and SE location, indicate a BOX; any other number of points is assumed to be a POLYGON.  Note that POLYGONs should begin and end on the same point, in order to properly express a 'closed polygon' shape."
+                }
+            },
+            "required": [
+                "points"
+            ],
+            "title": "Geolocation",
+            "type": "object"
+        },
+        "GeolocationType": {
+            "description": "",
+            "enum": [
+                "POINT",
+                "BOX",
+                "POLYGON"
+            ],
+            "title": "GeolocationType",
+            "type": "string"
+        },
+        "Identifier": {
+            "additionalProperties": false,
+            "description": "Values of various identifying numbers, such as DOE contract number, product numbers, ISBN, ISSN, and other various forms of identifying markings or numbers pertaining to the product or metadata.",
+            "properties": {
+                "type": {
+                    "$ref": "#/$defs/IdentifierType"
+                },
+                "value": {
+                    "description": "Value of this identifier",
+                    "pattern": "^.{0,100}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Identifier",
+            "type": "object"
+        },
+        "IdentifierType": {
+            "description": "Describe the type of identifier",
+            "enum": [
+                "AUTH_REV",
+                "CN_DOE",
+                "CN_NONDOE",
+                "CODEN",
+                "DOE_DOCKET",
+                "EDB",
+                "ETDE_RN",
+                "INIS_RN",
+                "ISBN",
+                "ISSN",
+                "LEGACY",
+                "NSA",
+                "OPN_ACC",
+                "OTHER_ID",
+                "PATENT",
+                "PROJ_ID",
+                "PROP_REV",
+                "REF",
+                "REL_TRN",
+                "RN",
+                "TRN",
+                "TVI",
+                "USER_VER",
+                "WORK_AUTH",
+                "WORK_PROP"
+            ],
+            "title": "IdentifierType",
+            "type": "string"
+        },
+        "Individual": {
+            "additionalProperties": false,
+            "description": "An individual involved in the dataset.",
+            "properties": {
+                "affiliation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/BRCOrganization"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Affiliation of the individual.",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "Email address of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "name": {
+                    "description": "Name of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "orcid": {
+                    "description": "ORCID for the individual. This should include the full URI with prefix, e.g., https://orcid.org/0000-0002-1825-0097.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "primaryContact": {
+                    "description": "Indicates if the individual is a primary contact.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Individual",
+            "type": "object"
+        },
+        "MediaFile": {
+            "additionalProperties": false,
+            "description": "Metadata information pertaining to a particular media resource associated with this product.  Contains information about its disposition, content, and processing state.  Each individual file is uniquely identified by its `MEDIA_FILE_ID` value.",
+            "properties": {
+                "added_by_user_id": {
+                    "description": "Indicates the E-Link USER ID that attached this MEDIA FILE.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "checksum": {
+                    "description": "Calculated hash or checksum value of the physical file as applicable, from media processing.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_file_added": {
+                    "description": "Indicates the date and time this media file was created.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_file_updated": {
+                    "description": "Indicates the last date and time this media file was modified.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "document_page_count": {
+                    "description": "For document-based media, the number of printed pages if applicable.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "duration_seconds": {
+                    "description": "For audio-visual media, the duration of the resource in seconds.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "file_size_bytes": {
+                    "description": "If local file, the file size in bytes.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "media_file_id": {
+                    "description": "Unique identifier for a given MEDIA FILE.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "media_id": {
+                    "description": "Link to parent MEDIA SET ID.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "media_source": {
+                    "description": "Describes method of file production or association with this media set.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "media_type": {
+                    "description": "Indicates TYPE of media file, detected or set during media processing.",
+                    "pattern": "^.{0,1}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "mime_type": {
+                    "description": "Mime type describing the MEDIA FILE content.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "parent_media_file_id": {
+                    "description": "If non-zero, indicates unique MEDIA FILE ID this MEDIA FILE is derived from.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "pdf_version": {
+                    "description": "For PDF media files, indicates the version of PDF.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pdfa_conformance": {
+                    "description": "For PDF media that is PDF/A compliant, the conformance level, generally A, B, or U.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pdfa_part": {
+                    "description": "For PDF media that is PDF/A compliant, the level of compliance, as a value between 1 and 4.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pdfua_part": {
+                    "description": "For PDF media that is PDF/UA compliant, its compliance level, generally 1 or 2.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "processing_exceptions": {
+                    "description": "If present, the reason why media processing failed, or description of problem encountered processing this particular file.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "revision": {
+                    "description": "Revision number of this media file, associated with the MEDIA SET",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "status": {
+                    "description": "Indiciates current processing status for this MEDIA FILE. Other values may indicate awaiting additional processing, such as 'OCR', pending text processing.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "subtitle_tracks": {
+                    "description": "Indicates the number of subtitle tracks for audio-visual media.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "url": {
+                    "description": "Either the file name for local files, or URL path to off-site resource.",
+                    "pattern": "^.{0,255}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "url_type": {
+                    "$ref": "#/$defs/MediaLocationEnum",
+                    "description": "Indicates if the file is LOCALLY HOSTED ('L') or OFF-SITE URL ('O').",
+                    "pattern": "^.{0,1}$"
+                },
+                "video_tracks": {
+                    "description": "Indicates the number of video tracks in audio-visual media.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                }
+            },
+            "title": "MediaFile",
+            "type": "object"
+        },
+        "MediaLocationEnum": {
+            "description": "Indicates if a media file is stored locally or off-site.",
+            "enum": [
+                "L",
+                "O"
+            ],
+            "title": "MediaLocationEnum",
+            "type": "string"
+        },
+        "MediaSet": {
+            "additionalProperties": false,
+            "description": "Metadata about files associated with this product.  Summarizes the main media file associated with this product, usually an off-site URL or PDF uploaded to OSTI, with its state, URL if applicable, and other identifying state information pertaining to the media files as a group. Each media set is uniquely identified by its `MEDIA_ID` value.",
+            "properties": {
+                "access_limitations": {
+                    "description": "Access limitations are inherited from the parent metadata record at time of association.",
+                    "items": {
+                        "$ref": "#/$defs/AccessLimitationsEnum",
+                        "pattern": "^.{0,5}$"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "added_by": {
+                    "description": "Indicates user ID that added this media set.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "date_added": {
+                    "description": "Date this media set was first created. (UTC)",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_updated": {
+                    "description": "Date this media set was most recently modified. (UTC)",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_valid_end": {
+                    "description": "If present, date and time when media association was removed or replaced. (UTC)",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "document_page_count": {
+                    "description": "Number of pages, if applicable, found in the processing of this file.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "files": {
+                    "description": "Array of all files, including original submission of file or URL along with any derived files during processing of media.",
+                    "items": {
+                        "$ref": "#/$defs/MediaFile"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "media_id": {
+                    "description": "Unique ID for this MEDIA SET.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "media_location": {
+                    "$ref": "#/$defs/MediaLocationEnum",
+                    "description": "Indicates if this media set's main content is LOCAL or OFF-SITE."
+                },
+                "media_source": {
+                    "description": "Indicates the initial primary source of the media set.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "media_title": {
+                    "description": "Optional title provided for the given media set.",
+                    "pattern": "^.{0,500}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "mime_type": {
+                    "description": "MIME type description of the file content of this media file. This value is set by OSTI media processing.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "osti_id": {
+                    "description": "Links to Record OSTI_ID value for a Media Set.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "revision": {
+                    "description": "Revision number of this media association set.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "status": {
+                    "description": "Indicate the current processing of the media file set.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "MediaSet",
+            "type": "object"
+        },
+        "Organism": {
+            "additionalProperties": false,
+            "description": "An organism studied in the dataset.",
+            "properties": {
+                "NCBITaxID": {
+                    "description": "NCBI taxonomy ID for the organism.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "scientificName": {
+                    "description": "Scientific name of the organism.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Organism",
+            "type": "object"
+        },
+        "Organization": {
+            "additionalProperties": false,
+            "description": "Describes a particular organization associated with the bibliographic record. Organizations may be author collaborations, sponsors, research laboratories, or contributors to the work, as indicated by their associated type. For identification purposes, at least one of either 'name' or 'ror_id' is required for validation.  If ROR ID is specified, it will be validated against the ROR authority at OSTI.",
+            "properties": {
+                "contributor_type": {
+                    "$ref": "#/$defs/ContributorType",
+                    "description": "Indicate the contribution made by this Organization.  Required for CONTRIBUTING 'type'.",
+                    "pattern": "^.{0,25}$"
+                },
+                "identifiers": {
+                    "description": "List of any identifiers for this Organization.  Only applicable to Sponsoring organizations.",
+                    "items": {
+                        "$ref": "#/$defs/OrganizationIdentifier"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "name": {
+                    "description": "Name of the organization",
+                    "pattern": "^.{0,800}$",
+                    "type": "string"
+                },
+                "ror_id": {
+                    "description": "ROR ID for this organization, if any. This value will be validated against the ROR authority.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "type": {
+                    "$ref": "#/$defs/OrganizationType",
+                    "pattern": "^.{0,20}$"
+                }
+            },
+            "required": [
+                "type",
+                "name"
+            ],
+            "title": "Organization",
+            "type": "object"
+        },
+        "OrganizationIdentifier": {
+            "additionalProperties": false,
+            "description": "One or more identifying numbers or references associated with this organization.  Please note that only sponsoring organizations may have associated identifier values.",
+            "properties": {
+                "type": {
+                    "$ref": "#/$defs/OrganizationIdentifierType",
+                    "pattern": "^.{0,20}$"
+                },
+                "value": {
+                    "description": "Indicates the value of this identifier.  May be validated according to its particular type.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "value"
+            ],
+            "title": "OrganizationIdentifier",
+            "type": "object"
+        },
+        "OrganizationIdentifierType": {
+            "description": "Describe the type of identifier.",
+            "enum": [
+                "AWARD_DOI",
+                "CN_DOE",
+                "CN_NONDOE"
+            ],
+            "title": "OrganizationIdentifierType",
+            "type": "string"
+        },
+        "OrganizationType": {
+            "description": "Indicates type of organization.",
+            "enum": [
+                "AUTHOR",
+                "CONTRIBUTING",
+                "RESEARCHING",
+                "SPONSOR"
+            ],
+            "title": "OrganizationType",
+            "type": "string"
+        },
+        "Person": {
+            "additionalProperties": false,
+            "description": "Information about a particular person involved in the production or maintenance of this record",
+            "properties": {
+                "affiliations": {
+                    "description": "List of any affiliations for this person.  At least one of either 'name' and/or 'ror_id' is required; if ROR ID is provided, the value will be validated against the OSTI ROR authority.",
+                    "items": {
+                        "$ref": "#/$defs/Affiliation"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "contributor_type": {
+                    "$ref": "#/$defs/ContributorType",
+                    "pattern": "^.{0,25}$"
+                },
+                "email": {
+                    "description": "List of any email address(es) associated with this person. Email addresses are validated to be well-formed.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "first_name": {
+                    "description": "First (or 'Given') name of the person",
+                    "pattern": "^.{0,50}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "last_name": {
+                    "description": "Last (or 'Family') name of this person",
+                    "pattern": "^.{0,60}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "middle_name": {
+                    "description": "Middle name or initial of the person",
+                    "pattern": "^.{0,50}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "orcid": {
+                    "description": "ORCID (https://orcid.org/) value for this person. ORCID values, if provided, must be of valid format.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "osti_user_id": {
+                    "description": "OSTI-assigned identifier for this person, if any",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "phone": {
+                    "description": "Contact phone number for this person, if available. If provided, must be a valid phone number expression.",
+                    "pattern": "^.{0,30}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "type": {
+                    "$ref": "#/$defs/PersonType",
+                    "pattern": "^.{0,20}$"
+                }
+            },
+            "required": [
+                "type"
+            ],
+            "title": "Person",
+            "type": "object"
+        },
+        "PersonType": {
+            "description": "Indicates type of person.",
+            "enum": [
+                "AUTHOR",
+                "RELEASE",
+                "CONTACT",
+                "CONTRIBUTING",
+                "PROT_CE",
+                "PROT_RO",
+                "SBIZ_PI",
+                "SBIZ_BO"
+            ],
+            "title": "PersonType",
+            "type": "string"
+        },
+        "Plasmid": {
+            "additionalProperties": false,
+            "description": "Description of plasmid or other molecular vector features.",
+            "properties": {
+                "backbone": {
+                    "description": "Name of the backbone of the plasmid, e.g., pUC19.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "description": "Description of the plasmid, including any relevant features not captured in other fields.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "host": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Organism"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Host organism for the plasmid, e.g., E. coli. Includes both the scientific name and NCBI Taxonomy ID."
+                },
+                "id": {
+                    "description": "Unique identifier for the plasmid. This must be unique within the dataset.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ori": {
+                    "description": "Origin of replication for the plasmid, e.g., ColE1.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "promoters": {
+                    "description": "Promoters for the plasmid, e.g., T7.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "replicates_in": {
+                    "description": "Organism(s) in which the plasmid replicates. Includes both the scientific name and NCBI Taxonomy ID.",
+                    "items": {
+                        "$ref": "#/$defs/Organism"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "selection_markers": {
+                    "description": "Selection markers for the plasmid, e.g, kan.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Plasmid",
+            "type": "object"
+        },
+        "Point": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "latitude": {
+                    "description": "Latitude of this point in the geolocation; limited to -90 to 90, inclusive.",
+                    "maximum": 90,
+                    "minimum": -90,
+                    "type": "number"
+                },
+                "longitude": {
+                    "description": "Longitude of this point in the geolocation; limited to -180 to 180, inclusive.",
+                    "maximum": 180,
+                    "minimum": -180,
+                    "type": "number"
+                }
+            },
+            "required": [
+                "latitude",
+                "longitude"
+            ],
+            "title": "Point",
+            "type": "object"
+        },
+        "ProductType": {
+            "description": "Define the type of product represented by this metadata information. Values presented *in italics* are considered Legacy types.",
+            "enum": [
+                "AR",
+                "B",
+                "CO",
+                "DA",
+                "FS",
+                "JA",
+                "MI",
+                "OT",
+                "P",
+                "PD",
+                "SM",
+                "TD",
+                "TR",
+                "PA"
+            ],
+            "title": "ProductType",
+            "type": "string"
+        },
+        "Record": {
+            "additionalProperties": false,
+            "description": "Defines the bibliographic metadata about a particular work or record. Depending on product type, various elements are permitted, not permitted, or required.",
+            "properties": {
+                "access_limitation_other": {
+                    "description": "Additional information about access/distribution limitation for this record, if needed. Required for CUI or PDOUO designations in access limitation. May contain information about the following: Special handling instructions, Copyright restrictions, Other criteria pertinent to the review, access limitation, announcement, and/or restriction of this STI product.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "access_limitations": {
+                    "description": "Access/distribution limitation codes to describe the distribution rules and limitations for this work.",
+                    "items": {
+                        "$ref": "#/$defs/AccessLimitationsEnum",
+                        "pattern": "^.{0,5}$"
+                    },
+                    "type": "array"
+                },
+                "added_by": {
+                    "description": "E-Link user ID that initially entered this record. Value internally maintained by E-Link.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "added_by_email": {
+                    "description": "E-Link account email address initially entering this record. Value maintained by E-Link.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "added_by_name": {
+                    "description": "E-Link user name initially entering this record. Value maintained by E-Link.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "announcement_codes": {
+                    "description": "List of announcement codes for this record.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "audit_logs": {
+                    "description": "Listing of any audit logs of actions taken and worker interactions performed on this metadata revision, if any.",
+                    "items": {
+                        "$ref": "#/$defs/AuditLog"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "availability": {
+                    "description": "Describes record's availibility information.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "collection_type": {
+                    "$ref": "#/$defs/CollectionTypeEnum",
+                    "description": "Indicates the OSTI collection type originally creating this record. Maintained internally by E-Link."
+                },
+                "conference_information": {
+                    "description": "\"Describes the conference pertaining to this record, if any; usually name and / or location the event took place.\"\"",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "conference_type": {
+                    "description": "Code representing the type of conference-related work of this record. Generally, only applicable to CO type submissions.",
+                    "pattern": "^.{0,1}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "contract_award_date": {
+                    "description": "Date contract for this record was awarded.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "country_publication_code": {
+                    "description": "Country of publication for this record",
+                    "pattern": "^.{0,5}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_metadata_added": {
+                    "description": "Date record first entered the OSTI system. Value internally maintained by E-Link.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_metadata_updated": {
+                    "description": "Date of this revision of the record. Value internally maintained by E-Link.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_submitted_to_osti_first": {
+                    "description": "Date record was first submitted to OSTI for publication. Maintained internally by E-Link.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_submitted_to_osti_last": {
+                    "description": "Most recent date record information was submitted to OSTI. Maintained internally by E-Link.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "description": "Description or abstract for this record. Required to have a value for grantee submissions.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "descriptors": {
+                    "description": "List of descriptor codes for this record",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "doe_funded_flag": {
+                    "description": "Indicates if the record is primarily DOE-funded. Indicate Y for Yes, N for no, or leave blank/omit if unknown status.",
+                    "pattern": "^.{0,1}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "doi": {
+                    "description": "The DOI for this record, if any.  Enter value if previously assigned a DOI for the record from an outside service.  If not supplied, OSTI may assign a DOI for the work for certain applicable record types.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "doi_infix": {
+                    "description": "\"Any customized infix value for the DOI used when generating a DOI reference. The following characters should be avoided in the infix value: ;/?:@&=+$,.\"",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "edit_reason": {
+                    "description": "Value provided by user editing a record describing the reason for the edit.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "edit_source": {
+                    "description": "Value determined based on type of edit and user performing the association.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "edited_by": {
+                    "description": "OSTI user ID making this revision of the metadata record. Value internally maintained by E-Link.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "edited_by_email": {
+                    "description": "E-Link user email address that created this revision of the metadata record. Value maintained by E-Link.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "edited_by_name": {
+                    "description": "E-Link user name that created this revision of the metadata record. Value maintained by E-Link.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "edition": {
+                    "description": "Edition number, as applicable to Books or other products.",
+                    "pattern": "^.{0,10}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "format_information": {
+                    "description": "Information about the format of the product, including any operating system or program requirements for use of the data, as applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "geolocations": {
+                    "description": "List of geolocation references for this record.",
+                    "items": {
+                        "$ref": "#/$defs/Geolocation"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "identifiers": {
+                    "description": "List of identifying numbers related to this record",
+                    "items": {
+                        "$ref": "#/$defs/Identifier"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "issue": {
+                    "description": "Issue number for journals or other applicable products if any.",
+                    "pattern": "^.{0,80}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "journal_license_url": {
+                    "description": "URL for information regarding the journal license for information",
+                    "pattern": "^.{0,255}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "journal_name": {
+                    "description": "Name of journal publishing this information",
+                    "pattern": "^.{0,250}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "journal_open_access_flag": {
+                    "description": "Indicates if the journal article is available in an open access journal, indicated as Y for open, N for not, or left blank/omitted if not applicable or unknown status.",
+                    "pattern": "^.{0,1}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "journal_type": {
+                    "description": "Specific sub-type of the journal article.  For product type JA only. Further qualifies the type of record.",
+                    "pattern": "^.{0,2}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "keywords": {
+                    "description": "Concise set of key words for this record",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "languages": {
+                    "description": "Language codes for this record",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "media": {
+                    "description": "Listing of any media and files associated with this record, along with various metadata information and status data for each.  Empty if no media is currently associated with this record.",
+                    "items": {
+                        "$ref": "#/$defs/MediaSet"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "media_embargo_sunset_date": {
+                    "description": "Indicates date on which the document embargo ends, if applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "opn_addressee": {
+                    "description": "For OpenNET records, the addressee information",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "opn_declassified_date": {
+                    "description": "For OpenNET records, the date information was declassified",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "opn_declassified_status": {
+                    "description": "For OpenNET records, status of declassification of information",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "opn_document_categories": {
+                    "description": "For OpenNET records, list of any document categories pertaining to this record",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "opn_document_location": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "opn_fieldoffice_acronym_code": {
+                    "pattern": "^.{0,10}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "organizations": {
+                    "description": "List of organizations related to this record. For submissions, at least SPONSOR and RESEARCHING organization is required.",
+                    "items": {
+                        "$ref": "#/$defs/Organization"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "osti_id": {
+                    "description": "Unique identifier for OSTI record, only required for updates.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "other_information": {
+                    "description": "Information useful to include in published announcements which is not suited for other fields.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "ouo_release_date": {
+                    "description": "Date of OUO access limitation expiration if applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "paper_flag": {
+                    "description": "Indicates if OSTI has or had a paper copy of this product.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "patent_assignee": {
+                    "description": "The holder of property rights to a patent.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "patent_file_date": {
+                    "description": "Date patent was filed with US Patent Office.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "patent_priority_date": {
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pdouo_exemption_number": {
+                    "description": "Exception number for PDOUO access limitation records. Multiple values may be delimited by semi-colons.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "persons": {
+                    "description": "List of persons (authors, contributors, etc.) related to this record. For submissions, at least one AUTHOR or CONTRIBUTING Person, along with a RELEASE contact, is required.",
+                    "items": {
+                        "$ref": "#/$defs/Person"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "product_size": {
+                    "description": "Information regarding physical size of media or report, if applicable.",
+                    "pattern": "^.{0,50}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "product_type": {
+                    "$ref": "#/$defs/ProductType",
+                    "pattern": "^.{0,2}$"
+                },
+                "product_type_other": {
+                    "description": "Additional information for 'OTHER' product types.  Required if 'OT' product type is specified for this record.",
+                    "pattern": "^.{0,200}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "prot_data_other": {
+                    "description": "Information regarding why the information is protected if not a CRADA product.",
+                    "pattern": "^.{0,80}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "prot_flag": {
+                    "description": "Indicates the type of protected data described by this record. PROT must be specified in the access limitations.",
+                    "pattern": "^.{0,5}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "prot_release_date": {
+                    "description": "The date on which data protections for this record will end.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "publication_date": {
+                    "description": "Date of publication of this record.  For Thesis/Dissertation records, this may also be the completion date of the Thesis.  For Patents, the date the patent was issued or approved.",
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "publication_date_text": {
+                    "description": "String representation of the publication date (e.g., Summer 2001)",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "publisher_information": {
+                    "description": "Publisher-specific information if applicable",
+                    "pattern": "^.{0,400}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "related_doc_info": {
+                    "description": "Additional information regarding the document.  Considered historical or deprecated information, provided for access to historical data. This field is NOT recommended for new submissions.",
+                    "pattern": "^.{0,2255}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "related_identifiers": {
+                    "description": "List of related identifiers connected to this record",
+                    "items": {
+                        "$ref": "#/$defs/RelatedIdentifier"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "released_to_osti_date": {
+                    "description": "Date record information was released to OSTI, as entered by releasing official.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "releasing_official_comments": {
+                    "description": "Any comments made by the releasing official on the record.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "report_period_end_date": {
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "report_period_start_date": {
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "report_type_other": {
+                    "description": "Detail information about 'Other' report types.",
+                    "pattern": "^.{0,80}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "report_types": {
+                    "description": "The type(s) of information or frequency of reporting of information in this report.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "revision": {
+                    "description": "Revision number (sequence) for this record.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "sbiz_flag": {
+                    "description": "Indicates if this metadata is SBIR or STTR related.",
+                    "pattern": "^.{0,6}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "sbiz_phase": {
+                    "description": "A three-character field constrained to 'I', 'II', 'IIA', 'IIB', or 'III' indicating the phase of this SBIR/STTR report.",
+                    "pattern": "^.{0,3}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "sbiz_previous_contract_number": {
+                    "description": "The previous SBIR/STTR contract number if a Phase III SBIR/STTR report.",
+                    "pattern": "^.{0,14}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "sbiz_release_date": {
+                    "description": "Date data protections on this SBIR/STTR record will expire.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "site_ownership_code": {
+                    "description": "Code of the DOE site submitting this document",
+                    "pattern": "^.{0,10}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "site_unique_id": {
+                    "description": "Site-specified unique accession number for this record",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "site_url": {
+                    "description": "(DATASET product type only) The URL of the data set landing page, containing links to data set content or additional information as required.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_edit_type": {
+                    "description": "Value determined by submission type for each edit or revision of a record. Changes on a per-revision basis.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_input_type": {
+                    "description": "Value determined by submission type at record creation time. Defines how E-Link record was first entered into the system.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "subject_category_code": {
+                    "description": "Set two-character subject category code values for this record",
+                    "items": {
+                        "pattern": "^.{0,2}$",
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "subject_category_code_legacy": {
+                    "description": "Any legacy or historical subject category codes for this report",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "title": {
+                    "description": "Title of record.  For Book Chapters, the title of the chapter.",
+                    "type": "string"
+                },
+                "volume": {
+                    "description": "A volume number as applicable, usually for journals or books.",
+                    "pattern": "^.{0,68}$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "workflow_status": {
+                    "$ref": "#/$defs/WorkflowStatusEnum",
+                    "description": "Workflow status of current revision of record."
+                }
+            },
+            "required": [
+                "osti_id",
+                "access_limitations",
+                "title",
+                "publication_date"
+            ],
+            "title": "Record",
+            "type": "object"
+        },
+        "Records": {
+            "additionalProperties": false,
+            "description": "A list of Record metadata.",
+            "properties": {
+                "records": {
+                    "description": "List of records in the collection.",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Records",
+            "type": "object"
+        },
+        "RelatedIdentifier": {
+            "additionalProperties": false,
+            "description": "Identifies other resources that are related in some manner to this record",
+            "properties": {
+                "relation": {
+                    "$ref": "#/$defs/RelationType",
+                    "pattern": "^.{0,20}$"
+                },
+                "type": {
+                    "$ref": "#/$defs/RelatedIdentifierType",
+                    "description": "Identify the type of this related identifier"
+                },
+                "value": {
+                    "description": "The value of the identifier",
+                    "pattern": "^.{0,2000}$",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "relation",
+                "value"
+            ],
+            "title": "RelatedIdentifier",
+            "type": "object"
+        },
+        "RelatedIdentifierType": {
+            "description": "Identify the type of this related identifier",
+            "enum": [
+                "ARK",
+                "arXiv",
+                "bibcode",
+                "DOI",
+                "EAN13",
+                "EISSN",
+                "IGSN",
+                "ISBN",
+                "ISSN",
+                "ISTC",
+                "Handle",
+                "LISSN",
+                "LSID",
+                "OTHER",
+                "PMCID",
+                "PMID",
+                "PURL",
+                "UPC",
+                "URI",
+                "URL",
+                "URN",
+                "UUID",
+                "w3id"
+            ],
+            "title": "RelatedIdentifierType",
+            "type": "string"
+        },
+        "RelatedItem": {
+            "additionalProperties": false,
+            "description": "A related publication or item, including cited publications.",
+            "properties": {
+                "relatedItemIdentifier": {
+                    "description": "Identifier or URL for the related item.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "relatedItemType": {
+                    "$ref": "#/$defs/CitedItemType",
+                    "description": "Type of the related item, e.g., JournalArticle."
+                },
+                "title": {
+                    "description": "Title of the related item.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "RelatedItem",
+            "type": "object"
+        },
+        "RelationType": {
+            "description": "Indicates the relationship between this identifier and the source record.",
+            "enum": [
+                "BasedOnData",
+                "Cites",
+                "Compiles",
+                "Continues",
+                "Describes",
+                "Documents",
+                "Finances",
+                "HasComment",
+                "HasDerivation",
+                "HasMetadata",
+                "HasPart",
+                "HasRelatedMaterial",
+                "HasReply",
+                "HasReview",
+                "HasVersion",
+                "IsBasedOn",
+                "IsBasisFor",
+                "IsCitedBy",
+                "IsCommentOn",
+                "IsCompiledBy",
+                "IsContinuedBy",
+                "IsDataBasisFor",
+                "IsDerivedFrom",
+                "IsDescribedBy",
+                "IsDocumentedBy",
+                "IsFinancedBy",
+                "IsIdenticalTo",
+                "IsMetadataFor",
+                "IsNewVersionOf",
+                "IsObsoletedBy",
+                "IsOriginalFormOf",
+                "IsPartOf",
+                "IsPreviousVersionOf",
+                "IsReferencedBy",
+                "IsRelatedMaterial",
+                "IsReplyTo",
+                "IsRequiredBy",
+                "IsReviewedBy",
+                "IsReviewOf",
+                "IsSourceOf",
+                "IsSupplementedBy",
+                "IsSupplementTo",
+                "IsVariantFormOf",
+                "IsVersionOf",
+                "Obsoletes",
+                "References",
+                "Requires",
+                "Reviews"
+            ],
+            "title": "RelationType",
+            "type": "string"
+        },
+        "RepositoryEnum": {
+            "description": "Repository where the dataset is stored.",
+            "enum": [
+                "AmeriFlux",
+                "Bio-Protocol",
+                "Dryad",
+                "FigShare",
+                "GenBank",
+                "GEO",
+                "GitHub",
+                "GLBRC Sustainability",
+                "Iowa State University FigShare",
+                "ICE",
+                "Illinois Data Bank",
+                "iProX",
+                "JGI Gold",
+                "JGI Genome Portal",
+                "jPOST",
+                "MassIVE",
+                "Mendeley Data",
+                "National Microbiome Data Collaborative",
+                "NCBI BioProject",
+                "NCBI SRA",
+                "ORNL DAAC",
+                "OSTI",
+                "PanoramaPublic",
+                "PedtideAtlas",
+                "PRIDE",
+                "Protein Data Bank",
+                "The Cambridge Crystallographic Data Centre",
+                "Zenodo"
+            ],
+            "title": "RepositoryEnum",
+            "type": "string"
+        },
+        "WorkflowStatusEnum": {
+            "description": "The workflow status of the record.",
+            "enum": [
+                "R",
+                "SA",
+                "SR",
+                "SO",
+                "SF",
+                "SX",
+                "SV",
+                "X",
+                "D"
+            ],
+            "title": "WorkflowStatusEnum",
+            "type": "string"
+        }
+    },
+    "$id": "https://w3id.org/brc/brc_schema",
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "additionalProperties": true,
+    "description": "A list of Record metadata.",
+    "metamodel_version": "1.7.0",
+    "properties": {
+        "records": {
+            "description": "List of records in the collection.",
+            "items": {
+                "type": "integer"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        }
+    },
+    "title": "brc_schema",
+    "type": "object",
+    "version": "0.1.4"
+}
