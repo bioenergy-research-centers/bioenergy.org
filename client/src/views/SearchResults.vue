@@ -856,6 +856,69 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
     .attr('fill', (d, i) => enhancedColors[i % enhancedColors.length])
     .attr('opacity', 0.8);
 
+    const slices = arcs.append('path')
+    .attr('d', arcGenerator)
+    .attr('fill', (d, i) => enhancedColors[i % enhancedColors.length])
+    .attr('opacity', 0.8)
+    .style('cursor', (d) => {
+      // Only make slices clickable if they're >= 3% AND labels are enabled
+      const percentage = (d.data.value / totalValue) * 100;
+      return (enableClickableLabels && chartType && percentage >= 3) ? 'pointer' : 'default';
+    });
+
+  // Add click functionality to slices if enabled
+  if (enableClickableLabels && chartType) {
+    slices
+      .on('mouseover', function(event, d) {
+        const percentage = (d.data.value / totalValue) * 100;
+        
+        // Only add hover effects for slices >= 3%
+        if (percentage >= 3) {
+          select(this)
+            .attr('opacity', 1)
+            .style('filter', 'brightness(1.25)'); // Slightly brighter on hover
+          
+          // Also highlight the corresponding legend item
+          const legendItems = svg.selectAll('.legend-item');
+          legendItems
+            .style('background-color', (legendData) => 
+              legendData.label === d.data.label ? '#e3f2fd' : 'transparent'
+            )
+            .select('div:last-child')
+            .style('font-weight', (legendData) => 
+              legendData.label === d.data.label ? 'bold' : 'normal'
+            );
+        }
+      })
+      .on('mouseout', function(event, d) {
+        const percentage = (d.data.value / totalValue) * 100;
+        
+        if (percentage >= 3) {
+          select(this)
+            .attr('opacity', 0.8)
+            .style('filter', 'none');
+          
+          // Reset legend highlighting
+          const legendItems = svg.selectAll('.legend-item');
+          legendItems
+            .style('background-color', 'transparent')
+            .select('div:last-child')
+            .style('font-weight', 'normal');
+        }
+      })
+      .on('click', function(event, d) {
+        const percentage = (d.data.value / totalValue) * 100;
+        
+        // Only handle clicks for slices >= 3%
+        if (percentage >= 3) {
+          console.log('Pie slice clicked:', d.data.label, 'for chart:', chartType);
+          handleLegendClick(d.data.label, chartType);
+        } else {
+          console.log('Small slice clicked but ignored (< 3%):', d.data.label);
+        }
+      });
+  }
+
   // Add text labels only for slices that are large enough (more than 3% of total)
   arcs.append('text')
     .attr('transform', d => {
