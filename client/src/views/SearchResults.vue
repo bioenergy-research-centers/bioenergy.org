@@ -348,7 +348,8 @@ const createCountVisualization = () => {
     .map(([year, count]) => ({ year, count }))
     .sort((a, b) => a.year.localeCompare(b.year));
 
-  createBarChart(chartData, 'year', 'count', 'Dataset Count by Year', 'Year', 'Number of Datasets');
+  // Enable clickable bars for count chart
+  createBarChart(chartData, 'year', 'count', 'Dataset Count by Year', 'Year', 'Number of Datasets', true, 'count');
 };
 
 // 2. Sources Visualization - Based on BRC field
@@ -483,7 +484,9 @@ const createTopicsVisualization = () => {
     'count', 
     'Research Topics Distribution', 
     'Topics', 
-    'Number of Datasets'
+    'Number of Datasets',
+    true, // Enable clickable bars
+    'topics' // Chart type
   );
 };
 
@@ -660,7 +663,8 @@ const createAnalysisVisualization = () => {
 };
 
 // Helper function to create bar charts
-const createBarChart = (data, xKey, yKey, title, xLabel, yLabel) => {
+// Updated Helper function to create bar charts with clickable bars
+const createBarChart = (data, xKey, yKey, title, xLabel, yLabel, enableClickableBars = false, chartType = null) => {
   const margin = { top: 40, right: 30, bottom: 60, left: 60 };
   const width = 700 - margin.left - margin.right;
   const height = 400 - margin.top - margin.bottom;
@@ -695,8 +699,8 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel) => {
   g.append('g')
     .call(axisLeft(yScale));
 
-  // Create bars
-  g.selectAll('.bar')
+  // Create bars with optional click functionality
+  const bars = g.selectAll('.bar')
     .data(data)
     .enter().append('rect')
     .attr('class', 'bar')
@@ -705,7 +709,35 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel) => {
     .attr('y', d => yScale(d[yKey]))
     .attr('height', d => height - yScale(d[yKey]))
     .attr('fill', '#72a530')
-    .attr('opacity', 0.8);
+    .attr('opacity', 0.8)
+    .style('cursor', enableClickableBars ? 'pointer' : 'default');
+
+  // Add click functionality if enabled
+  if (enableClickableBars && chartType) {
+    bars
+      .on('mouseover', function(event, d) {
+        select(this)
+          .attr('opacity', 1)
+          .attr('fill', '#5d8a26'); // Darker green on hover
+      })
+      .on('mouseout', function() {
+        select(this)
+          .attr('opacity', 0.8)
+          .attr('fill', '#72a530'); // Back to original color
+      })
+      .on('click', function(event, d) {
+        console.log('Bar clicked:', d[xKey], 'for chart:', chartType);
+        handleBarClick(d[xKey], chartType);
+      });
+
+    // Add visual indicator that bars are clickable
+    svg.append('text')
+      .attr('x', width + margin.left + margin.right - 10)
+      .attr('y', margin.top + 15)
+      .attr('text-anchor', 'end')
+      .style('font-size', '10px')
+      .style('fill', '#0066cc')
+  }
 
   // Add value labels on bars
   g.selectAll('.label')
@@ -742,6 +774,28 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel) => {
     .style('text-anchor', 'middle')
     .style('font-size', '12px')
     .text(xLabel);
+};
+
+// Function to handle bar clicks
+const handleBarClick = (barValue, chartType) => {
+  console.log('=== BAR CLICK DEBUG ===');
+  console.log('Bar clicked:', barValue, 'for chart:', chartType);
+  console.log('Current activeFilters before update:', JSON.stringify(activeFilters.value));
+  
+  // Handle different chart types
+  if (chartType === 'topics') {
+    // For topics, we could add a topic filter (you'd need to add this to your backend)
+    console.log('Topics filtering not implemented yet - would filter by:', barValue);
+    // activeFilters.value.topic = barValue; // You'd need to add this field
+  } else if (chartType === 'count') {
+    // For count by year, we could add a year filter
+    console.log('Year filtering not implemented yet - would filter by year:', barValue);
+    // activeFilters.value.year = barValue; // You'd need to add this field
+  }
+  
+  // For now, just show what would happen
+  console.log('Bar click registered but filtering not yet implemented for chart type:', chartType);
+  console.log('=== END BAR CLICK DEBUG ===');
 };
 
 // Helper function to create pie charts
