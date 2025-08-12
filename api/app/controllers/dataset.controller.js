@@ -191,7 +191,7 @@ exports.findAllPublished = (req, res) => {
 };
 
 // Find datasets using advanced filters
-exports.findByFilters = (req, res) => {
+exports.findByFilters = async (req, res) => {
 
   const { textQuery, filters } = req.body;
   
@@ -327,29 +327,104 @@ exports.findByFilters = (req, res) => {
     }
   }
 
+// Topic filter
+if (filters.topic) {
+  console.log('Filtering for topic:', filters.topic);
+  
+  // Map topic categories to their keywords for more precise searching
+  const topicKeywords = {
+    'Genetic Engineering': ['genetic', 'genomic', 'gene', 'dna', 'rna', 'plasmid', 'transformation', 'crispr', 'mutagenesis', 'recombinant', 'synthetic biology', 'metabolic engineering'],
+    'Plant Biology': ['plant', 'crop', 'agriculture', 'photosynthesis', 'cell wall', 'starch', 'sugar', 'glucose', 'xylose', 'arabinose'],
+    'Microbiology': ['fermentation', 'yeast', 'bacteria', 'microorganism', 'saccharomyces', 'escherichia', 'clostridium', 'zymomonas', 'microbial', 'cultivation'],
+    'Analytics & Methods': ['analysis', 'chromatography', 'spectroscopy', 'sequencing', 'proteomics', 'metabolomics', 'transcriptomics', 'assay', 'characterization'],
+    'Enzymes & Proteins': ['enzyme', 'protein', 'cellulase', 'xylanase', 'amylase', 'lipase', 'catalysis', 'biocatalyst', 'enzymatic', 'hydrolysis'],
+    'Biomass & Feedstock': ['biomass', 'cellulose', 'lignin', 'hemicellulose', 'switchgrass', 'corn stover', 'wheat straw', 'wood chips', 'algae', 'microalgae', 'feedstock'],
+    'Bioenergy Production': ['bioenergy', 'biofuel', 'bioethanol', 'biodiesel', 'biogas', 'methane', 'ethanol', 'butanol', 'renewable fuel', 'sustainable fuel'],
+    'Process Engineering': ['pretreatment', 'distillation', 'purification', 'separation', 'reactor', 'bioprocess', 'optimization', 'scale-up', 'pilot plant']
+  };
+  
+  const keywords = topicKeywords[filters.topic];
+  if (keywords && keywords.length > 0) {
+    // Create OR conditions for any of the keywords in this topic
+    const keywordConditions = keywords.map(keyword => 
+      where(
+        db.Sequelize.cast(db.Sequelize.col('json'), 'text'),
+        {
+          [Op.iLike]: `%${keyword}%`
+        }
+      )
+    );
+    
+    // Use OR to match any of the keywords for this topic
+    const topicSearchQuery = {
+      [Op.or]: keywordConditions
+    };
+    conditions.push(topicSearchQuery);
+  } else {
+    console.log('No keywords found for topic:', filters.topic);
+  }
+}
+
+// Year filter - Hybrid approach: backend + client-side refinement
+  if (filters.year) {
+    console.log('Filtering for year:', filters.year);
+    
+    // Use the working broad search
+    const yearSearchQuery = where(
+      db.Sequelize.cast(db.Sequelize.col('json'), 'text'),
+      {
+        [Op.iLike]: `%${filters.year}%`
+      }
+    );
+    conditions.push(yearSearchQuery);
+    
+    // we need client-side year refinement
+    req.needsYearRefinement = filters.year;
+  }
+
   // Use Op.and to merge conditions
   const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
 
-  Dataset.scope('supportedOnly').findAll({
-    where: mergedWhereConditions,
-  })
-    .then(data => {
-      console.log(`Query returned ${data.length} results`);
-      if (filters && filters.species && data.length > 0) {
-        console.log('First result species:', data[0].toClientJSON().species);
-      }
-      if (filters && filters.species && data.length === 0) {
-        console.log('No results found for species filter:', filters.species);
-      }
+Dataset.scope('supportedOnly').findAll({
+  where: mergedWhereConditions,
+})
+  .then(data => {
+    console.log(`Query returned ${data.length} results`);
+    
+    let finalResults = data;
+    
+    // Client-side year refinement
+    if (req.needsYearRefinement) {
+      const targetYear = req.needsYearRefinement;
+      console.log('Applying client-side year refinement for:', targetYear);
       
-      res.send(data.map(x => x.toClientJSON()));
-    })
-    .catch(err => {
-      console.error('Error in findByFilters:', err);
-      res.status(500).send({
-        message: err.message || "Some error occurred while retrieving filtered Datasets."
+      finalResults = data.filter(dataset => {
+        const clientData = dataset.toClientJSON();
+        if (clientData.date) {
+          const datasetYear = clientData.date.toString().split('-')[0];
+          return datasetYear === targetYear;
+        }
+        return false;
       });
+      
+      console.log(`After year refinement: ${finalResults.length} results`);
+    }
+    
+    if (filters && filters.species && finalResults.length > 0) {
+      console.log('First result species:', finalResults[0].toClientJSON().species);
+    }
+    if (filters && filters.species && finalResults.length === 0) {
+      console.log('No results found for species filter:', filters.species);
+    }
+    
+    res.send(finalResults.map(x => x.toClientJSON()));
+  })
+  .catch(err => {
+    console.error('Error in findByFilters:', err);
+    res.status(500).send({
+      message: err.message || "Some error occurred while retrieving filtered Datasets."
     });
+  });
 
 };
 

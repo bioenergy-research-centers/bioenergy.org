@@ -24,6 +24,8 @@ const activeFilters = ref({
   repository: null, // For resources chart
   species: null,    // For species chart
   analysisType: null, // For analysis type chart
+  topic: null,
+  year: null, 
 });
 
 const props = defineProps({
@@ -37,6 +39,7 @@ const urlFilters = ref({});
 
 
 // Parse filters from URL and apply them
+// Update the URL filters watcher to handle new fields
 watch(() => props.filters, async (newFilters) => {
   console.log('URL filters changed:', newFilters);
   
@@ -45,7 +48,7 @@ watch(() => props.filters, async (newFilters) => {
       const parsedFilters = JSON.parse(newFilters);
       console.log('Parsed filters:', parsedFilters);
       
-      // Apply these filters to activeFilters
+      // Apply these filters to activeFilters (including new fields)
       Object.keys(parsedFilters).forEach(key => {
         if (activeFilters.value.hasOwnProperty(key)) {
           activeFilters.value[key] = parsedFilters[key];
@@ -55,10 +58,8 @@ watch(() => props.filters, async (newFilters) => {
       
       console.log('Updated activeFilters:', activeFilters.value);
       
-      // Wait for next tick to ensure filters are applied
       await nextTick();
       
-      // Trigger search with new filters
       console.log('Triggering search with URL filters...');
       if (!props.filter && !props.dnaSequence) {
         console.log('Calling fetchAllData with filters...');
@@ -72,17 +73,18 @@ watch(() => props.filters, async (newFilters) => {
       console.error('Error parsing filters from URL:', e);
     }
   } else {
-    // Clear filters if no filters in URL
+    // Clear ALL filters when no filters in URL
     console.log('No filters in URL, clearing activeFilters');
     const oldFilters = { ...activeFilters.value };
     activeFilters.value = {
       brc: null,
       repository: null,
       species: null,
-      analysisType: null
+      analysisType: null,
+      topic: null,
+      year: null
     };
     
-    // Only trigger search if filters actually changed
     const filtersChanged = Object.keys(oldFilters).some(key => oldFilters[key] !== null);
     if (filtersChanged) {
       console.log('Triggering search after clearing filters...');
@@ -136,7 +138,9 @@ const handleSearch = async () => {
           brc: activeFilters.value.brc,
           repository: activeFilters.value.repository,
           species: activeFilters.value.species,
-          analysisType: activeFilters.value.analysisType
+          analysisType: activeFilters.value.analysisType,
+          topic: activeFilters.value.topic,         // Add this
+          year: activeFilters.value.year           // Add this
         }
       };
       
@@ -150,10 +154,8 @@ const handleSearch = async () => {
       console.log('Using filtered search with payload:', filterPayload);
       response = await DatasetDataService.runFilteredSearch(filterPayload);
     } else if (!props.filter && !props.dnaSequence) {
-      // Use getAll for empty search without filters
       response = await DatasetDataService.getAll();
     } else {
-      // Use advanced search for text/sequence search without filters
       response = await DatasetDataService.runAdvancedSearch(
         props.filter,
         props.dnaSequence
@@ -172,7 +174,6 @@ const handleSearch = async () => {
   } finally {
     loading.value = false;
     
-    // Force visualization update after filtering is complete
     await nextTick();
     if (showChart.value) {
       console.log('Creating visualization after filtering');
@@ -180,7 +181,6 @@ const handleSearch = async () => {
     }
   }
 };
-
 
 const fetchAllData = async () => {
   console.log('fetchAllData called');
@@ -201,7 +201,9 @@ const fetchAllData = async () => {
           brc: activeFilters.value.brc,
           repository: activeFilters.value.repository,
           species: activeFilters.value.species,
-          analysisType: activeFilters.value.analysisType
+          analysisType: activeFilters.value.analysisType,
+          topic: activeFilters.value.topic,         // Add this
+          year: activeFilters.value.year           // Add this
         }
       };
       
@@ -215,7 +217,6 @@ const fetchAllData = async () => {
       console.log('fetchAllData - Using filtered search with payload:', filterPayload);
       response = await DatasetDataService.runFilteredSearch(filterPayload);
     } else {
-      // Use getAll for no filters
       response = await DatasetDataService.getAll();
     }
     
@@ -231,7 +232,6 @@ const fetchAllData = async () => {
   } finally {
     loading.value = false;
     
-    // Force visualization update after filtering is complete
     await nextTick();
     if (showChart.value) {
       console.log('fetchAllData - creating visualization after filtering');
@@ -777,6 +777,7 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel, enableClickable
 };
 
 // Function to handle bar clicks
+// Updated function to handle bar clicks with actual filtering
 const handleBarClick = (barValue, chartType) => {
   console.log('=== BAR CLICK DEBUG ===');
   console.log('Bar clicked:', barValue, 'for chart:', chartType);
@@ -784,17 +785,25 @@ const handleBarClick = (barValue, chartType) => {
   
   // Handle different chart types
   if (chartType === 'topics') {
-    // For topics, we could add a topic filter (you'd need to add this to your backend)
-    console.log('Topics filtering not implemented yet - would filter by:', barValue);
-    // activeFilters.value.topic = barValue; // You'd need to add this field
+    activeFilters.value.topic = barValue;
+    console.log('Set Topic filter to:', barValue);
   } else if (chartType === 'count') {
-    // For count by year, we could add a year filter
-    console.log('Year filtering not implemented yet - would filter by year:', barValue);
-    // activeFilters.value.year = barValue; // You'd need to add this field
+    activeFilters.value.year = barValue;
+    console.log('Set Year filter to:', barValue);
   }
   
-  // For now, just show what would happen
-  console.log('Bar click registered but filtering not yet implemented for chart type:', chartType);
+  console.log('Current activeFilters after update:', JSON.stringify(activeFilters.value));
+  
+  // Trigger data refresh with new filters
+  console.log('Triggering data refresh...');
+  if (!props.filter && !props.dnaSequence) {
+    console.log('Calling fetchAllData...');
+    fetchAllData();
+  } else {
+    console.log('Calling handleSearch...');
+    handleSearch();
+  }
+  
   console.log('=== END BAR CLICK DEBUG ===');
 };
 
@@ -1010,6 +1019,10 @@ const removeFilter = (filterType) => {
     activeFilters.value.species = null;
   } else if (filterType === 'analysisType') {
     activeFilters.value.analysisType = null;
+  } else if (filterType === 'topic') {
+    activeFilters.value.topic = null;
+  } else if (filterType === 'year') {
+    activeFilters.value.year = null;
   }
   
   console.log('Active filters after removal:', activeFilters.value);
@@ -1190,45 +1203,64 @@ const setActiveTab = (tab: string) => {
             </div>
             
             <!-- Filter Tags -->
-              <div v-if="activeFilters.brc || activeFilters.repository || activeFilters.species || activeFilters.analysisType" class="filter-tags">
-                <span class="filter-label">Active Filters:</span>
-                <span 
-                  v-if="activeFilters.brc" 
-                  class="filter-tag"
-                  @click="removeFilter('brc')"
-                  title="Click to remove filter"
-                >
-                  BRC: {{ activeFilters.brc }}
-                  <i class="bi bi-x"></i>
-                </span>
-                <span 
-                  v-if="activeFilters.repository" 
-                  class="filter-tag"
-                  @click="removeFilter('repository')"
-                  title="Click to remove filter"
-                >
-                  Repository: {{ activeFilters.repository }}
-                  <i class="bi bi-x"></i>
-                </span>
-                <span 
-                  v-if="activeFilters.species" 
-                  class="filter-tag"
-                  @click="removeFilter('species')"
-                  title="Click to remove filter"
-                >
-                  Species: {{ activeFilters.species }}
-                  <i class="bi bi-x"></i>
-                </span>
-                <span 
-                  v-if="activeFilters.analysisType" 
-                  class="filter-tag"
-                  @click="removeFilter('analysisType')"
-                  title="Click to remove filter"
-                >
-                  Analysis: {{ activeFilters.analysisType }}
-                  <i class="bi bi-x"></i>
-                </span>
-              </div>
+          <!-- Filter Tags - Updated to include topic and year -->
+          <div v-if="activeFilters.brc || activeFilters.repository || activeFilters.species || activeFilters.analysisType || activeFilters.topic || activeFilters.year" class="filter-tags">
+            <span class="filter-label">Active Filters:</span>
+            <span 
+              v-if="activeFilters.brc" 
+              class="filter-tag"
+              @click="removeFilter('brc')"
+              title="Click to remove filter"
+            >
+              BRC: {{ activeFilters.brc }}
+              <i class="bi bi-x"></i>
+            </span>
+            <span 
+              v-if="activeFilters.repository" 
+              class="filter-tag"
+              @click="removeFilter('repository')"
+              title="Click to remove filter"
+            >
+              Repository: {{ activeFilters.repository }}
+              <i class="bi bi-x"></i>
+            </span>
+            <span 
+              v-if="activeFilters.species" 
+              class="filter-tag"
+              @click="removeFilter('species')"
+              title="Click to remove filter"
+            >
+              Species: {{ activeFilters.species }}
+              <i class="bi bi-x"></i>
+            </span>
+            <span 
+              v-if="activeFilters.analysisType" 
+              class="filter-tag"
+              @click="removeFilter('analysisType')"
+              title="Click to remove filter"
+            >
+              Analysis: {{ activeFilters.analysisType }}
+              <i class="bi bi-x"></i>
+            </span>
+            <span 
+              v-if="activeFilters.topic" 
+              class="filter-tag"
+              @click="removeFilter('topic')"
+              title="Click to remove filter"
+            >
+              Topic: {{ activeFilters.topic }}
+              <i class="bi bi-x"></i>
+            </span>
+            <span 
+              v-if="activeFilters.year" 
+              class="filter-tag"
+              @click="removeFilter('year')"
+              title="Click to remove filter"
+            >
+              Year: {{ activeFilters.year }}
+              <i class="bi bi-x"></i>
+            </span>
+          </div>
           </div>
           <div class="chart-container">
             <div ref="chartContainer" class="d3-chart"></div>
