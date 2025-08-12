@@ -375,120 +375,107 @@ const createSourcesVisualization = () => {
   createPieChart(chartData, 'Dataset Distribution by BRC (Bioenergy Research Center)', true, 'sources');
 };
 
+// const createTopicsVisualization = () => {
+//   const precomputedFrequency = {
+//     "Genetic Engineering": 230,
+//     "Plant Biology": 104,
+//     "Microbiology": 94,
+//     "Analytics & Methods": 82,
+//     "Enzymes & Proteins": 59,
+//     "Biomass & Feedstock": 58,
+//     "Bioenergy Production": 43,
+//     "Process Engineering": 14
+//   };
 
-// 3. Topics Visualization
+//   const chartData = Object.entries(precomputedFrequency)
+//     .map(([topic, count]) => ({ label: topic, value: count }))
+//     .sort((a, b) => b.value - a.value);
+
+//   createBarChart(
+//     chartData.map(d => ({ category: d.label, count: d.value })), 
+//     'category', 
+//     'count', 
+//     'Research Topics Distribution (Pre-computed)', 
+//     'Topics', 
+//     'Number of Datasets'
+//   );
+// };
+// Updated topics visualization using pre-computed categories
+// Updated topics visualization that works with filtered results
+// Updated topics visualization that works with filtered results
 const createTopicsVisualization = () => {
+  // Define the same categories from your analysis
+  const keywordCategories = {
+    'Genetic Engineering': [
+      'genetic', 'genomic', 'gene', 'dna', 'rna', 'plasmid', 'transformation',
+      'crispr', 'mutagenesis', 'recombinant', 'synthetic biology', 'metabolic engineering'
+    ],
+    'Plant Biology': [
+      'plant', 'crop', 'agriculture', 'photosynthesis', 'cell wall', 
+      'starch', 'sugar', 'glucose', 'xylose', 'arabinose'
+    ],
+    'Microbiology': [
+      'fermentation', 'yeast', 'bacteria', 'microorganism', 'saccharomyces', 
+      'escherichia', 'clostridium', 'zymomonas', 'microbial', 'cultivation'
+    ],
+    'Analytics & Methods': [
+      'analysis', 'chromatography', 'spectroscopy', 'sequencing', 'proteomics',
+      'metabolomics', 'transcriptomics', 'assay', 'characterization'
+    ],
+    'Enzymes & Proteins': [
+      'enzyme', 'protein', 'cellulase', 'xylanase', 'amylase', 'lipase',
+      'catalysis', 'biocatalyst', 'enzymatic', 'hydrolysis'
+    ],
+    'Biomass & Feedstock': [
+      'biomass', 'cellulose', 'lignin', 'hemicellulose', 'switchgrass', 'corn stover',
+      'wheat straw', 'wood chips', 'algae', 'microalgae', 'feedstock'
+    ],
+    'Bioenergy Production': [
+      'bioenergy', 'biofuel', 'bioethanol', 'biodiesel', 'biogas', 'methane',
+      'ethanol', 'butanol', 'renewable fuel', 'sustainable fuel'
+    ],
+    'Process Engineering': [
+      'pretreatment', 'distillation', 'purification', 'separation', 'reactor',
+      'bioprocess', 'optimization', 'scale-up', 'pilot plant'
+    ]
+  };
+
   const topicCount = {};
   
+  // Analyze the CURRENT filtered results, not all data
   results.value.forEach(result => {
-    let topics = [];
+    const searchableText = extractSearchableText(result);
+    const categories = categorizeDataset(searchableText, keywordCategories);
     
-    // 1. Try to extract from keywords field (if it exists and has content)
-    if (result.keywords && result.keywords.length > 0) {
-      topics = Array.isArray(result.keywords) ? result.keywords : result.keywords.split(',');
-    }
-    
-    // 2. Extract from plasmid features
-    else if (result.plasmid_features && result.plasmid_features.length > 0) {
-      const featureTopics = new Set();
-      
-      result.plasmid_features.forEach(feature => {
-        // Extract from promoters
-        if (feature.promoters && feature.promoters.length > 0) {
-          feature.promoters.forEach(promoter => {
-            featureTopics.add(`Promoter: ${promoter}`);
-          });
-        }
-        
-        // Extract from selection markers
-        if (feature.selection_markers && feature.selection_markers.length > 0) {
-          feature.selection_markers.forEach(marker => {
-            featureTopics.add(`Selection: ${marker}`);
-          });
-        }
-        
-        // Extract from origins of replication
-        if (feature.ori) {
-          featureTopics.add(`Origin: ${feature.ori}`);
-        }
-        
-        // Extract from backbone types
-        if (feature.backbone) {
-          // Extract meaningful parts from backbone names
-          const backboneName = feature.backbone.toLowerCase();
-          if (backboneName.includes('gfp')) featureTopics.add('GFP Reporter');
-          if (backboneName.includes('rfp')) featureTopics.add('RFP Reporter');
-          if (backboneName.includes('biobrick') || backboneName.includes('pbb')) featureTopics.add('BioBrick');
-          if (backboneName.includes('pet')) featureTopics.add('Expression Vector');
-        }
-      });
-      
-      topics = Array.from(featureTopics);
-    }
-    
-    // 3. Extract from species (if available)
-    else if (result.species && result.species.length > 0) {
-      topics = result.species.map(species => `Species: ${species}`);
-    }
-    
-    // 4. Extract from title analysis (as fallback)
-    else if (result.title) {
-      const biologicalTerms = [
-        'plasmid', 'vector', 'expression', 'promoter', 'gene', 'protein',
-        'enzyme', 'fermentation', 'biofuel', 'bioenergy', 'biomass',
-        'cellulose', 'lignin', 'metabolic', 'genomic', 'synthetic biology',
-        'engineering', 'production', 'pathway', 'biosynthesis',
-        'cloning', 'transformation', 'assembly', 'construction'
-      ];
-      
-      const titleLower = result.title.toLowerCase();
-      topics = biologicalTerms.filter(term => 
-        titleLower.includes(term.toLowerCase())
-      );
-      
-      // Also extract year-based topics from titles
-      const yearMatch = result.title.match(/\b(19|20)\d{2}\b/);
-      if (yearMatch) {
-        topics.push(`Study Year: ${yearMatch[0]}`);
-      }
-    }
-    
-    // 5. Extract from analysis type
-    if (result.analysisType && result.analysisType !== 'not specified') {
-      topics.push(`Analysis: ${result.analysisType}`);
-    }
-    
-    // 6. Extract from dataset type
-    if (result.datasetType) {
-      const typeMap = {
-        'GD': 'Genetic Data',
-        'MD': 'Metabolic Data',
-        'PD': 'Protein Data',
-        'CD': 'Chemical Data'
-      };
-      topics.push(`Type: ${typeMap[result.datasetType] || result.datasetType}`);
-    }
-    
-    // 7. Default fallback
-    if (topics.length === 0) {
-      topics = ['General'];
-    }
-    
-    // Count each topic
-    topics.forEach(topic => {
-      const cleanTopic = topic.toString().trim();
-      if (cleanTopic) {
-        topicCount[cleanTopic] = (topicCount[cleanTopic] || 0) + 1;
-      }
+    categories.forEach(category => {
+      topicCount[category] = (topicCount[category] || 0) + 1;
     });
   });
 
-  console.log('Topic distribution:', topicCount); // Debug log
+  console.log('Topic distribution for current results:', topicCount);
 
+  // Only show categories that have results in the current data
   const chartData = Object.entries(topicCount)
     .map(([topic, count]) => ({ label: topic, value: count }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 15); // Show top 15 topics 
+    .sort((a, b) => b.value - a.value);
+
+  if (chartData.length === 0) {
+    // Show message if no topics found
+    const svg = select(chartContainer.value)
+      .append('svg')
+      .attr('width', 700)
+      .attr('height', 400);
+
+    svg.append('text')
+      .attr('x', 350)
+      .attr('y', 200)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '16px')
+      .style('fill', '#666')
+      .text('No topic categories found in current results');
+    
+    return;
+  }
 
   createBarChart(
     chartData.map(d => ({ category: d.label, count: d.value })), 
@@ -498,6 +485,53 @@ const createTopicsVisualization = () => {
     'Topics', 
     'Number of Datasets'
   );
+};
+
+// Helper function to extract searchable text from a dataset
+const extractSearchableText = (dataset) => {
+  const textFields = [];
+  
+  if (dataset.title) textFields.push(dataset.title.toLowerCase());
+  if (dataset.description) textFields.push(dataset.description.toLowerCase());
+  if (dataset.keywords && dataset.keywords.length > 0) {
+    textFields.push(dataset.keywords.join(' ').toLowerCase());
+  }
+  
+  if (dataset.plasmid_features) {
+    dataset.plasmid_features.forEach(feature => {
+      if (feature.description) textFields.push(feature.description.toLowerCase());
+      if (feature.promoters) textFields.push(feature.promoters.join(' ').toLowerCase());
+    });
+  }
+  
+  if (dataset.species) {
+    dataset.species.forEach(species => {
+      if (typeof species === 'string') {
+        textFields.push(species.toLowerCase());
+      } else if (species.scientificName) {
+        textFields.push(species.scientificName.toLowerCase());
+      }
+    });
+  }
+  
+  return textFields.join(' ');
+};
+
+// Helper function to categorize a dataset
+const categorizeDataset = (searchableText, keywordCategories) => {
+  const categories = [];
+  
+  Object.entries(keywordCategories).forEach(([category, keywords]) => {
+    const hasKeyword = keywords.some(keyword => 
+      searchableText.includes(keyword.toLowerCase())
+    );
+    
+    if (hasKeyword) {
+      categories.push(category);
+    }
+  });
+  
+  return categories;
 };
 
 // 4. Resources Visualization - Based on Repository field

@@ -80,18 +80,21 @@ const datasets = require("../controllers/dataset.controller.js");
 const router = require("express").Router();
 const {search} = require("../controllers/searchController");
 
-// Retrieve all Tutorials
+// Retrieve all Datasets
 router.get("/", datasets.findAll);
 
-// Retrieve all published Tutorials
+// Retrieve all published Datasets
 router.get("/published", datasets.findAllPublished);
 
-// Retrieve a single Tutorial with id
-router.get("/:id", datasets.findOne);
+// Note: These routes must come BEFORE the /:id route
+router.get("/analyze-keywords", datasets.analyzeKeywords);
+router.post("/analyze-keywords", datasets.analyzeKeywords);
+router.post("/filters", datasets.findByFilters);  // Make sure this line exists
 
 // POST /api/datasets -> search
 router.post("/", search);
 
-router.post("/filters", datasets.findByFilters);
+// Must be last - catches all /:id patterns
+router.get("/:id", datasets.findOne);
 
 module.exports = router;
