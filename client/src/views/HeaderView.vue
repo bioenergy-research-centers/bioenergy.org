@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {RouterLink, useRoute, useRouter} from "vue-router";
 import headerIcon from "@/assets/brc-bioenergy-icon.png"
-import {onBeforeMount, ref, watch} from "vue";
+import {onBeforeMount, ref, watch, onMounted} from "vue"; // Fixed import
 import {useSearchStore} from '@/store/searchStore';
 
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
@@ -18,22 +18,30 @@ const advancedFilters = ref({
   brc: '',
   repository: '',
   species: '',
-  analysisType: ''
+  analysisType: '',
+  personName: ''
 });
 
-onBeforeMount(() => {
-  const query = route.query.q as string || '';
-  if (query)
-    searchText.value = query as string;
-})
+const clearAdvancedFilters = () => {
+  advancedFilters.value = {
+    brc: '',
+    repository: '',
+    species: '',
+    analysisType: '',
+    personName: ''
+  };
+};
 
-// Watch for URL query changes and update search text
-watch(() => route.query.q, (newQuery) => {
-  const queryString = newQuery as string || '';
-  if (queryString !== searchText.value) {
-    searchText.value = queryString;
-  }
-}, { immediate: true });
+const clearSequence = () => {
+  searchStore.clearSearchData();
+  dnaSequence.value = '';
+};
+
+const clearAll = () => {
+  clearSequence();
+  clearAdvancedFilters();
+  searchText.value = '';
+};
 
 const onSubmit = () => {
   // save sequence to the store
@@ -70,30 +78,65 @@ const onAdvancedSearch = () => {
   });
 };
 
-const clearSequence = () => {
-  searchStore.clearSearchData();
-  dnaSequence.value = '';
-};
-
-const clearAdvancedFilters = () => {
-  advancedFilters.value = {
-    brc: '',
-    repository: '',
-    species: '',
-    analysisType: ''
-  };
-};
-
-const clearAll = () => {
-  clearSequence();
-  clearAdvancedFilters();
-  searchText.value = '';
-};
-
-// Prevent dropdown from closing when clicking inside
 const preventDropdownClose = (event) => {
   event.stopPropagation();
 };
+
+onBeforeMount(() => {
+  const query = route.query.q as string || '';
+  if (query)
+    searchText.value = query as string;
+});
+
+watch(() => route.query.q, (newQuery) => {
+  const queryString = newQuery as string || '';
+  if (queryString !== searchText.value) {
+    searchText.value = queryString;
+  }
+}, { immediate: true });
+
+// Add the new watcher for filters synchronization
+const isUpdatingFromURL = ref(false);
+
+watch(() => route.query.filters, (newFilters) => {
+  if (isUpdatingFromURL.value) {
+    console.log('HeaderView - Skipping update (already updating from URL)');
+    return;
+  }
+  
+  console.log('HeaderView - URL filters changed:', newFilters);
+  
+  isUpdatingFromURL.value = true;
+  
+  try {
+    if (newFilters) {
+      const parsedFilters = JSON.parse(newFilters);
+      console.log('HeaderView - Parsed filters:', parsedFilters);
+      
+      // Update the advanced search form fields
+      Object.keys(advancedFilters.value).forEach(key => {
+        if (parsedFilters.hasOwnProperty(key)) {
+          advancedFilters.value[key] = parsedFilters[key];
+        } else {
+          advancedFilters.value[key] = '';
+        }
+      });
+      
+    } else {
+      // Clear all advanced filters if no filters in URL
+      console.log('HeaderView - No filters in URL, clearing advanced filters');
+      clearAdvancedFilters();
+    }
+  } catch (e) {
+    console.error('HeaderView - Error parsing filters from URL:', e);
+  } finally {
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      isUpdatingFromURL.value = false;
+    }, 100);
+  }
+}, { immediate: true });
+
 </script>
 
 <template>
@@ -171,6 +214,14 @@ const preventDropdownClose = (event) => {
                     <input type="text" class="form-control form-control-sm" 
                            placeholder="e.g., Genomic, Code" 
                            v-model="advancedFilters.analysisType">
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label small">Person Name</label>
+                    <input type="text" class="form-control form-control-sm" 
+                          placeholder="e.g., Jane Doe" 
+                          v-model="advancedFilters.personName">
+                    <small class="form-text text-muted">Searches both creators and contributors</small>
                   </div>
                 </li>
                 

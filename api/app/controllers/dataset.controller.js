@@ -382,6 +382,32 @@ if (filters.topic) {
     req.needsYearRefinement = filters.year;
   }
 
+  // Person Name filter - Search in both creators and contributors
+if (filters.personName) {
+  console.log('Filtering for person name:', filters.personName);
+  
+  // Search for the name anywhere in creator or contributors sections
+  const personSearchQuery = {
+    [Op.or]: [
+      // Search broadly in creator section
+      where(
+        db.Sequelize.cast(db.Sequelize.col('json'), 'text'),
+        {
+          [Op.iLike]: `%"creator"%${filters.personName}%`
+        }
+      ),
+      // Search broadly in contributors section
+      where(
+        db.Sequelize.cast(db.Sequelize.col('json'), 'text'),
+        {
+          [Op.iLike]: `%"contributors"%${filters.personName}%`
+        }
+      )
+    ]
+  };
+  conditions.push(personSearchQuery);
+}
+
   // Use Op.and to merge conditions
   const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
 

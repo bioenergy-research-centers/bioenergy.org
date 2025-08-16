@@ -26,6 +26,7 @@ const activeFilters = ref({
   analysisType: null, // For analysis type chart
   topic: null,
   year: null, 
+  personName: null,
 });
 
 const props = defineProps({
@@ -40,15 +41,31 @@ const urlFilters = ref({});
 
 // Parse filters from URL and apply them
 // Update the URL filters watcher to handle new fields
-watch(() => props.filters, async (newFilters) => {
-  console.log('URL filters changed:', newFilters);
+// In SearchResults.vue, update your URL filters watcher with more debugging:
+// Fixed URL watcher that properly detects changes
+watch(() => props.filters, async (newFilters, oldFilters) => {
+  console.log('=== SEARCHRESULTS URL WATCHER DEBUG ===');
+  console.log('Old filters:', oldFilters);
+  console.log('New filters:', newFilters);
   
+  // Always update activeFilters to match URL, regardless of current state
   if (newFilters) {
     try {
       const parsedFilters = JSON.parse(newFilters);
       console.log('Parsed filters:', parsedFilters);
       
-      // Apply these filters to activeFilters (including new fields)
+      // Reset ALL filters first, then apply the ones from URL
+      activeFilters.value = {
+        brc: null,
+        repository: null,
+        species: null,
+        analysisType: null,
+        topic: null,
+        year: null,
+        personName: null
+      };
+      
+      // Apply filters from URL
       Object.keys(parsedFilters).forEach(key => {
         if (activeFilters.value.hasOwnProperty(key)) {
           activeFilters.value[key] = parsedFilters[key];
@@ -73,29 +90,27 @@ watch(() => props.filters, async (newFilters) => {
       console.error('Error parsing filters from URL:', e);
     }
   } else {
-    // Clear ALL filters when no filters in URL
-    console.log('No filters in URL, clearing activeFilters');
-    const oldFilters = { ...activeFilters.value };
+    // No filters in URL - clear everything and search
+    console.log('No filters in URL, clearing ALL activeFilters');
     activeFilters.value = {
       brc: null,
       repository: null,
       species: null,
       analysisType: null,
       topic: null,
-      year: null
+      year: null,
+      personName: null
     };
     
-    const filtersChanged = Object.keys(oldFilters).some(key => oldFilters[key] !== null);
-    if (filtersChanged) {
-      console.log('Triggering search after clearing filters...');
-      await nextTick();
-      if (!props.filter && !props.dnaSequence) {
-        await fetchAllData();
-      } else {
-        await handleSearch();
-      }
+    console.log('Triggering search after clearing filters...');
+    await nextTick();
+    if (!props.filter && !props.dnaSequence) {
+      await fetchAllData();
+    } else {
+      await handleSearch();
     }
   }
+  console.log('=== END SEARCHRESULTS URL WATCHER DEBUG ===');
 }, { immediate: true });
 
 // New emit for search updates
@@ -140,7 +155,8 @@ const handleSearch = async () => {
           species: activeFilters.value.species,
           analysisType: activeFilters.value.analysisType,
           topic: activeFilters.value.topic,         // Add this
-          year: activeFilters.value.year           // Add this
+          year: activeFilters.value.year,           // Add this
+          personName: activeFilters.value.personName
         }
       };
       
@@ -202,10 +218,12 @@ const fetchAllData = async () => {
           repository: activeFilters.value.repository,
           species: activeFilters.value.species,
           analysisType: activeFilters.value.analysisType,
-          topic: activeFilters.value.topic,         // Add this
-          year: activeFilters.value.year           // Add this
+          topic: activeFilters.value.topic,         
+          year: activeFilters.value.year,           
+          personName: activeFilters.value.personName
         }
       };
+
       
       // Remove null values from filters
       Object.keys(filterPayload.filters).forEach(key => {
@@ -662,10 +680,10 @@ const createAnalysisVisualization = () => {
   createPieChart(chartData, 'Dataset Distribution by Analysis Type', true, 'analysis');
 };
 
-// Helper function to create bar charts
 // Updated Helper function to create bar charts with clickable bars
 const createBarChart = (data, xKey, yKey, title, xLabel, yLabel, enableClickableBars = false, chartType = null) => {
-  const margin = { top: 40, right: 30, bottom: 60, left: 60 };
+  // adjust bottom margin for title issue
+  const margin = { top: 40, right: 30, bottom: 100, left: 60 };
   const width = 700 - margin.left - margin.right;
   const height = 400 - margin.top - margin.bottom;
 
@@ -1071,31 +1089,43 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
 
 
 // Function to remove a specific filter
-const removeFilter = (filterType) => {
+// Updated removeFilter function with URL synchronization
+// Alternative removeFilter with forced reactivity
+// Simplified and clean removeFilter function
+const removeFilter = async (filterType) => {
+  console.log('=== REMOVE FILTER DEBUG ===');
   console.log('Removing filter:', filterType);
   
-  if (filterType === 'brc') {
-    activeFilters.value.brc = null;
-  } else if (filterType === 'repository') {
-    activeFilters.value.repository = null;
-  } else if (filterType === 'species') {
-    activeFilters.value.species = null;
-  } else if (filterType === 'analysisType') {
-    activeFilters.value.analysisType = null;
-  } else if (filterType === 'topic') {
-    activeFilters.value.topic = null;
-  } else if (filterType === 'year') {
-    activeFilters.value.year = null;
-  }
+  // Don't modify activeFilters here - let the URL watcher handle it
+  // Just calculate what the new URL should be
+  const updatedFilters = { ...activeFilters.value };
+  updatedFilters[filterType] = null;
   
-  console.log('Active filters after removal:', activeFilters.value);
+  // Create clean filters object for URL (excluding null values)
+  const cleanFilters = {};
+  Object.keys(updatedFilters).forEach(key => {
+    if (updatedFilters[key] !== null) {
+      cleanFilters[key] = updatedFilters[key];
+    }
+  });
   
-  // Trigger data refresh without the removed filter
-  if (!props.filter && !props.dnaSequence) {
-    fetchAllData();
-  } else {
-    handleSearch();
-  }
+  console.log('Updated filters for URL:', cleanFilters);
+  
+  // Update the URL - let the watcher handle the rest
+  const currentQuery = props.filter || '';
+  const hasFilters = Object.keys(cleanFilters).length > 0;
+  
+  console.log('Updating URL...');
+  await router.push({
+    path: '/data',
+    query: {
+      q: currentQuery,
+      filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
+    },
+  });
+  
+  console.log('URL updated - watcher should handle the rest');
+  console.log('=== END REMOVE FILTER DEBUG ===');
 };
 
 // New function to handle internal search updates
@@ -1153,15 +1183,15 @@ watch(activeTab, () => {
   }
 });
 
-watch(activeFilters, () => {
-  console.log('Active filters changed:', activeFilters.value);
-  if (showChart.value) {
-    nextTick(() => {
-      console.log('Updating visualization due to filter change');
-      createVisualization();
-    });
-  }
-}, { deep: true });
+// watch(activeFilters, () => {
+//   console.log('Active filters changed:', activeFilters.value);
+//   if (showChart.value) {
+//     nextTick(() => {
+//       console.log('Updating visualization due to filter change');
+//       createVisualization();
+//     });
+//   }
+// }, { deep: true });
 
 watch(visualizationTrigger, () => {
   if (showChart.value && results.value.length > 0) {
@@ -1321,6 +1351,15 @@ const setActiveTab = (tab: string) => {
               title="Click to remove filter"
             >
               Year: {{ activeFilters.year }}
+              <i class="bi bi-x"></i>
+            </span>
+            <span 
+              v-if="activeFilters.personName" 
+              class="filter-tag"
+              @click="removeFilter('personName')"
+              title="Click to remove filter"
+            >
+              Person: {{ activeFilters.personName }}
               <i class="bi bi-x"></i>
             </span>
           </div>
