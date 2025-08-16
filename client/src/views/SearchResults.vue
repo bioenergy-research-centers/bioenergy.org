@@ -41,8 +41,6 @@ const urlFilters = ref({});
 
 // Parse filters from URL and apply them
 // Update the URL filters watcher to handle new fields
-// In SearchResults.vue, update your URL filters watcher with more debugging:
-// Fixed URL watcher that properly detects changes
 watch(() => props.filters, async (newFilters, oldFilters) => {
   console.log('=== SEARCHRESULTS URL WATCHER DEBUG ===');
   console.log('Old filters:', oldFilters);
@@ -394,33 +392,6 @@ const createSourcesVisualization = () => {
   createPieChart(chartData, 'Dataset Distribution by BRC (Bioenergy Research Center)', true, 'sources');
 };
 
-// const createTopicsVisualization = () => {
-//   const precomputedFrequency = {
-//     "Genetic Engineering": 230,
-//     "Plant Biology": 104,
-//     "Microbiology": 94,
-//     "Analytics & Methods": 82,
-//     "Enzymes & Proteins": 59,
-//     "Biomass & Feedstock": 58,
-//     "Bioenergy Production": 43,
-//     "Process Engineering": 14
-//   };
-
-//   const chartData = Object.entries(precomputedFrequency)
-//     .map(([topic, count]) => ({ label: topic, value: count }))
-//     .sort((a, b) => b.value - a.value);
-
-//   createBarChart(
-//     chartData.map(d => ({ category: d.label, count: d.value })), 
-//     'category', 
-//     'count', 
-//     'Research Topics Distribution (Pre-computed)', 
-//     'Topics', 
-//     'Number of Datasets'
-//   );
-// };
-// Updated topics visualization using pre-computed categories
-// Updated topics visualization that works with filtered results
 // Updated topics visualization that works with filtered results
 const createTopicsVisualization = () => {
   // Define the same categories from your analysis
@@ -1089,15 +1060,10 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
 
 
 // Function to remove a specific filter
-// Updated removeFilter function with URL synchronization
-// Alternative removeFilter with forced reactivity
-// Simplified and clean removeFilter function
 const removeFilter = async (filterType) => {
   console.log('=== REMOVE FILTER DEBUG ===');
   console.log('Removing filter:', filterType);
   
-  // Don't modify activeFilters here - let the URL watcher handle it
-  // Just calculate what the new URL should be
   const updatedFilters = { ...activeFilters.value };
   updatedFilters[filterType] = null;
   
@@ -1111,7 +1077,6 @@ const removeFilter = async (filterType) => {
   
   console.log('Updated filters for URL:', cleanFilters);
   
-  // Update the URL - let the watcher handle the rest
   const currentQuery = props.filter || '';
   const hasFilters = Object.keys(cleanFilters).length > 0;
   
@@ -1182,16 +1147,6 @@ watch(activeTab, () => {
     });
   }
 });
-
-// watch(activeFilters, () => {
-//   console.log('Active filters changed:', activeFilters.value);
-//   if (showChart.value) {
-//     nextTick(() => {
-//       console.log('Updating visualization due to filter change');
-//       createVisualization();
-//     });
-//   }
-// }, { deep: true });
 
 watch(visualizationTrigger, () => {
   if (showChart.value && results.value.length > 0) {
