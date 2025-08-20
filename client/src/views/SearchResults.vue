@@ -24,15 +24,15 @@ const activeFilters = ref({
   repository: null, // For resources chart
   species: null,    // For species chart
   analysisType: null, // For analysis type chart
-  topic: null,
-  year: null, 
-  personName: null,
+  topic: null, // for topics chart
+  year: null, // for dataset/year count chart
+  personName: null, // for advanced search field only, not used in charts
 });
 
 const props = defineProps({
   filter: String,
   dnaSequence: String,
-  filters: String, // Add this new prop
+  filters: String,
 });
 
 // Parse filters from URL
@@ -765,7 +765,6 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel, enableClickable
     .text(xLabel);
 };
 
-// Function to handle bar clicks
 // Updated function to handle bar clicks with actual filtering
 const handleBarClick = (barValue, chartType) => {
   console.log('=== BAR CLICK DEBUG ===');
@@ -934,34 +933,66 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
     });
 
   // Determine if we need scrolling (only for more than 18 items that would exceed available space)
-  const needsScrolling = data.length > 18;
   const legendItemHeight = 18;
-  const maxLegendHeight = needsScrolling ? 320 : (data.length * legendItemHeight + 10);
+  const maxLegendHeight = 320; // Maximum height before scrolling
+  const estimatedContentHeight = data.length * legendItemHeight + 10; // +10 for padding
+  const needsScrolling = estimatedContentHeight > maxLegendHeight;
+  
+  console.log(`Legend items: ${data.length}, Estimated height: ${estimatedContentHeight}, Needs scrolling: ${needsScrolling}`);
   
   // Position legend to the right of the pie chart with more width
-  const legendX = (width / 2) + radius + 15; // Slightly closer to pie
-  const legendWidth = Math.max(150, width - legendX - 10); // Minimum 300px width, use more available space
+  const legendX = (width / 2) + radius + 15;
+  const legendWidth = Math.max(150, width - legendX - 10);
   
-  // Create legend container (scrollable only when needed)
+  // Use actual content height or max height
+  const containerHeight = needsScrolling ? maxLegendHeight : estimatedContentHeight;
+  
+  // Create legend container
   const legendContainer = svg.append('foreignObject')
     .attr('x', legendX)
     .attr('y', 40)
     .attr('width', legendWidth)
-    .attr('height', maxLegendHeight);
+    .attr('height', containerHeight);
 
   const legendDiv = legendContainer
     .append('xhtml:div')
     .style('width', '100%')
     .style('height', '100%')
-    .style('overflow-y', needsScrolling ? 'auto' : 'visible') // Only scroll when needed
+    .style('overflow-y', needsScrolling ? 'auto' : 'hidden') // Only auto when actually needed
     .style('overflow-x', 'hidden')
-    .style('background', 'transparent') // Always transparent background
-    .style('font-family', 'Arial, sans-serif');
+    .style('background', 'transparent')
+    .style('font-family', 'Arial, sans-serif')
+    .style('padding', '5px')
+    .style('box-sizing', 'border-box');
 
-  // Add custom scrollbar styles only when needed
+  // Add custom scrollbar styles only when scrolling is enabled
   if (needsScrolling) {
-    legendDiv.style('scrollbar-width', 'thin')
+    legendDiv
+      .style('scrollbar-width', 'thin')
       .style('scrollbar-color', '#ccc #f0f0f0');
+    
+    // Add webkit scrollbar styles for better cross-browser support
+    const style = document.createElement('style');
+    style.textContent = `
+      .legend-scrollable::-webkit-scrollbar {
+        width: 6px;
+      }
+      .legend-scrollable::-webkit-scrollbar-track {
+        background: #f0f0f0;
+        border-radius: 3px;
+      }
+      .legend-scrollable::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+      }
+      .legend-scrollable::-webkit-scrollbar-thumb:hover {
+        background: #999;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Add class for webkit styling
+    legendDiv.classed('legend-scrollable', true);
   }
 
   // Create legend items
@@ -1023,6 +1054,16 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
     });
 }
 
+if (needsScrolling) {
+    svg.append('text')
+      .attr('x', legendX + (legendWidth / 2))
+      .attr('y', containerHeight + 60) // Position below the legend container
+      .attr('text-anchor', 'middle')
+      .style('font-size', '10px')
+      .style('fill', '#999')
+      .text('↕ Scroll for more');
+  }
+
   // Add title
   svg.append('text')
     .attr('x', width / 2)
@@ -1046,16 +1087,6 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
     }
   }
 
-  // Add scroll indicator only when actually scrollable
-  if (needsScrolling) {
-    svg.append('text')
-      .attr('x', legendX + (legendWidth / 2))
-      .attr('y', height - 10)
-      .attr('text-anchor', 'middle')
-      .style('font-size', '10px')
-      .style('fill', '#999')
-      .text('↕ Scroll for more');
-  }
 };
 
 
