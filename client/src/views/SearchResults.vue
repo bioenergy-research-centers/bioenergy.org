@@ -2,12 +2,13 @@
 import DatasetDataService from "../services/DatasetDataService";
 import {ref, watch, onMounted, nextTick} from "vue";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 // Add D3 imports
 import { select, scaleLinear, scaleBand, axisBottom, axisLeft, pie, arc, schemeCategory10 } from 'd3';
 
 const router = useRouter();
+const route = useRoute()
 
 const results = ref([]);
 const loading = ref(true);
@@ -263,43 +264,66 @@ const forceVisualizationUpdate = async () => {
   }
 };
 
-// Updated legend click handler with better debugging
-const handleLegendClick = (legendValue, chartType) => {
+// Updated legend click handler that properly updates URL
+const handleLegendClick = async (legendValue, chartType) => {
   console.log('=== LEGEND CLICK DEBUG ===');
   console.log('Legend clicked:', legendValue, 'for chart:', chartType);
+  console.log('Current route query:', route.query);
   console.log('Current activeFilters before update:', JSON.stringify(activeFilters.value));
+  
+  // Calculate what the new filters should be
+  const updatedFilters = { ...activeFilters.value };
   
   // Update the appropriate filter
   if (chartType === 'sources') {
-    activeFilters.value.brc = legendValue;
+    updatedFilters.brc = legendValue;
     console.log('Set BRC filter to:', legendValue);
   } else if (chartType === 'resources') {
-    activeFilters.value.repository = legendValue;
+    updatedFilters.repository = legendValue;
     console.log('Set Repository filter to:', legendValue);
   } else if (chartType === 'species') {
-    activeFilters.value.species = legendValue;
+    updatedFilters.species = legendValue;
     console.log('Set Species filter to:', legendValue);
   } else if (chartType === 'analysis') {
-    activeFilters.value.analysisType = legendValue;
+    updatedFilters.analysisType = legendValue;
     console.log('Set Analysis Type filter to:', legendValue);
   }
   
-  console.log('Current activeFilters after update:', JSON.stringify(activeFilters.value));
+  console.log('Updated filters after change:', updatedFilters);
   
-  // Trigger data refresh with new filters
-  console.log('Triggering data refresh...');
-  console.log('props.filter:', props.filter);
-  console.log('props.dnaSequence:', props.dnaSequence);
+  // Create clean filters object for URL (excluding null values)
+  const cleanFilters = {};
+  Object.keys(updatedFilters).forEach(key => {
+    if (updatedFilters[key] !== null) {
+      cleanFilters[key] = updatedFilters[key];
+    }
+  });
   
-  if (!props.filter && !props.dnaSequence) {
-    console.log('Calling fetchAllData...');
-    fetchAllData();
-  } else {
-    console.log('Calling handleSearch...');
-    handleSearch();
+  console.log('Clean filters for URL:', cleanFilters);
+  
+  // Update the URL with the new filter state
+  const currentQuery = props.filter || '';
+  const hasFilters = Object.keys(cleanFilters).length > 0;
+  
+  console.log('Updating URL with legend click...');
+  console.log('Current query:', currentQuery);
+  console.log('Has filters:', hasFilters);
+  
+  try {
+    await router.push({
+      path: '/data',
+      query: {
+        q: currentQuery || undefined,
+        filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
+      }
+    });
+    console.log('URL updated successfully from legend click');
+  } catch (error) {
+    console.error('Error updating URL from legend click:', error);
   }
   
   console.log('=== END LEGEND CLICK DEBUG ===');
+
 };
 
 // Main visualization function that routes to specific chart types
@@ -765,31 +789,48 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel, enableClickable
     .text(xLabel);
 };
 
-// Updated function to handle bar clicks with actual filtering
-const handleBarClick = (barValue, chartType) => {
+// Updated bar click handler that properly updates URL
+const handleBarClick = async (barValue, chartType) => {
   console.log('=== BAR CLICK DEBUG ===');
   console.log('Bar clicked:', barValue, 'for chart:', chartType);
-  console.log('Current activeFilters before update:', JSON.stringify(activeFilters.value));
+  console.log('Current route query:', route.query);
+  
+  // Calculate what the new filters should be
+  const updatedFilters = { ...activeFilters.value };
   
   // Handle different chart types
   if (chartType === 'topics') {
-    activeFilters.value.topic = barValue;
+    updatedFilters.topic = barValue;
     console.log('Set Topic filter to:', barValue);
   } else if (chartType === 'count') {
-    activeFilters.value.year = barValue;
+    updatedFilters.year = barValue;
     console.log('Set Year filter to:', barValue);
   }
   
-  console.log('Current activeFilters after update:', JSON.stringify(activeFilters.value));
+  // Create clean filters object for URL
+  const cleanFilters = {};
+  Object.keys(updatedFilters).forEach(key => {
+    if (updatedFilters[key] !== null) {
+      cleanFilters[key] = updatedFilters[key];
+    }
+  });
   
-  // Trigger data refresh with new filters
-  console.log('Triggering data refresh...');
-  if (!props.filter && !props.dnaSequence) {
-    console.log('Calling fetchAllData...');
-    fetchAllData();
-  } else {
-    console.log('Calling handleSearch...');
-    handleSearch();
+  const currentQuery = props.filter || '';
+  const hasFilters = Object.keys(cleanFilters).length > 0;
+  
+  console.log('Updating URL with bar click...');
+  
+  try {
+    await router.push({
+      path: '/data',
+      query: {
+        q: currentQuery || undefined,
+        filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
+      }
+    });
+    console.log('URL updated successfully from bar click');
+  } catch (error) {
+    console.error('Error updating URL from bar click:', error);
   }
   
   console.log('=== END BAR CLICK DEBUG ===');
@@ -1090,11 +1131,14 @@ if (needsScrolling) {
 };
 
 
-// Function to remove a specific filter
+// Clean removeFilter function with proper route access
 const removeFilter = async (filterType) => {
   console.log('=== REMOVE FILTER DEBUG ===');
   console.log('Removing filter:', filterType);
+  console.log('Current route query:', route.query);
+  console.log('Current activeFilters:', activeFilters.value);
   
+  // Calculate what the new filters should be
   const updatedFilters = { ...activeFilters.value };
   updatedFilters[filterType] = null;
   
@@ -1106,21 +1150,28 @@ const removeFilter = async (filterType) => {
     }
   });
   
-  console.log('Updated filters for URL:', cleanFilters);
+  console.log('Clean filters for URL:', cleanFilters);
   
   const currentQuery = props.filter || '';
   const hasFilters = Object.keys(cleanFilters).length > 0;
   
   console.log('Updating URL...');
-  await router.push({
-    path: '/data',
-    query: {
-      q: currentQuery,
-      filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
-    },
-  });
+  console.log('Current query:', currentQuery);
+  console.log('Has filters:', hasFilters);
   
-  console.log('URL updated - watcher should handle the rest');
+  try {
+    await router.push({
+      path: '/data',
+      query: {
+        q: currentQuery || undefined,
+        filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
+      }
+    });
+    console.log('URL updated successfully');
+  } catch (error) {
+    console.error('Error updating URL:', error);
+  }
+  
   console.log('=== END REMOVE FILTER DEBUG ===');
 };
 
