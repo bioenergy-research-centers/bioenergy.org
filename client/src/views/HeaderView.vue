@@ -37,10 +37,33 @@ const clearSequence = () => {
   dnaSequence.value = '';
 };
 
-const clearAll = () => {
+// Enhanced clearAll function that also triggers a fresh search
+const clearAll = async () => {
+  console.log('=== CLEAR ALL DEBUG ===');
+  console.log('Before clearing - searchText:', searchText.value);
+  console.log('Before clearing - advancedFilters:', advancedFilters.value);
+  console.log('Before clearing - dnaSequence:', dnaSequence.value);
+  
+  // Clear all form fields
   clearSequence();
   clearAdvancedFilters();
   searchText.value = '';
+  
+  console.log('After clearing - all fields should be empty');
+  console.log('searchText:', searchText.value);
+  console.log('advancedFilters:', advancedFilters.value);
+  console.log('dnaSequence:', dnaSequence.value);
+  
+  // Navigate to clean /data page (no query parameters)
+  // This will trigger a fresh search with no filters
+  console.log('Navigating to clean /data page...');
+  await router.push({
+    path: '/data'
+    // No query parameters = completely clean search
+  });
+  
+  console.log('Navigation complete - should trigger fresh search');
+  console.log('=== END CLEAR ALL DEBUG ===');
 };
 
 const onSubmit = () => {
