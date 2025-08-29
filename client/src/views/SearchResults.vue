@@ -3,6 +3,9 @@ import DatasetDataService from "../services/DatasetDataService";
 import {ref, watch} from "vue";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
 
+import sanitizeHtml from 'sanitize-html';
+const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
+
 const results = ref([]);
 const loading = ref(true);
 const error = ref(null);
@@ -75,6 +78,12 @@ watch(
 const onSelectResult = (result: any) => {
   selectedResult.value = result;
 }
+
+const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
+  if (str.length <= maxStart + maxEnd) return str;
+  return str.slice(0, maxStart) + "…" + str.slice(-maxEnd);
+}
+
 </script>
 
 <template>
@@ -106,11 +115,11 @@ const onSelectResult = (result: any) => {
               :class="{ active: selectedResult.identifier === result.identifier }"
               @click="onSelectResult(result)"
           >
-            <div class="ms-2 me-auto">
-              <div class="mb-2 fw-bold">{{ result.identifier }}</div>
-              <div class="small">{{ result.title }}</div>
+            <div class="list-group-item-content ms-2 me-auto">
+              <div class="mb-2 fw-bold">{{ truncateMiddle(result.identifier, 25,25) }}</div>
+              <div class="small" v-html="sanitizeHtml(truncateMiddle(result.title), ALLOWED_HTML)"></div>
             </div>
-            <small style="font-size: 0.75em">{{ result.date }}</small>
+            <small class="ps-1" style="font-size: 0.75em">{{ result.date }}</small>
           </div>
         </div>
       </div>
@@ -125,6 +134,11 @@ const onSelectResult = (result: any) => {
 
 
 <style scoped>
+.list-group-item-content {
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
 .page-container {
   display: flex;
   height: 100vh;
