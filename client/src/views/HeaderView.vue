@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {RouterLink, useRoute, useRouter} from "vue-router";
 import headerIcon from "@/assets/brc-bioenergy-icon.png"
-import {onBeforeMount, ref} from "vue";
+import {onBeforeMount, ref, watch, onMounted} from "vue"; // Fixed import
 import {useSearchStore} from '@/store/searchStore';
 
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
@@ -13,11 +13,58 @@ const searchStore = useSearchStore();
 const searchText = ref('');
 const dnaSequence = ref('');
 
-onBeforeMount(() => {
-  const query = route.query.q as string || '';
-  if (query)
-    searchText.value = query as string;
-})
+// Advanced search filters
+const advancedFilters = ref({
+  brc: '',
+  repository: '',
+  species: '',
+  analysisType: '',
+  personName: ''
+});
+
+const clearAdvancedFilters = () => {
+  advancedFilters.value = {
+    brc: '',
+    repository: '',
+    species: '',
+    analysisType: '',
+    personName: ''
+  };
+};
+
+const clearSequence = () => {
+  searchStore.clearSearchData();
+  dnaSequence.value = '';
+};
+
+// Enhanced clearAll function that also triggers a fresh search
+const clearAll = async () => {
+  console.log('=== CLEAR ALL DEBUG ===');
+  console.log('Before clearing - searchText:', searchText.value);
+  console.log('Before clearing - advancedFilters:', advancedFilters.value);
+  console.log('Before clearing - dnaSequence:', dnaSequence.value);
+  
+  // Clear all form fields
+  clearSequence();
+  clearAdvancedFilters();
+  searchText.value = '';
+  
+  console.log('After clearing - all fields should be empty');
+  console.log('searchText:', searchText.value);
+  console.log('advancedFilters:', advancedFilters.value);
+  console.log('dnaSequence:', dnaSequence.value);
+  
+  // Navigate to clean /data page (no query parameters)
+  // This will trigger a fresh search with no filters
+  console.log('Navigating to clean /data page...');
+  await router.push({
+    path: '/data'
+    // No query parameters = completely clean search
+  });
+  
+  console.log('Navigation complete - should trigger fresh search');
+  console.log('=== END CLEAR ALL DEBUG ===');
+};
 
 const onSubmit = () => {
   // save sequence to the store
@@ -32,10 +79,87 @@ const onSubmit = () => {
   });
 };
 
-const clearSequence = () => {
-  searchStore.clearSearchData();
-  dnaSequence.value = '';
+const onAdvancedSearch = () => {
+  // Save sequence to store
+  searchStore.setDnaSequence(dnaSequence.value);
+  
+  // Create filter object with only non-empty values
+  const filters = {};
+  Object.keys(advancedFilters.value).forEach(key => {
+    if (advancedFilters.value[key] && advancedFilters.value[key].trim() !== '') {
+      filters[key] = advancedFilters.value[key].trim();
+    }
+  });
+  
+  // Navigate to /data with search text and filters
+  router.push({
+    path: '/data',
+    query: {
+      q: searchText.value,
+      filters: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined
+    },
+  });
 };
+
+const preventDropdownClose = (event) => {
+  event.stopPropagation();
+};
+
+onBeforeMount(() => {
+  const query = route.query.q as string || '';
+  if (query)
+    searchText.value = query as string;
+});
+
+watch(() => route.query.q, (newQuery) => {
+  const queryString = newQuery as string || '';
+  if (queryString !== searchText.value) {
+    searchText.value = queryString;
+  }
+}, { immediate: true });
+
+// Add the new watcher for filters synchronization
+const isUpdatingFromURL = ref(false);
+
+watch(() => route.query.filters, (newFilters) => {
+  if (isUpdatingFromURL.value) {
+    console.log('HeaderView - Skipping update (already updating from URL)');
+    return;
+  }
+  
+  console.log('HeaderView - URL filters changed:', newFilters);
+  
+  isUpdatingFromURL.value = true;
+  
+  try {
+    if (newFilters) {
+      const parsedFilters = JSON.parse(newFilters);
+      console.log('HeaderView - Parsed filters:', parsedFilters);
+      
+      // Update the advanced search form fields
+      Object.keys(advancedFilters.value).forEach(key => {
+        if (parsedFilters.hasOwnProperty(key)) {
+          advancedFilters.value[key] = parsedFilters[key];
+        } else {
+          advancedFilters.value[key] = '';
+        }
+      });
+      
+    } else {
+      // Clear all advanced filters if no filters in URL
+      console.log('HeaderView - No filters in URL, clearing advanced filters');
+      clearAdvancedFilters();
+    }
+  } catch (e) {
+    console.error('HeaderView - Error parsing filters from URL:', e);
+  } finally {
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      isUpdatingFromURL.value = false;
+    }, 100);
+  }
+}, { immediate: true });
+
 </script>
 
 <template>
@@ -65,18 +189,81 @@ const clearSequence = () => {
               </button>
 
               <!-- Advanced Search Dropdown -->
-              <ul class="dropdown-menu p-3">
-                <li>
+              <ul class="dropdown-menu p-3" @click="preventDropdownClose">
+                <!-- DNA Sequence Section -->
+                <li class="mb-3">
+                  <label class="form-label small fw-bold text-muted">DNA Sequence</label>
                   <textarea class="form-control" rows="3" placeholder="Enter sequence..."
                             v-model="dnaSequence"></textarea>
                 </li>
-                <li class="mt-2">
-                  <button type="submit" class="btn btn-sm btn-primary">
-                    Run Sequence Search
-                  </button>&nbsp;
-                  <button type="button" class="btn btn-sm btn-secondary" @click.prevent="clearSequence" v-if="searchStore.dnaSequence">
-                    Clear
-                  </button>
+                
+                <!-- Divider -->
+                <li><hr class="dropdown-divider"></li>
+                
+                <!-- Advanced Filters Section -->
+                <li class="mb-3">
+                  <label class="form-label small fw-bold text-muted">Filter by Fields</label>
+                  
+                  <!-- BRC Filter -->
+                  <div class="mb-2">
+                    <label class="form-label small">Bioenergy Research Center (BRC)</label>
+                    <select class="form-select form-select-sm" v-model="advancedFilters.brc">
+                      <option value="">Any BRC</option>
+                      <option value="JBEI">JBEI</option>
+                      <option value="GLBRC">GLBRC</option>
+                      <option value="CABBI">CABBI</option>
+                      <option value="CBI">CBI</option>
+                    </select>
+                  </div>
+                  
+                  <!-- Repository Filter -->
+                  <div class="mb-2">
+                    <label class="form-label small">Repository</label>
+                    <input type="text" class="form-control form-control-sm" 
+                          placeholder="e.g., ICE, Illinois Data Bank, NCBI" 
+                          v-model="advancedFilters.repository">
+                  </div>
+                  <!-- Species Filter -->
+                  <div class="mb-2">
+                    <label class="form-label small">Species</label>
+                    <input type="text" class="form-control form-control-sm" 
+                           placeholder="e.g., E. coli, Sorghum bicolor" 
+                           v-model="advancedFilters.species">
+                  </div>
+                  
+                  <!-- Analysis Type Filter -->
+                  <div class="mb-2">
+                    <label class="form-label small">Analysis Type</label>
+                    <input type="text" class="form-control form-control-sm" 
+                           placeholder="e.g., Genomic, Code" 
+                           v-model="advancedFilters.analysisType">
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label small">Person Name</label>
+                    <input type="text" class="form-control form-control-sm" 
+                          placeholder="e.g., Jane Doe" 
+                          v-model="advancedFilters.personName">
+                    <small class="form-text text-muted">Searches both creators and contributors</small>
+                  </div>
+                </li>
+                
+                <!-- Action Buttons -->
+                <li class="mt-3">
+                  <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-sm btn-primary" @click="onAdvancedSearch">
+                      <i class="bi bi-search"></i> Advanced Search
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-outline-primary" v-if="dnaSequence.trim()">
+                      <i class="bi bi-dna"></i> Sequence Search
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearAdvancedFilters">
+                      Clear Filters
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" @click="clearAll">
+                      Clear All
+                    </button>
+                  </div>
                 </li>
               </ul>
             </div>
@@ -117,5 +304,40 @@ const clearSequence = () => {
 
 textarea {
   resize: none;
+}
+
+/* Prevent dropdown from being too narrow */
+.dropdown-menu {
+  min-width: 400px;
+}
+
+/* Style for form elements in dropdown */
+.dropdown-menu .form-label {
+  margin-bottom: 0.25rem;
+}
+
+.dropdown-menu .form-control,
+.dropdown-menu .form-select {
+  font-size: 0.875rem;
+}
+
+/* Gap utility for older Bootstrap versions */
+.gap-2 > * + * {
+  margin-left: 0.5rem;
+}
+
+@media (max-width: 576px) {
+  .dropdown-menu {
+    min-width: 300px;
+  }
+  
+  .gap-2 {
+    flex-direction: column;
+  }
+  
+  .gap-2 > * + * {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
 }
 </style>
