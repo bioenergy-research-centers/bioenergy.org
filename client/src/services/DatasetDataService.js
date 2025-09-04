@@ -31,6 +31,10 @@ class DatasetDataService {
     return http.post('/datasets/', payload);
   }
 
+  runFilteredSearch(payload) {
+    return http.post('/datasets/filters', payload);
+  }
+
   // Query for datasets using multiple filters
   findByParams(params) {
     var queryParams = new URLSearchParams();
