@@ -1,6 +1,9 @@
 <script setup>
   import { ref, computed } from 'vue';
   import OrganismLink from '@/components/OrganismLink.vue';
+  import sanitizeHtml from 'sanitize-html';
+  const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
+
   const props = defineProps(['selectedResult']);
   const expandedIndex=ref(null);
   function toggleDesc(idx) {
@@ -12,10 +15,11 @@
     if(!Array.isArray(creators)) { return []; }
     return creators.filter(item => item.primaryContact === true);
   });
+  
 </script>
 
 <template>
-  <h3>{{ selectedResult.title }}</h3>
+  <h3 v-html="sanitizeHtml(selectedResult?.title, ALLOWED_HTML)"></h3>
         <div>
           More information at:
           <a :href="selectedResult.bibliographicCitation" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
@@ -54,7 +58,7 @@
 
         <div v-if="selectedResult.description" class="mt-4">
           <div class="small text-uppercase mt-5 fw-bold">Description</div>
-          {{ selectedResult.description }}
+          <span v-html="sanitizeHtml(selectedResult?.description, ALLOWED_HTML)"></span>
         </div>
 
         <div v-if="selectedResult.keywords && selectedResult.keywords.length" class="mt-4">

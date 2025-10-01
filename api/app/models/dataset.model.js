@@ -1,4 +1,6 @@
 const { Model, DataTypes } = require("sequelize");
+const sanitizeHtml = require('sanitize-html');
+const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
 
 module.exports = (sequelize, Sequelize) => {
   class Dataset extends Model {
@@ -24,7 +26,14 @@ module.exports = (sequelize, Sequelize) => {
       },
       json: {
         type: DataTypes.JSONB,
-        allowNull: false
+        allowNull: false,
+        set(rawJSON) {
+          // sanitize all string values
+          const cleanJSON = JSON.parse(JSON.stringify(rawJSON,
+            (_key, value) => (typeof value === "string" ? sanitizeHtml(value, ALLOWED_HTML) : value)
+          ));
+          this.setDataValue('json', cleanJSON);
+        }
       }
     },
     { 
