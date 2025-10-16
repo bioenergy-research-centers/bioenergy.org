@@ -1287,6 +1287,134 @@ const setActiveTab = (tab: string) => {
     </div>
 
     <!-- Results Found -->
+    <div v-else class="new-ui results-container">
+      <!-- Full Column: Keyword and Advanced Search Inputs -->
+      <div class="full-width">
+        <form style="width:75%;">
+          <div class="input-group">
+            <!-- Main Search Input -->
+            <label for="main-search-input" class="visually-hidden">Search Datasets</label>
+            <input id="main-search-input" class="form-control" placeholder="Search bioenergy.org datasets" />
+            <button type="submit" class="btn btn-sm btn-outline-secondary">
+              <span class="visually-hidden">Search</span>
+              <i class="bi bi-search text-muted"></i>
+            </button>
+
+            <!-- Advanced Search Dropdown Toggle -->
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+              Advanced
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="columns">
+        <!-- Left Column: Search Results -->
+        <div class="left-column">
+          <h3>Filters</h3>
+          <div class="" style="background-color: #fff;border:1px solid #ddd;padding:15px;margin-top:10px;">
+            <!--- Bioenergy Research Center Filter -->
+            <div class="mb-2">
+               <label class="form-label small">Bioenergy Research Center (BRC)</label>
+                  <select class="form-select form-select-sm">
+                    <option value="">Any BRC</option>
+                    <option value="JBEI">JBEI</option>
+                    <option value="GLBRC">GLBRC</option>
+                    <option value="CABBI">CABBI</option>
+                    <option value="CBI">CBI</option>
+                  </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Repository</label>
+              <input type="text" class="form-control form-control-sm"
+                          placeholder="e.g., ICE, Illinois Data Bank, NCBI">
+              </div>
+            <!-- Species Filter -->
+            <div class="mb-2">
+              <label class="form-label small">Species</label>
+              <input type="text" class="form-control form-control-sm"
+                      placeholder="e.g., E. coli, Sorghum bicolor">
+            </div>
+
+            <!-- Analysis Type Filter -->
+            <div class="mb-2">
+              <label class="form-label small">Analysis Type</label>
+              <input type="text" class="form-control form-control-sm"
+                      placeholder="e.g., Genomic, Code">
+            </div>
+
+            <!-- Person Filter -->
+            <div class="mb-2">
+                    <label class="form-label small">Person Name</label>
+                    <input type="text" class="form-control form-control-sm"
+                          placeholder="e.g., Jane Doe">
+                    <small class="form-text text-muted">Searches both creators and contributors</small>
+                  </div>
+            <div class="mb-2">
+              <button type="button" class="btn btn-sm btn-primary" @click="onAdvancedSearch">
+                <i class="bi bi-search"></i> Advanced Search
+              </button>
+            </div>
+            <div class="mb-2">
+              <button type="submit" class="btn btn-sm btn-outline-primary" v-if="dnaSequence.trim()">
+                <i class="bi bi-dna"></i> Sequence Search
+              </button>
+            </div>
+            <div class="mb-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearAdvancedFilters">
+                Clear Filters
+              </button>
+            </div>
+            <div>
+              <button type="button" class="btn btn-sm btn-outline-danger" @click="clearAll">
+                Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Selected Result Details OR Chart -->
+        <div class="right-column">
+          <h3>{{ results.length }} Results Found</h3>
+           <div class="list-group">
+            <div
+                class="list-group-item list-group-item-action"
+                v-for="result in results"
+                :key="result.identifier"
+                @click="onSelectResult(result)"
+            >
+              <div class="badge" style="float: right;background-color:grey;"><small>{{ result.date }}</small></div>
+              <div class="fw-bold mb-2">{{ result.identifier }}</div>
+              <div class="mb-2"><em>{{ result.title }}</em></div>
+              <div class="mb-2">Repository: {{ result.repository }}</div>
+              <!-- <div class="mb-1">Analysis Type: {{ result.analysisType }}</div> -->
+              <div><a href="">{{  result.identifier  }} dataset link <i class="bi bi-arrow-right"></i></a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--- TODO: All the current markup -->
+  <br/>
+  <h2> Current UI</h2>
+
+  <div class="page-container">
+    <!-- Loading Indicator -->
+    <div v-if="loading" class="loading-indicator">
+      Running search...
+    </div>
+
+    <!-- No Results Found -->
+    <div v-else-if="results && results.length === 0" class="no-results-container">
+      <div class="no-results-message">
+        <h2>Uh oh!</h2>
+        <p>Your search did not match any records. Please refine your query and try again.</p>
+      </div>
+    </div>
+
+    <!-- Results Found -->
     <div v-else class="results-container">
       <!-- Left Column: Search Results -->
       <div class="left-column">
@@ -1550,6 +1678,45 @@ const setActiveTab = (tab: string) => {
   color: #555;
 }
 
+/* TODO New UI Container Styles */
+.new-ui.results-container {
+  display: flex;
+  flex-direction: column; /* Stack full-width on top of columns */
+  flex: 1;
+}
+.new-ui .full-width {
+  padding: 20px;
+  border-bottom: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+.new-ui .left-column {
+  padding: 20px;
+  box-sizing: border-box;
+}
+.new-ui .right-column {
+  box-sizing: border-box;
+  padding: 20px;
+}
+
+@media (min-width: 968px) {
+  .new-ui .columns {
+    display: flex;
+    flex: 1;
+  }
+  .new-ui .left-column {
+    border-right: 1px solid #ddd;
+    min-width: 300px;
+    width: 400px;
+  }
+  .new-ui .right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* TODO End New UI Container Styles */
+
 /* Results Container Styles */
 .results-container {
   display: flex;
@@ -1563,13 +1730,12 @@ const setActiveTab = (tab: string) => {
   width: 400px;
   overflow-y: auto;
   padding: 20px;
-  border-right: 1px solid #ddd;
+  /* border-right: 1px solid #ddd; */
 }
 
 /* Right Column Styles */
 .right-column {
   flex: 1;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
