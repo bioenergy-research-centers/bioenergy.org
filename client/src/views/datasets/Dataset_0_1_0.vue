@@ -1,6 +1,7 @@
 <script setup>
   import { ref, computed } from 'vue';
   import OrganismLink from '@/components/OrganismLink.vue';
+  import AuthorList from '@/components/AuthorList.vue';
   import sanitizeHtml from 'sanitize-html';
   const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
 
@@ -9,57 +10,77 @@
   function toggleDesc(idx) {
     expandedIndex.value = expandedIndex.value === idx ? null : idx;
   }
-
-  const primaryCreators = computed(() => {
-    const creators = props.selectedResult?.creator
-    if(!Array.isArray(creators)) { return []; }
-    return creators.filter(item => item.primaryContact === true);
-  });
   
+  const updatedDate = computed(() => {
+    const date = props.selectedResult?.updated_at
+    if(!date) {return "";}
+    const d = new Date(date)
+    return d.toLocaleDateString(undefined, {dateStyle: "medium"})
+  })
+
+  const publishedDate = computed(() => {
+    const date = props.selectedResult?.date
+    if(!date) {return "";}
+    const d = new Date(date)
+    return d.toLocaleDateString(undefined, {dateStyle: "medium"})
+  })
 </script>
 
 <template>
-  <h3 v-html="sanitizeHtml(selectedResult?.title, ALLOWED_HTML)"></h3>
-        <div>
-          More information at:
-          <a :href="selectedResult.bibliographicCitation" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
-            <i class="bi bi-box-arrow-up-right"></i> {{ selectedResult.identifier }}
-          </a>
-        </div>
+  <div class="row mt-2 align-items-center">
+    <div class="col">
+      <small>Published: {{ publishedDate }}</small>
+    </div>
+    <div class="col-auto text-end me-md-4">
+      <div class="">    
+        <a :href="selectedResult.bibliographicCitation" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success text-light bg-brc-green rounded-pill px-3 pe-4 fw-bold fs-5">
+          <i class="bi bi-box-arrow-up-right"></i> Access Data
+        </a>
+      </div>
+    </div>
+  </div>
 
-        <div class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Date</div>
-          {{ selectedResult.date }}
-        </div>
+  <div class="row mt-4">
+    <div class="col-12 col-md">
+      <h3 v-html="sanitizeHtml(selectedResult?.title, ALLOWED_HTML)"></h3>
+      <AuthorList :creators="selectedResult.creator"/>
 
-        <div v-if="primaryCreators.length" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Creator</div>
-          <div>
-            <template v-for="(creator, index) in primaryCreators">
-              {{ creator.name }}<span v-if="index !== primaryCreators.length - 1">, </span>
-            </template>
-          </div>
-        </div>
+    </div>
+  </div>
+  
+  <hr/>
 
-        <div class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">BRC</div>
-          <div>{{ selectedResult.brc }}</div>
-        </div>
+  <div class="row text-muted">
+  
+    <div class="col-12 col-md-4 text-break">
+      <small>Identifier: {{ selectedResult.identifier }}</small><br/>
+    </div>
+    <div class="col-12 col-md-4 text-md-center">
+      <small>Repository: {{ selectedResult.repository }}</small>
+    </div>
+    <div class="col-12 col-md-4 text-md-end pe-md-4">
+      <small>BRC: {{ selectedResult.brc }}</small><br/>
+    </div>
+  </div>
+  <div class="row text-muted">
+    <div class="col">
+      <!-- <small>URL: {{ selectedResult.bibliographicCitation }}</small> -->
+    </div>
+  </div>
 
-        <div class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Repository</div>
-          <div>{{ selectedResult.repository }}</div>
-        </div>
+  <hr/>
+
+  <div v-if="selectedResult.description" class="row">
+    <div class="small text-uppercase fw-bold">Description</div>
+    <p v-html="sanitizeHtml(selectedResult.description, ALLOWED_HTML)"></p>
+  </div>
+
 
         <div v-if="selectedResult.analysisType" class="mt-4">
           <div class="small text-uppercase mt-5 fw-bold">Analysis Type</div>
           <div>{{ selectedResult.analysisType }}</div>
         </div>
 
-        <div v-if="selectedResult.description" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Description</div>
-          <span v-html="sanitizeHtml(selectedResult?.description, ALLOWED_HTML)"></span>
-        </div>
 
         <div v-if="selectedResult.keywords && selectedResult.keywords.length" class="mt-4">
           <div class="small text-uppercase mt-5 fw-bold">Keywords</div>
@@ -122,21 +143,24 @@
         </div>
 
         <div v-if="selectedResult.relatedItem" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Related Item</div>
+          <div class="small text-uppercase mt-5 fw-bold">Related Items</div>
           <div v-for="item in selectedResult.relatedItem">
             <div class="text-muted italic mt-2 fw-bold">
               {{ item.relatedItemType }}
               <i class="bi bi-box-arrow-up-right"></i>
             </div>
             <a :href="item.relatedItemIdentifier" target="_blank" rel="noopener noreferrer">
-              {{ item.title }}
+              <span v-html="sanitizeHtml(item.title, ALLOWED_HTML)"/>
             </a>
           </div>
         </div>
 
-        <div class='row mt-4'>
+        <hr/>
+        <div class='row mt-3 float-end'>
           <div class='text-end text-muted small'>
               Schema Version: {{ selectedResult.schema_version }}<br/>
+              Record Updated: {{ updatedDate }}
           </div>
         </div>
+
 </template>

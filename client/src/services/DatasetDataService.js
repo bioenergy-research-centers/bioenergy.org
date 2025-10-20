@@ -7,7 +7,7 @@ class DatasetDataService {
   }
 
   get(id) {
-    return http.get(`/datasets/${id}`);
+    return http.get(`/datasets/${encodeURIComponent(id)}`);
   }
 
   published() {

@@ -2,6 +2,7 @@
 import DatasetDataService from "../services/DatasetDataService";
 import {ref, watch, onMounted, nextTick} from "vue";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
+import AuthorList from '@/components/AuthorList.vue';
 import { useRouter, useRoute } from 'vue-router';
 
 // Add D3 imports
@@ -140,6 +141,7 @@ const handleSearch = async () => {
   error.value = null;
   results.value = [];
   selectedResult.value = null;
+
 
   try {
     let response;
@@ -1378,18 +1380,51 @@ const setActiveTab = (tab: string) => {
           <h3>{{ results.length }} Results Found</h3>
            <div class="list-group">
             <div
-                class="list-group-item list-group-item-action"
+                class="list-group-item"
                 v-for="result in results"
-                :key="result.identifier"
-                @click="onSelectResult(result)"
+                :key="result.uid"
             >
-              <div class="badge" style="float: right;background-color:grey;"><small>{{ result.date }}</small></div>
-              <div class="fw-bold mb-2">{{ result.identifier }}</div>
-              <div class="mb-2"><em>{{ result.title }}</em></div>
-              <div class="mb-2">Repository: {{ result.repository }}</div>
-              <!-- <div class="mb-1">Analysis Type: {{ result.analysisType }}</div> -->
-              <div><a href="">{{  result.identifier  }} dataset link <i class="bi bi-arrow-right"></i></a></div>
+              <div class="list-group-item-content py-2">
+
+                <div class="row">
+                  <div class="col-md order-md-1 fs-6 fw-bold order-1">
+                    <router-link :to="{name: 'datasetShow', params: {id: result.uid }}" class=" text-brc-green pe-4">
+                      <span v-html="sanitizeHtml(truncateMiddle(result.title||'No Title Provided', 75,50), ALLOWED_HTML)"></span>
+                    </router-link>
+                  </div>
+                  <!-- only display on larger devices -->
+                  <div class="d-none d-md-block col-md-auto order-2">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="fs-6 fw-light">
+                    <AuthorList :creators="result.creator"/>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="mt-2">
+                    <p><small v-html="sanitizeHtml(truncateMiddle(result.description||'No Description Provided', 150,75), ALLOWED_HTML)"></small></p>
+                  </div>
+                </div>
+
+                <div class="row mt-1 fs-6">
+                  <div class="col-12 col-md">
+                    <span class="text-muted fw-lighter">{{ result.analysisType }}</span>
+                  </div>
+                  <div class="col-12 col-md-auto text-md-end ps-md-3">
+                    <div class="d-inline-flex flex-row-reverse flex-md-row flex-wrap gap-1 justify-content-start justify-content-md-end">
+                      <span class="badge bg-light text-muted">{{ result.repository }}</span>
+                      <span class="badge bg-brc-light-green text-muted">{{ result.date }}</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
+
           </div>
         </div>
       </div>

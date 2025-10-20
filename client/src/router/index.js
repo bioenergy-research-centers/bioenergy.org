@@ -1,6 +1,7 @@
 import {createRouter, createWebHistory} from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import DatasetView from '../views/DatasetView.vue';
+import DatasetShowView from '../views/DatasetShowView.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +16,12 @@ const router = createRouter({
             path: '/data',
             name: 'data',
             component: DatasetView
+        },
+                {
+            path: '/data/:id',
+            name: 'datasetShow',
+            props: true,
+            component: DatasetShowView
         },
         {
             path: '/contact',

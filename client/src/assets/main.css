@@ -21,3 +21,13 @@ body {
     font-weight: bold;
     font-size: 3em;
 }
+.text-brc-green {
+  color: #72a530;
+}
+
+.bg-brc-light-green {
+  background-color: #DBE8C5;
+}
+.bg-brc-green {
+  background-color: #72a530;
+}
