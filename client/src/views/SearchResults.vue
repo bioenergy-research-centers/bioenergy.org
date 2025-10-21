@@ -4,6 +4,7 @@ import {ref, watch, onMounted, nextTick} from "vue";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
 import AuthorList from '@/components/AuthorList.vue';
 import { useRouter, useRoute } from 'vue-router';
+import Search from '@/components/Search.vue';
 
 // Add D3 imports
 import { select, scaleLinear, scaleBand, axisBottom, axisLeft, pie, arc, schemeCategory10 } from 'd3';
@@ -1292,23 +1293,7 @@ const setActiveTab = (tab: string) => {
     <div v-else class="new-ui results-container">
       <!-- Full Column: Keyword and Advanced Search Inputs -->
       <div class="full-width">
-        <form style="width:75%;">
-          <div class="input-group">
-            <!-- Main Search Input -->
-            <label for="main-search-input" class="visually-hidden">Search Datasets</label>
-            <input id="main-search-input" class="form-control" placeholder="Search bioenergy.org datasets" />
-            <button type="submit" class="btn btn-sm btn-outline-secondary">
-              <span class="visually-hidden">Search</span>
-              <i class="bi bi-search text-muted"></i>
-            </button>
-
-            <!-- Advanced Search Dropdown Toggle -->
-            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"
-                    aria-expanded="false">
-              Advanced
-            </button>
-          </div>
-        </form>
+        <Search />
       </div>
       <div class="columns">
         <!-- Left Column: Search Results -->
@@ -1317,8 +1302,8 @@ const setActiveTab = (tab: string) => {
           <div class="" style="background-color: #fff;border:1px solid #ddd;padding:15px;margin-top:10px;">
             <!--- Bioenergy Research Center Filter -->
             <div class="mb-2">
-               <label class="form-label small">Bioenergy Research Center (BRC)</label>
-                  <select class="form-select form-select-sm">
+               <label class="form-label small" for="bioenergy">Bioenergy Research Center (BRC)</label>
+                  <select class="form-select form-select-sm" id="bioenergy">
                     <option value="">Any BRC</option>
                     <option value="JBEI">JBEI</option>
                     <option value="GLBRC">GLBRC</option>
@@ -1327,34 +1312,34 @@ const setActiveTab = (tab: string) => {
                   </select>
             </div>
             <div class="mb-2">
-              <label class="form-label small">Repository</label>
+              <label class="form-label small" for="repository">Repository</label>
               <input type="text" class="form-control form-control-sm"
-                          placeholder="e.g., ICE, Illinois Data Bank, NCBI">
+                          placeholder="e.g., ICE, Illinois Data Bank, NCBI" id="repository">
               </div>
             <!-- Species Filter -->
             <div class="mb-2">
-              <label class="form-label small">Species</label>
+              <label class="form-label small" for="species">Species</label>
               <input type="text" class="form-control form-control-sm"
-                      placeholder="e.g., E. coli, Sorghum bicolor">
+                      placeholder="e.g., E. coli, Sorghum bicolor" id="species">
             </div>
 
             <!-- Analysis Type Filter -->
             <div class="mb-2">
-              <label class="form-label small">Analysis Type</label>
+              <label class="form-label small" for="analysis-type">Analysis Type</label>
               <input type="text" class="form-control form-control-sm"
-                      placeholder="e.g., Genomic, Code">
+                      placeholder="e.g., Genomic, Code" id="analysis-type">
             </div>
 
             <!-- Person Filter -->
             <div class="mb-2">
-                    <label class="form-label small">Person Name</label>
+                    <label class="form-label small" for="person">Person Name</label>
                     <input type="text" class="form-control form-control-sm"
-                          placeholder="e.g., Jane Doe">
+                          placeholder="e.g., Jane Doe" id="person">
                     <small class="form-text text-muted">Searches both creators and contributors</small>
                   </div>
             <div class="mb-2">
               <button type="button" class="btn btn-sm btn-primary" @click="onAdvancedSearch">
-                <i class="bi bi-search"></i> Advanced Search
+                Filter Results
               </button>
             </div>
             <div class="mb-2">

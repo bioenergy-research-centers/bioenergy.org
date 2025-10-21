@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import HeaderView from "@/views/HeaderView.vue";
+import Search from '@/components/Search.vue';
 
 import mapImage from "@/assets/brc-bioenergy-map.png"
 import cabbiLogo from "@/assets/cabbi-logo.png"
@@ -16,24 +17,8 @@ import doeLogo from "@/assets/doe-logo.png"
     <div class="row">
       <div class="col-md-12 col-lg-8 mt-3">
         <div class="callout">
-          <form>
-            <h2 class="fw-bold text-light">Search 523 Datasets from 4 Bioenergy Research Centers</h2>
-            <div class="input-group">
-              <!-- Main Search Input -->
-              <label for="main-search-input" class="visually-hidden">Search Datasets</label>
-              <input id="main-search-input" class="form-control" placeholder="Search datasets" />
-              <button type="submit" class="btn btn-sm btn-outline-secondary bg-light">
-                <span class="visually-hidden">Search</span>
-                <i class="bi bi-search text-muted"></i>
-              </button>
-
-              <!-- Advanced Search Dropdown Toggle -->
-              <button type="button" class="btn btn-sm btn-outline-secondary bg-light dropdown-toggle" data-bs-toggle="dropdown"
-                      aria-expanded="false">
-                Advanced
-              </button>
-            </div>
-          </form>
+            <h2 class="fw-bold text-light">Search Datasets From Four Bioenergy Research Centers</h2>
+            <Search />
         </div>
         <p class="lead px-3 fw-bold">
           A collaborative educational and informational platform brought to you by the four US Department of Energy funded <a href="https://www.genomicscience.energy.gov/bioenergy-research-centers/" class=" text-muted" target="_blank" rel="noopener noreferrer">Bioenergy Research Centers</a>
