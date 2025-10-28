@@ -5,12 +5,14 @@ import { resolveComponentVersion } from './datasets/versionComponentMap';
 import AuthorList from '@/components/AuthorList.vue';
 import { useRouter, useRoute } from 'vue-router';
 import Search from '@/components/Search.vue';
+import {useSearchStore} from '@/store/searchStore';
 
 // Add D3 imports
 import { select, scaleLinear, scaleBand, axisBottom, axisLeft, pie, arc, schemeCategory10 } from 'd3';
 
 const router = useRouter();
 const route = useRoute()
+const searchStore = useSearchStore();
 
 import sanitizeHtml from 'sanitize-html';
 const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
@@ -22,7 +24,7 @@ const selectedResult = ref(null);
 
 // Add refs for D3 containers and chart state
 const chartContainer = ref<HTMLElement>();
-const showChart = ref(false);
+const showChart = ref(true);
 const activeTab = ref('count'); // 'count', 'sources', 'topics', 'resources'
 
 const activeFilters = ref({
@@ -1260,7 +1262,6 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
 }
 
 const toggleChart = () => {
-  showChart.value = !showChart.value;
   if (showChart.value) {
     nextTick(() => {
       createVisualization();
@@ -1270,6 +1271,71 @@ const toggleChart = () => {
 
 const setActiveTab = (tab: string) => {
   activeTab.value = tab;
+};
+
+// Advanced search filters
+const advancedFilters = ref({
+  brc: '',
+  repository: '',
+  species: '',
+  analysisType: '',
+  personName: ''
+});
+
+const clearAdvancedFilters = () => {
+  advancedFilters.value = {
+    brc: '',
+    repository: '',
+    species: '',
+    analysisType: '',
+    personName: ''
+  };
+};
+
+const clearSequence = () => {
+  searchStore.clearSearchData();
+};
+
+// Enhanced clearAll function that also triggers a fresh search
+const clearAll = async () => {
+  console.log('=== CLEAR ALL DEBUG ===');
+  console.log('Before clearing - advancedFilters:', advancedFilters.value);
+  
+  // Clear all form fields
+  clearSequence();
+  clearAdvancedFilters();
+  
+  console.log('After clearing - all fields should be empty');
+  console.log('advancedFilters:', advancedFilters.value);
+  
+  // Navigate to clean /data page (no query parameters)
+  // This will trigger a fresh search with no filters
+  console.log('Navigating to clean /data page...');
+  await router.push({
+    path: '/data'
+    // No query parameters = completely clean search
+  });
+  
+  console.log('Navigation complete - should trigger fresh search');
+  console.log('=== END CLEAR ALL DEBUG ===');
+};
+
+const onAdvancedSearch = () => {  
+  // Create filter object with only non-empty values
+  const filters = {};
+  Object.keys(advancedFilters.value).forEach(key => {
+    if (advancedFilters.value[key] && advancedFilters.value[key].trim() !== '') {
+      filters[key] = advancedFilters.value[key].trim();
+    }
+  });
+  
+  // Navigate to /data with search text and filters
+  router.push({
+    path: '/data',
+    query: {
+      filters: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined
+    },
+  });
 };
 
 </script>
@@ -1294,73 +1360,191 @@ const setActiveTab = (tab: string) => {
       <!-- Full Column: Keyword and Advanced Search Inputs -->
       <div class="full-width">
         <Search />
+        
       </div>
       <div class="columns">
-        <!-- Left Column: Search Results -->
+        <!-- Left Column: Filters -->
         <div class="left-column">
           <h3>Filters</h3>
           <div class="" style="background-color: #fff;border:1px solid #ddd;padding:15px;margin-top:10px;">
-            <!--- Bioenergy Research Center Filter -->
-            <div class="mb-2">
-               <label class="form-label small" for="bioenergy">Bioenergy Research Center (BRC)</label>
-                  <select class="form-select form-select-sm" id="bioenergy">
-                    <option value="">Any BRC</option>
-                    <option value="JBEI">JBEI</option>
-                    <option value="GLBRC">GLBRC</option>
-                    <option value="CABBI">CABBI</option>
-                    <option value="CBI">CBI</option>
-                  </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label small" for="repository">Repository</label>
-              <input type="text" class="form-control form-control-sm"
-                          placeholder="e.g., ICE, Illinois Data Bank, NCBI" id="repository">
+            <form @submit.prevent="onAdvancedSearch">
+              <!--- Bioenergy Research Center Filter -->
+              <div class="mb-2">
+                <label class="form-label small" for="bioenergy">Bioenergy Research Center (BRC)</label>
+                    <select class="form-select form-select-sm" id="bioenergy" v-model="advancedFilters.brc">
+                      <option value="">Any BRC</option>
+                      <option value="JBEI">JBEI</option>
+                      <option value="GLBRC">GLBRC</option>
+                      <option value="CABBI">CABBI</option>
+                      <option value="CBI">CBI</option>
+                    </select>
               </div>
-            <!-- Species Filter -->
-            <div class="mb-2">
-              <label class="form-label small" for="species">Species</label>
-              <input type="text" class="form-control form-control-sm"
-                      placeholder="e.g., E. coli, Sorghum bicolor" id="species">
-            </div>
+              <div class="mb-2">
+                <label class="form-label small" for="repository">Repository</label>
+                <input type="text" class="form-control form-control-sm"
+                            placeholder="e.g., ICE, Illinois Data Bank, NCBI" 
+                            id="repository"
+                            v-model="advancedFilters.repository">
+                </div>
+              <!-- Species Filter -->
+              <div class="mb-2">
+                <label class="form-label small" for="species">Species</label>
+                <input type="text" class="form-control form-control-sm"
+                        placeholder="e.g., E. coli, Sorghum bicolor" 
+                        id="species"
+                        v-model="advancedFilters.species">
+              </div>
 
-            <!-- Analysis Type Filter -->
-            <div class="mb-2">
-              <label class="form-label small" for="analysis-type">Analysis Type</label>
-              <input type="text" class="form-control form-control-sm"
-                      placeholder="e.g., Genomic, Code" id="analysis-type">
-            </div>
+              <!-- Analysis Type Filter -->
+              <div class="mb-2">
+                <label class="form-label small" for="analysis-type">Analysis Type</label>
+                <input type="text" class="form-control form-control-sm"
+                        placeholder="e.g., Genomic, Code" 
+                        id="analysis-type"
+                        v-model="advancedFilters.analysisType">
+              </div>
 
-            <!-- Person Filter -->
-            <div class="mb-2">
-                    <label class="form-label small" for="person">Person Name</label>
-                    <input type="text" class="form-control form-control-sm"
-                          placeholder="e.g., Jane Doe" id="person">
-                    <small class="form-text text-muted">Searches both creators and contributors</small>
+              <!-- Person Filter -->
+              <div class="mb-2">
+                      <label class="form-label small" for="person">Person Name</label>
+                      <input type="text" class="form-control form-control-sm"
+                            placeholder="e.g., Jane Doe" 
+                            id="person"
+                            v-model="advancedFilters.personName">
+                      <small class="form-text text-muted">Searches both creators and contributors</small>
+                    </div>
+              <div class="mb-2">
+                <button type="submit" class="btn btn-sm btn-primary">
+                  Filter Results
+                </button>
+              </div>
+              <div class="mb-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearAdvancedFilters">
+                  Clear Filters
+                </button>
+              </div>
+              <div>
+                <button type="button" class="btn btn-sm btn-outline-danger" @click="clearAll">
+                  Clear All
+                </button>
+              </div>
+            </form>
+          </div>
+          <br/>
+
+          <!-- Toggle Button for Analytics -->
+          <button 
+            class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar"
+            @click="toggleChart"
+            >
+            Explore Analytics
+          </button>
+
+          <!-- Offcanvas Sidebar -->
+          <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+            <div class="offcanvas-header">
+              <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+              <div v-if="showChart" class="chart-view">
+                <div class="chart-header">
+                  <h4>Dataset Analytics</h4>
+                  <div class="chart-tabs">
+                    <button 
+                      v-for="tab in [
+                        { key: 'count', label: 'Dataset Count' },
+                        { key: 'sources', label: 'Sources' },
+                        { key: 'topics', label: 'Topics' },
+                        { key: 'resources', label: 'Resources' },
+                        { key: 'species', label: 'Species' },
+                        { key: 'analysis', label: 'Analysis Type' }
+                      ]"
+                      :key="tab.key"
+                      @click="setActiveTab(tab.key)"
+                      :class="['tab-button', { active: activeTab === tab.key }]"
+                    >
+                      {{ tab.label }}
+                    </button>
                   </div>
-            <div class="mb-2">
-              <button type="button" class="btn btn-sm btn-primary" @click="onAdvancedSearch">
-                Filter Results
-              </button>
-            </div>
-            <div class="mb-2">
-              <button type="submit" class="btn btn-sm btn-outline-primary" v-if="dnaSequence.trim()">
-                <i class="bi bi-dna"></i> Sequence Search
-              </button>
-            </div>
-            <div class="mb-2">
-              <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearAdvancedFilters">
-                Clear Filters
-              </button>
-            </div>
-            <div>
-              <button type="button" class="btn btn-sm btn-outline-danger" @click="clearAll">
-                Clear All
-              </button>
+                  
+                  <!-- Filter Tags -->
+                  <!-- Filter Tags - Updated to include topic and year -->
+                  <div v-if="activeFilters.brc || activeFilters.repository || activeFilters.species || activeFilters.analysisType || activeFilters.topic || activeFilters.year" class="filter-tags">
+                    <span class="filter-label">Active Filters:</span>
+                    <span 
+                      v-if="activeFilters.brc" 
+                      class="filter-tag"
+                      @click="removeFilter('brc')"
+                      title="Click to remove filter"
+                    >
+                      BRC: {{ activeFilters.brc }}
+                      <i class="bi bi-x"></i>
+                    </span>
+                    <span 
+                      v-if="activeFilters.repository" 
+                      class="filter-tag"
+                      @click="removeFilter('repository')"
+                      title="Click to remove filter"
+                    >
+                      Repository: {{ activeFilters.repository }}
+                      <i class="bi bi-x"></i>
+                    </span>
+                    <span 
+                      v-if="activeFilters.species" 
+                      class="filter-tag"
+                      @click="removeFilter('species')"
+                      title="Click to remove filter"
+                    >
+                      Species: {{ activeFilters.species }}
+                      <i class="bi bi-x"></i>
+                    </span>
+                    <span 
+                      v-if="activeFilters.analysisType" 
+                      class="filter-tag"
+                      @click="removeFilter('analysisType')"
+                      title="Click to remove filter"
+                    >
+                      Analysis: {{ activeFilters.analysisType }}
+                      <i class="bi bi-x"></i>
+                    </span>
+                    <span 
+                      v-if="activeFilters.topic" 
+                      class="filter-tag"
+                      @click="removeFilter('topic')"
+                      title="Click to remove filter"
+                    >
+                      Topic: {{ activeFilters.topic }}
+                      <i class="bi bi-x"></i>
+                    </span>
+                    <span 
+                      v-if="activeFilters.year" 
+                      class="filter-tag"
+                      @click="removeFilter('year')"
+                      title="Click to remove filter"
+                    >
+                      Year: {{ activeFilters.year }}
+                      <i class="bi bi-x"></i>
+                    </span>
+                    <span 
+                      v-if="activeFilters.personName" 
+                      class="filter-tag"
+                      @click="removeFilter('personName')"
+                      title="Click to remove filter"
+                    >
+                      Person: {{ activeFilters.personName }}
+                      <i class="bi bi-x"></i>
+                    </span>
+                  </div>
+                </div>
+                <div class="chart-container">
+                  <div ref="chartContainer" class="d3-chart"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Selected Result Details OR Chart -->
+        <!-- Right Column: Results -->
         <div class="right-column">
           <h3>{{ results.length }} Results Found</h3>
            <div class="list-group">
@@ -1373,13 +1557,9 @@ const setActiveTab = (tab: string) => {
 
                 <div class="row">
                   <div class="col-md order-md-1 fs-6 fw-bold order-1">
-                    <router-link :to="{name: 'datasetShow', params: {id: result.uid }}" class=" text-brc-green pe-4">
+                    <router-link :to="{name: 'datasetShow', params: {id: result.uid }, query: $route.query}" class=" text-brc-green pe-4">
                       <span v-html="sanitizeHtml(truncateMiddle(result.title||'No Title Provided', 75,50), ALLOWED_HTML)"></span>
                     </router-link>
-                  </div>
-                  <!-- only display on larger devices -->
-                  <div class="d-none d-md-block col-md-auto order-2">
-                    <i class="bi bi-three-dots-vertical"></i>
                   </div>
                 </div>
 
@@ -1406,171 +1586,25 @@ const setActiveTab = (tab: string) => {
                     </div>
                   </div>
                 </div>
+                
+                <div class="row">
+                  <p>
+                    <a data-bs-toggle="collapse" :href="'#collapse-' + result.uid" role="button" aria-expanded="false" :aria-controls="'collapse-' + result.uid">
+                      Expand
+                    </a>
+                  </p>
+                  <div class="collapse" :id="'collapse-' + result.uid">
+                    <div class="card card-body">
+                      <ul>
+                        <li>Keywords: planta regeneration, callus, GWAS</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
 
               </div>
             </div>
-
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!--- TODO: All the current markup -->
-  <br/>
-  <h2> Current UI</h2>
-
-  <div class="page-container">
-    <!-- Loading Indicator -->
-    <div v-if="loading" class="loading-indicator">
-      Running search...
-    </div>
-
-    <!-- No Results Found -->
-    <div v-else-if="results && results.length === 0" class="no-results-container">
-      <div class="no-results-message">
-        <h2>Uh oh!</h2>
-        <p>Your search did not match any records. Please refine your query and try again.</p>
-      </div>
-    </div>
-
-    <!-- Results Found -->
-    <div v-else class="results-container">
-      <!-- Left Column: Search Results -->
-      <div class="left-column">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <div class="fw-bold text-center small">{{ results.length }} results found</div>
-          <button 
-            @click="toggleChart" 
-            class="btn btn-sm btn-outline-primary"
-          >
-            {{ showChart ? 'Hide Analytics' : 'Show Analytics' }}
-          </button>
-        </div>
-
-        <div class="list-group">
-          <div
-              class="list-group-item d-flex justify-content-between list-group-item-action cursor-pointer"
-              v-for="result in results"
-              :key="result.identifier"
-              :class="{ active: selectedResult.identifier === result.identifier }"
-              @click="onSelectResult(result)"
-          >
-            <div class="list-group-item-content ms-2 me-auto">
-              <div class="mb-2 fw-bold">{{ truncateMiddle(result.identifier, 25,25) }}</div>
-              <div class="small" v-html="sanitizeHtml(truncateMiddle(result.title), ALLOWED_HTML)"></div>
-            </div>
-            <small class="ps-1" style="font-size: 0.75em">{{ result.date }}</small>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Column: Selected Result Details OR Chart -->
-      <div class="right-column">
-        <!-- Chart View -->
-        <div v-if="showChart" class="chart-view">
-          <div class="chart-header">
-            <h4>Dataset Analytics</h4>
-            <div class="chart-tabs">
-              <button 
-                v-for="tab in [
-                  { key: 'count', label: 'Dataset Count' },
-                  { key: 'sources', label: 'Sources' },
-                  { key: 'topics', label: 'Topics' },
-                  { key: 'resources', label: 'Resources' },
-                  { key: 'species', label: 'Species' },
-                  { key: 'analysis', label: 'Analysis Type' }
-                ]"
-                :key="tab.key"
-                @click="setActiveTab(tab.key)"
-                :class="['tab-button', { active: activeTab === tab.key }]"
-              >
-                {{ tab.label }}
-              </button>
-            </div>
-            
-            <!-- Filter Tags -->
-          <!-- Filter Tags - Updated to include topic and year -->
-          <div v-if="activeFilters.brc || activeFilters.repository || activeFilters.species || activeFilters.analysisType || activeFilters.topic || activeFilters.year" class="filter-tags">
-            <span class="filter-label">Active Filters:</span>
-            <span 
-              v-if="activeFilters.brc" 
-              class="filter-tag"
-              @click="removeFilter('brc')"
-              title="Click to remove filter"
-            >
-              BRC: {{ activeFilters.brc }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.repository" 
-              class="filter-tag"
-              @click="removeFilter('repository')"
-              title="Click to remove filter"
-            >
-              Repository: {{ activeFilters.repository }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.species" 
-              class="filter-tag"
-              @click="removeFilter('species')"
-              title="Click to remove filter"
-            >
-              Species: {{ activeFilters.species }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.analysisType" 
-              class="filter-tag"
-              @click="removeFilter('analysisType')"
-              title="Click to remove filter"
-            >
-              Analysis: {{ activeFilters.analysisType }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.topic" 
-              class="filter-tag"
-              @click="removeFilter('topic')"
-              title="Click to remove filter"
-            >
-              Topic: {{ activeFilters.topic }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.year" 
-              class="filter-tag"
-              @click="removeFilter('year')"
-              title="Click to remove filter"
-            >
-              Year: {{ activeFilters.year }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.personName" 
-              class="filter-tag"
-              @click="removeFilter('personName')"
-              title="Click to remove filter"
-            >
-              Person: {{ activeFilters.personName }}
-              <i class="bi bi-x"></i>
-            </span>
-          </div>
-          </div>
-          <div class="chart-container">
-            <div ref="chartContainer" class="d3-chart"></div>
-          </div>
-        </div>
-
-        <!-- Detail View -->
-        <div v-else-if="selectedResult && !loading" class="detail-view">
-          <component :is="resolveComponentVersion(selectedResult)" :selectedResult></component>
-        </div>
-
-        <!-- Default message when no result selected and no chart -->
-        <div v-else class="no-selection-message">
-          <p>Select a dataset from the left to view details, or click "Show Analytics" to view data visualizations.</p>
         </div>
       </div>
     </div>
@@ -1586,7 +1620,7 @@ const setActiveTab = (tab: string) => {
 
 .page-container {
   display: flex;
-  height: 100vh;
+  height: 250vh;
   width: 100%;
   overflow: hidden;
   position: relative;
@@ -1716,6 +1750,10 @@ const setActiveTab = (tab: string) => {
 .new-ui .right-column {
   box-sizing: border-box;
   padding: 20px;
+}
+
+.offcanvas-start {
+  width: 900px;              
 }
 
 @media (min-width: 968px) {

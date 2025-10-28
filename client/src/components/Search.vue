@@ -163,48 +163,47 @@ watch(() => route.query.filters, (newFilters) => {
 
 <template>
   <form @submit.prevent="onSubmit">
-    <div class="input-group">
-      <!-- Main Search Input -->
-      <label for="main-search-input" class="visually-hidden">Search Datasets</label>
-      <input id="main-search-input" class="form-control" placeholder="Search bioenergy.org datasets" v-model="searchText"/>
-      <button type="submit" class="btn btn-sm btn-outline-secondary search">
-        <span class="visually-hidden">Search</span>
-        <i class="bi bi-search text-muted"></i>
-      </button>
-      
-      <!-- Advanced Search Dropdown Toggle -->
-      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle advanced" data-bs-toggle="dropdown"
-              aria-expanded="false">
-        Advanced
-      </button>
-
-      <!-- Advanced Search Dropdown -->
-      <ul class="dropdown-menu p-3" @click="preventDropdownClose">
-        <!-- DNA Sequence Section -->
-        <li class="mb-3">
-          <label class="form-label small fw-bold text-muted" for="dna">DNA Sequence</label>
-          <textarea class="form-control" rows="3" placeholder="Enter sequence..." v-model="dnaSequence" id="dna"></textarea>
-        </li>
-        <!-- Action Buttons -->
-        <li class="mt-3">
-          <div class="d-flex gap-2 flex-wrap">
-            <button type="button" class="btn btn-sm btn-primary" @click="onAdvancedSearch">
-              <i class="bi bi-search"></i> Advanced Search
-            </button>
-            <button type="submit" class="btn btn-sm btn-outline-primary" v-if="dnaSequence.trim()">
-              <i class="bi bi-dna"></i> Sequence Search
-            </button>
-            <!-- TODO no filters in this search
-            <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearAdvancedFilters">
-              Clear Filters
-            </button>
-            -->
-            <button type="button" class="btn btn-sm btn-outline-danger" @click="clearAll">
-              Clear
-            </button>
-          </div>
-        </li>
-      </ul>
+    <div class="row">
+      <div class="col-12 col-md-8">
+        <div class="input-group">
+          <!-- Main Search Input -->
+          <label for="main-search-input" class="visually-hidden">Search Datasets</label>
+          <input id="main-search-input" class="form-control" placeholder="Search bioenergy.org datasets" v-model="searchText"/>
+          <button type="submit" class="btn btn-sm btn-light search">
+            <span class="visually-hidden">Search</span>
+            <i class="bi bi-search text-muted"></i>
+          </button>
+          
+          <!-- Advanced Search Dropdown Toggle -->
+          <button type="button" class="btn btn-sm btn-light dropdown-toggle advanced" data-bs-toggle="dropdown"
+                  aria-expanded="false">
+            Advanced
+          </button>
+          
+          <!-- Advanced Search Dropdown -->
+          <ul class="dropdown-menu p-3" @click="preventDropdownClose">
+            <!-- DNA Sequence Section -->
+            <li class="mb-3">
+              <label class="form-label small fw-bold text-muted" for="dna">DNA Sequence</label>
+              <textarea class="form-control" rows="3" placeholder="Enter sequence..." v-model="dnaSequence" id="dna"></textarea>
+            </li>
+            <!-- Action Buttons -->
+            <li class="mt-3">
+              <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-sm btn-primary" @click="onAdvancedSearch">
+                  <i class="bi bi-search"></i> Advanced Search
+                </button>
+                <button type="submit" class="btn btn-sm btn-outline-primary" v-if="dnaSequence.trim()">
+                  <i class="bi bi-dna"></i> Sequence Search
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" @click="clearAll">
+                  Clear
+                </button>
+              </div>
+           </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </form>
 </template>
@@ -228,6 +227,11 @@ textarea {
   resize: none;
 }
 
+.search,
+.advanced {
+  border: 1px solid gray;
+}
+
 /* Prevent dropdown from being too narrow */
 .dropdown-menu {
   min-width: 400px;
@@ -241,11 +245,6 @@ textarea {
 .dropdown-menu .form-control,
 .dropdown-menu .form-select {
   font-size: 0.875rem;
-}
-
-.search,
-.advanced {
-  background-color: #fff;
 }
 
 /* Gap utility for older Bootstrap versions */
