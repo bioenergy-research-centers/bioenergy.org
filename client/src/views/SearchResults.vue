@@ -1430,25 +1430,13 @@ const onAdvancedSearch = () => {
               </div>
             </form>
           </div>
-          <br/>
+        </div>
 
-          <!-- Toggle Button for Analytics -->
-          <button 
-            class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar"
-            @click="toggleChart"
-            >
-            Explore Analytics
-          </button>
-
-          <!-- Offcanvas Sidebar -->
-          <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
-            <div class="offcanvas-header">
-              <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-            </div>
-            <div class="offcanvas-body">
-              <div v-if="showChart" class="chart-view">
+        <!-- Right Column: Results -->
+        <div class="right-column">
+          <div v-if="showChart" class="chart-view">
                 <div class="chart-header">
-                  <h4>Dataset Analytics</h4>
+                  <h3>Dataset Analytics</h3>
                   <div class="chart-tabs">
                     <button 
                       v-for="tab in [
@@ -1540,12 +1528,6 @@ const onAdvancedSearch = () => {
                   <div ref="chartContainer" class="d3-chart"></div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column: Results -->
-        <div class="right-column">
           <h3>{{ results.length }} Results Found</h3>
            <div class="list-group">
             <div
@@ -1587,21 +1569,6 @@ const onAdvancedSearch = () => {
                   </div>
                 </div>
                 
-                <div class="row">
-                  <p>
-                    <a data-bs-toggle="collapse" :href="'#collapse-' + result.uid" role="button" aria-expanded="false" :aria-controls="'collapse-' + result.uid">
-                      Expand
-                    </a>
-                  </p>
-                  <div class="collapse" :id="'collapse-' + result.uid">
-                    <div class="card card-body">
-                      <ul>
-                        <li>Keywords: planta regeneration, callus, GWAS</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             </div>
           </div>
@@ -1620,9 +1587,7 @@ const onAdvancedSearch = () => {
 
 .page-container {
   display: flex;
-  height: 250vh;
   width: 100%;
-  overflow: hidden;
   position: relative;
 }
 
@@ -1634,7 +1599,7 @@ const onAdvancedSearch = () => {
 }
 
 .chart-header {
-  padding: 20px 20px 0 20px;
+  padding: 0 20px;
   border-bottom: 1px solid #dee2e6;
   margin-bottom: 20px;
 }
@@ -1667,14 +1632,14 @@ const onAdvancedSearch = () => {
 }
 
 .tab-button.active {
-  background: #72a530;
+  background: #0d6efd;
   color: white;
-  border-color: #72a530;
+  border-color: #0d6efd;
 }
 
 .chart-container {
   flex: 1;
-  background-color: #f8f9fa;
+  background-color: #fff;
   border: 1px solid #dee2e6;
   border-radius: 0.375rem;
   padding: 20px;
@@ -1750,10 +1715,6 @@ const onAdvancedSearch = () => {
 .new-ui .right-column {
   box-sizing: border-box;
   padding: 20px;
-}
-
-.offcanvas-start {
-  width: 900px;              
 }
 
 @media (min-width: 968px) {
