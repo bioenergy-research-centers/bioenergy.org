@@ -72,10 +72,10 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
   <HeaderView />
   <div class="container">
     <div class="row">
-      <div class="col-sm-12 col-md-9 mt-4">
-        <div class="">
-          <h1 class="fw-bold">Available Data</h1>
-        </div>
+      <div class="col12 mt-4">
+         <h2>Available Data</h2>
+      </div>
+      <div class="col-sm-12 col-md-9 mt-3">
         <div>
           <p class="lead">
             The BRCs work across diverse scientific disciplines
@@ -86,8 +86,6 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
             provide a single location where stakeholders can more easily find and access these
             important BRC-generated datasets.
           </p>
-
-          <hr />
           <p class="">
             <!-- How do I use this site? -->
           </p>
@@ -107,12 +105,12 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
         <div>
 
           <search />
-          <router-link :to="{ name: 'datasetSearch'}" class="float-end px-3 mt-4 btn btn-primary fw-bold fs-5"><i
+          <router-link :to="{ name: 'datasetSearch'}" class="px-3 mt-4 btn btn-primary fw-bold fs-5"><i
               class="bi bi-arrow-right pe-3" aria-hidden="true"></i> Browse All Datasets</router-link>
         </div>
 
       </div>
-      <div class="d-none d-md-block col-md-3 mt-4">
+      <div class="d-md-block col-md-3">
         <div class="right-sidebar">
           <div class="row">
 
@@ -151,7 +149,7 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
 
     <div class="row mt-5">
       <div class="col-12">
-        <h2 class="fw-bold">Recent Datasets</h2>
+        <h2>Recent Datasets</h2>
 
         <div class="list-group">
           <div class="list-group-item mt-3" v-for="result in orderedRecentData" :key="result.uid">
@@ -185,7 +183,7 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
                     <!-- <span class="badge bg-light text-muted">{{ result.repository }}</span> -->
                     <!-- <span class="badge bg-brc-light-blue text-muted">{{ result.date }}</span> -->
                     <div class="brc-tag">
-                      <img :src="imgUrls[`../assets/${result.brc?.toLowerCase()}-logo.png`]" style="max-width:200px;">
+                      <img :src="imgUrls[`../assets/${result.brc?.toLowerCase()}-logo.png`]" style="max-width:200px;" :alt="`${result.brc.toLowerCase()} logo`">
                     </div>
                   </div>
                 </div>
@@ -214,9 +212,16 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
 <style scoped>
 
 .right-sidebar {
-  border-left: 1px solid;
-  padding: 20px 0 10px 20px;
+  padding: 0 0 10px 0;
+  margin-top: 20px;
   min-height: 100%
+}
+@media (min-width: 768px) {
+  .right-sidebar {
+    border-left: 1px solid #ddd;
+    margin-top: 0;
+    padding: 0 0 10px 20px;
+  } 
 }
 .text-accent {
   color: #4C8D87;
