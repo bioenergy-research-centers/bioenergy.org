@@ -39,7 +39,7 @@ watchEffect( async () => {
       <div class="card mt-4">
         <div class="card-body">
           <component :is="resolveComponentVersion(dataset)"  :selectedResult="dataset"></component>
-          <router-link :to="{ path: '/data', query: $route.query }" class="card-link btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5 mt-2"><i class="bi bi-arrow-left pe-3" aria-hidden="true"></i> Return</router-link>
+          <router-link :to="{ name: 'datasetSearch', query: $route.query }" class="card-link btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5 mt-2"><i class="bi bi-arrow-left pe-3" aria-hidden="true"></i> Return</router-link>
         </div>
       </div>
     </div>

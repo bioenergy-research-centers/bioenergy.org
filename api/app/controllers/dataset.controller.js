@@ -64,7 +64,8 @@ exports.findAll = (req, res) => {
   const textQueryTerm = req.query.fulltext;
   const titleQueryTerm = req.query.title;
   const brcQueryTerm = req.query.brc;
-
+  const limitQueryTerm = req.query.limit;
+  const MAXROWLIMIT = 500;
   // Initialize an empty array for search the conditions
   const conditions = [];
 
@@ -133,13 +134,18 @@ exports.findAll = (req, res) => {
     };
     conditions.push(brcSearchQuery);
   }
-
   // Use Op.and to merge conditions
   const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
-
-  Dataset.scope('supportedOnly').findAll({
+  const queryOptions = {
+    order: [
+      ['json.date', 'DESC'] 
+    ],
     where: mergedWhereConditions,
-  })
+  }
+  if (limitQueryTerm) {
+    queryOptions.limit = Math.min(parseInt(limitQueryTerm)||1, MAXROWLIMIT);
+  }
+  Dataset.scope('supportedOnly').findAll(queryOptions)
     .then(data => {
       res.send(data.map(x => x.toClientJSON()));
     })
@@ -412,6 +418,9 @@ if (filters.personName) {
   const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
 
 Dataset.scope('supportedOnly').findAll({
+  order: [
+      ['json.date', 'DESC'] 
+    ],
   where: mergedWhereConditions,
 })
   .then(data => {
@@ -453,6 +462,35 @@ Dataset.scope('supportedOnly').findAll({
   });
 
 };
+
+exports.getMetrics = async (req, res) => {
+  const metrics = {};
+  try{
+    metrics['totalDatasets'] = await Dataset.scope('supportedOnly').count();
+
+    const primaryAuthorCounts = await db.sequelize.query(`
+      SELECT COUNT(DISTINCT lower(trim(record->>'email')))::integer AS count
+      FROM "datasets" d
+      CROSS JOIN LATERAL jsonb_array_elements(d."json"->'creator') AS record
+      WHERE (record->>'primaryContact')::boolean = true
+    `, {type: db.sequelize.QueryTypes.SELECT});
+    metrics['totalPrimaryCreators']=primaryAuthorCounts[0].count;
+
+    const taxonCounts = await db.sequelize.query(`
+      SELECT COUNT(DISTINCT lower(trim(record->>'NCBITaxID')))::integer AS count
+      FROM "datasets" d
+      CROSS JOIN LATERAL jsonb_array_elements(d."json"->'species') AS record
+    `, {type: db.sequelize.QueryTypes.SELECT});
+    metrics['totalTaxIds']=taxonCounts[0].count;
+
+    res.send(metrics);
+  }catch (e) {
+    console.error(e);
+    res.status(500).send({
+      message: `Error retrieving Dataset metrics`
+    })
+  }
+}
 
 // Add this to the END of your existing dataset.controller.js file
 

@@ -53,11 +53,11 @@ const clearAll = async () => {
   console.log('advancedFilters:', advancedFilters.value);
   console.log('dnaSequence:', dnaSequence.value);
   
-  // Navigate to clean /data page (no query parameters)
+  // Navigate to clean dataSearch page (no query parameters)
   // This will trigger a fresh search with no filters
-  console.log('Navigating to clean /data page...');
+  console.log('Navigating to clean dataSearch page...');
   await router.push({
-    path: '/data'
+    name: 'datasetSearch'
     // No query parameters = completely clean search
   });
   
@@ -69,9 +69,9 @@ const onSubmit = () => {
   // save sequence to the store
   searchStore.setDnaSequence(dnaSequence.value);
 
-  // navigate to /data with search text in the URL
+  // navigate to dataSearch with search text in the URL
   router.push({
-    path: '/data',
+    name: 'datasetSearch',
     query: {
       q: searchText.value,
     },
@@ -90,9 +90,9 @@ const onAdvancedSearch = () => {
     }
   });
   
-  // Navigate to /data with search text and filters
+  // Navigate to dataSearch with search text and filters
   router.push({
-    path: '/data',
+    name: 'datasetSearch',
     query: {
       q: searchText.value,
       filters: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined

@@ -91,6 +91,9 @@ router.get("/analyze-keywords", datasets.analyzeKeywords);
 router.post("/analyze-keywords", datasets.analyzeKeywords);
 router.post("/filters", datasets.findByFilters);  // Make sure this line exists
 
+// Retrieve aggregated metrics on Dataasets
+router.get("/metrics", datasets.getMetrics);
+
 // POST /api/datasets -> search
 router.post("/", search);
 

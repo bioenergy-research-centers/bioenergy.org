@@ -33,7 +33,7 @@
     </div>
     <div class="col-auto text-end me-md-4">
       <div class="">    
-        <a :href="selectedResult.bibliographicCitation" target="_blank" rel="noopener noreferrer" class="btn btn-outline-success text-light bg-brc-green rounded-pill px-3 pe-4 fw-bold fs-5">
+        <a :href="selectedResult.bibliographicCitation" target="_blank" rel="noopener noreferrer" class="btn btn-primary text-light rounded-pill px-3 pe-4 fw-bold fs-5">
           <i class="bi bi-box-arrow-up-right"></i> Access Data
         </a>
       </div>

@@ -58,7 +58,7 @@ const clearAll = async () => {
   // This will trigger a fresh search with no filters
   console.log('Navigating to clean /data page...');
   await router.push({
-    path: '/data'
+    name: 'datasetSearch'
     // No query parameters = completely clean search
   });
   
@@ -72,7 +72,7 @@ const onSubmit = () => {
 
   // navigate to /data with search text in the URL
   router.push({
-    path: '/data',
+    name: 'datasetSearch',
     query: {
       q: searchText.value,
     },
@@ -93,7 +93,7 @@ const onAdvancedSearch = () => {
   
   // Navigate to /data with search text and filters
   router.push({
-    path: '/data',
+    name: 'datasetSearch',
     query: {
       q: searchText.value,
       filters: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined
@@ -179,10 +179,10 @@ watch(() => route.query.filters, (newFilters) => {
       <div class="row mt-2">
         <hr>
         <div class="col-12 text-center">
-          <router-link to="/data" class="small text-muted me-3">
-            Datasets
+          <router-link :to="{ name: 'dataHome'}" class="small text-muted me-3">
+            Data
           </router-link>
-          <router-link to="/contact" class=" small text-muted me-3">
+          <router-link :to="{ name: 'contact'}" class=" small text-muted me-3">
             Contact
           </router-link>
           <a :href="docs_link" class="small text-muted" target="_blank" rel="noopener noreferrer">API Docs</a>

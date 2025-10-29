@@ -35,6 +35,10 @@ class DatasetDataService {
     return http.post('/datasets/filters', payload);
   }
 
+  getMetrics(payload) {
+    return http.get('/datasets/metrics', payload);
+  }
+
   // Query for datasets using multiple filters
   findByParams(params) {
     var queryParams = new URLSearchParams();

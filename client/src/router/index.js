@@ -1,5 +1,6 @@
 import {createRouter, createWebHistory} from 'vue-router';
 import HomeView from '../views/HomeView.vue';
+import DataHomeView from '../views/DataHomeView.vue';
 import DatasetView from '../views/DatasetView.vue';
 import DatasetShowView from '../views/DatasetShowView.vue'
 
@@ -14,11 +15,16 @@ const router = createRouter({
         },
         {
             path: '/data',
-            name: 'data',
+            name: 'dataHome',
+            component: DataHomeView
+        },
+        {
+            path: '/search',
+            name: 'datasetSearch',
             component: DatasetView
         },
-                {
-            path: '/data/:id',
+        {
+            path: '/datasets/:id',
             name: 'datasetShow',
             props: true,
             component: DatasetShowView

@@ -6,6 +6,13 @@ body {
     font-family: helvetica, arial, sans-serif;
 }
 
+a:hover {
+  color: #4C8D87;
+}
+a {
+  color: #0d6efd;
+}
+
 .form-control:focus {
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0) inset;
 }
@@ -21,6 +28,10 @@ body {
     font-weight: bold;
     font-size: 3em;
 }
+.navbar-brand:hover {
+  color: #629520
+}
+
 .text-brc-green {
   color: #72a530;
 }
@@ -30,4 +41,7 @@ body {
 }
 .bg-brc-green {
   background-color: #72a530;
+}
+.bg-brc-light-blue {
+  background-color: #C5DBE8;
 }

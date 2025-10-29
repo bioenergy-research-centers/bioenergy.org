@@ -319,7 +319,7 @@ const handleLegendClick = async (legendValue, chartType) => {
   
   try {
     await router.push({
-      path: '/data',
+      name: 'datasetSearch',
       query: {
         q: currentQuery || undefined,
         filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
@@ -830,7 +830,7 @@ const handleBarClick = async (barValue, chartType) => {
   
   try {
     await router.push({
-      path: '/data',
+      name: 'datasetSearch',
       query: {
         q: currentQuery || undefined,
         filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
@@ -1169,7 +1169,7 @@ const removeFilter = async (filterType) => {
   
   try {
     await router.push({
-      path: '/data',
+      name: 'datasetSearch',
       query: {
         q: currentQuery || undefined,
         filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
@@ -1312,7 +1312,7 @@ const clearAll = async () => {
   // This will trigger a fresh search with no filters
   console.log('Navigating to clean /data page...');
   await router.push({
-    path: '/data'
+    name: 'datasetSearch'
     // No query parameters = completely clean search
   });
   
@@ -1331,7 +1331,7 @@ const onAdvancedSearch = () => {
   
   // Navigate to /data with search text and filters
   router.push({
-    path: '/data',
+    name: 'datasetSearch',
     query: {
       filters: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined
     },
@@ -1539,7 +1539,7 @@ const onAdvancedSearch = () => {
 
                 <div class="row">
                   <div class="col-md order-md-1 fs-6 fw-bold order-1">
-                    <router-link :to="{name: 'datasetShow', params: {id: result.uid }, query: $route.query}" class=" text-brc-green pe-4">
+                    <router-link :to="{name: 'datasetShow', params: {id: result.uid }, query: $route.query}" class="pe-4">
                       <span v-html="sanitizeHtml(truncateMiddle(result.title||'No Title Provided', 75,50), ALLOWED_HTML)"></span>
                     </router-link>
                   </div>
@@ -1563,8 +1563,8 @@ const onAdvancedSearch = () => {
                   </div>
                   <div class="col-12 col-md-auto text-md-end ps-md-3">
                     <div class="d-inline-flex flex-row-reverse flex-md-row flex-wrap gap-1 justify-content-start justify-content-md-end">
-                      <span class="badge bg-light text-muted">{{ result.repository }}</span>
-                      <span class="badge bg-brc-light-green text-muted">{{ result.date }}</span>
+                      <span class="badge bg-light text-muted fw-light">{{ result.repository }}</span>
+                      <span class="badge bg-brc-light-blue fw-light text-muted">{{ result.date }}</span>
                     </div>
                   </div>
                 </div>
