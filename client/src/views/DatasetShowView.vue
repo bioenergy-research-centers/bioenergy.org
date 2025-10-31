@@ -4,8 +4,11 @@ import DatasetDataService from "../services/DatasetDataService";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
 import { computed, ref, watch, watchEffect} from "vue"
 import { useRouter, useRoute } from 'vue-router';
+import {useSearchStore} from '@/store/searchStore';
+
 
 const route = useRoute();
+const searchStore = useSearchStore();
 
 const props = defineProps({
   id: String
@@ -39,7 +42,7 @@ watchEffect( async () => {
       <div class="card mt-4">
         <div class="card-body">
           <component :is="resolveComponentVersion(dataset)"  :selectedResult="dataset"></component>
-          <router-link :to="{ name: 'datasetSearch', query: $route.query }" class="card-link btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5 mt-2"><i class="bi bi-arrow-left pe-3" aria-hidden="true"></i> Return</router-link>
+          <router-link :to="{ name: 'datasetSearch', query: searchStore.lastSearchQuery }" class="card-link btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5 mt-2"><i class="bi bi-arrow-left pe-3" aria-hidden="true"></i> Return</router-link>
         </div>
       </div>
     </div>

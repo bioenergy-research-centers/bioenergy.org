@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue';
 import DataHomeView from '../views/DataHomeView.vue';
 import DatasetView from '../views/DatasetView.vue';
 import DatasetShowView from '../views/DatasetShowView.vue'
+import {useSearchStore} from '@/store/searchStore';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,7 +22,12 @@ const router = createRouter({
         {
             path: '/search',
             name: 'datasetSearch',
-            component: DatasetView
+            component: DatasetView,
+            beforeEnter: (to, _from) => {
+                console.log("Router - entering search view", to.query)
+                const searchStore = useSearchStore();
+                searchStore.refreshFromURLQuery(to.query);
+            }
         },
         {
             path: '/datasets/:id',

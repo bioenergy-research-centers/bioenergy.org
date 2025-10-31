@@ -56,9 +56,11 @@ async function loadDataMetrics() {
   }
 }
 
-// run on first mount and whenever the route param changes
-watch(() => route.name, loadRecentData, { immediate: true })
-watch(() => route.name, loadDataMetrics, { immediate: true })
+// run on first mount
+onMounted(() => {
+  loadRecentData();
+  loadDataMetrics();
+})
 
 // TODO - move to util method
 const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
@@ -72,7 +74,7 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
   <HeaderView />
   <div class="container">
     <div class="row">
-      <div class="col12 mt-4">
+      <div class="col-12 mt-4">
          <h2>Available Data</h2>
       </div>
       <div class="col-sm-12 col-md-9 mt-3">
@@ -101,14 +103,6 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
             contents. Note, some dataset repositories will require you to create a free login for access.
           </p>
         </div>
-
-        <div>
-
-          <search />
-          <router-link :to="{ name: 'datasetSearch'}" class="px-3 mt-4 btn btn-primary fw-bold fs-5"><i
-              class="bi bi-arrow-right pe-3" aria-hidden="true"></i> Browse All Datasets</router-link>
-        </div>
-
       </div>
       <div class="d-md-block col-md-3">
         <div class="right-sidebar">
@@ -144,6 +138,14 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
             </div>
           </div>
         </div>
+      </div>
+      <div class="col-12 mt-4 search-section">
+        <div class="search-form">
+          <search />
+        </div>
+        <span> - OR -</span>
+        <router-link :to="{ name: 'datasetSearch'}" class="px-3 btn btn-primary fw-bold fs-5"><i
+            class="bi bi-arrow-right pe-3" aria-hidden="true"></i> Browse All Datasets</router-link>
       </div>
     </div>
 
@@ -250,5 +252,15 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
   /* background-color: #4C8D87; */
   border-radius: 5px;
   padding: 5px;
+}
+.search-section {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+.search-form {
+	flex: 1 1 300px;
+	max-width: 600px;
 }
 </style>
