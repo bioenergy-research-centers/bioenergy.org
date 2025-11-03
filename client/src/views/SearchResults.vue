@@ -897,7 +897,7 @@ const onAdvancedSearch = () => {
         <!-- Left Column: Filters -->
         <div class="left-column">
           <h3>Filters</h3>
-          <div class="" style="background-color: #fff;border:1px solid #ddd;padding:15px;margin-top:10px;">
+          <div class="filter-container">
             <form @submit.prevent="onAdvancedSearch">
               <!--- Bioenergy Research Center Filter -->
               <div class="mb-2">
@@ -1059,7 +1059,6 @@ const onAdvancedSearch = () => {
 }
 
 .chart-header {
-  padding: 0 20px;
   border-bottom: 1px solid #dee2e6;
   margin-bottom: 20px;
 }
@@ -1103,7 +1102,7 @@ const onAdvancedSearch = () => {
   border: 1px solid #dee2e6;
   border-radius: 0.375rem;
   padding: 20px;
-  margin: 0 20px 20px 20px;
+  margin: 0 0 20px 0;
   overflow: auto;
   height: 440px;
 }
@@ -1176,6 +1175,12 @@ const onAdvancedSearch = () => {
 .new-ui .right-column {
   box-sizing: border-box;
   padding: 20px;
+}
+.filter-container {
+  background-color: #fff;
+  border:1px solid #ddd;
+  padding:15px;
+  margin-top:10px;
 }
 
 @media (min-width: 968px) {
