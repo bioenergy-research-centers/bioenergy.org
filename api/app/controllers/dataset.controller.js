@@ -482,6 +482,12 @@ exports.getMetrics = async (req, res) => {
       CROSS JOIN LATERAL jsonb_array_elements(d."json"->'species') AS record
     `, {type: db.sequelize.QueryTypes.SELECT});
     metrics['totalTaxIds']=taxonCounts[0].count;
+    
+    const repositoryCounts = await db.sequelize.query(`
+      SELECT COUNT(DISTINCT lower(trim(d."json"->>'repository')))::integer AS count
+      FROM "datasets" d
+    `, { type: db.sequelize.QueryTypes.SELECT });
+    metrics['repositoryCounts'] = repositoryCounts[0].count;
 
     res.send(metrics);
   }catch (e) {

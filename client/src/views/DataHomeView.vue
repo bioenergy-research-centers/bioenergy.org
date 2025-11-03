@@ -136,6 +136,15 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
                 </div>
               </div>
             </div>
+            <div class="col-12 mb-3">              
+              <div class="d-flex align-items-center">
+                <i class="bi bi-house-door display-3 me-4" style="font-size:4rem"></i>
+                <div class="d-flex flex-column justify-content-center">
+                  <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.repositoryCounts }}</span>
+                  <span class="text-muted lh-1">Repositories</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
