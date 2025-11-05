@@ -912,7 +912,7 @@ const onAdvancedSearch = () => {
               <div class="mb-2">
                 <label class="form-label small" for="repository">Repository</label>
                 <input type="text" class="form-control form-control-sm"
-                  placeholder="e.g., ICE, Illinois Data Bank, NCBI" id="repository"
+                  placeholder="e.g., ICE, GitHub, NCBI" id="repository"
                   v-model="searchStore.repository">
               </div>
               <!-- Species Filter -->
