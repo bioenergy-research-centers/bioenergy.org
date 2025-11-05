@@ -41,7 +41,7 @@ export const useSearchStore = defineStore('searchStore', () => {
 
   // Check for changes in the provided URL and update if found.
   // Use to initialize and refresh state from router and component whenever the query params change.
-  function refreshFromURLQuery(query) {
+  function runSearchFromURL(query) {
     console.log("searchStore - refreshing query", query)
     if (anyQueryURLChanges(query)) {
       console.log("searchStore - refreshing query - changes found")
@@ -62,6 +62,7 @@ export const useSearchStore = defineStore('searchStore', () => {
   }
 
   // Retrieve results matching current search filters and store in searchResults
+  // pass updateURL false to skip syncing changes to URL and potential route navigation
   async function runSearch(updateURL = true) {
     searchResultsLoading.value = true;
     searchResultsError.value = null;
@@ -85,11 +86,11 @@ export const useSearchStore = defineStore('searchStore', () => {
         };
         console.log('Using filtered search with payload:', filterPayload);
         response = await DatasetDataService.runFilteredSearch(filterPayload);
-      } else if (!querySearchTerm.value && !dnaSequence.value) {
+      } else if (!searchTerm.value && !dnaSequence.value) {
         response = await DatasetDataService.getAll();
       } else {
         response = await DatasetDataService.runAdvancedSearch(
-          querySearchTerm.value,
+          searchTerm.value,
           this.dnaSequence
         );
       }
@@ -115,6 +116,7 @@ export const useSearchStore = defineStore('searchStore', () => {
       }
     }
     await router.push({
+      name: 'datasetSearch',
       query: {
         ...route.query,
         q: (searchTerm.value && searchTerm.value.length > 0) ? searchTerm.value : undefined,
@@ -137,7 +139,11 @@ export const useSearchStore = defineStore('searchStore', () => {
       }
       if (Object.keys(jsonFilters).length > 0) {
         filters.value = jsonFilters;
+      } else {
+        filters.value = undefined;
       }
+    } else {
+      filters.value = undefined;
     }
   }
 
@@ -154,7 +160,7 @@ export const useSearchStore = defineStore('searchStore', () => {
 
   return {
     searchResults, searchResultsLoading, searchResultsError, runSearch, lastSearchQuery, clearSearchData,
-    importFromURLQuery, applySearchToURL, refreshFromURLQuery, searchTerm, dnaSequence,
+    importFromURLQuery, applySearchToURL, runSearchFromURL, searchTerm, dnaSequence,
     filters, brc, year, repository, species, personName, analysisType, topic
   }
 });

@@ -23,11 +23,6 @@ const router = createRouter({
             path: '/search',
             name: 'datasetSearch',
             component: DatasetView,
-            beforeEnter: (to, _from) => {
-                console.log("Router - entering search view", to.query)
-                const searchStore = useSearchStore();
-                searchStore.refreshFromURLQuery(to.query);
-            }
         },
         {
             path: '/datasets/:id',

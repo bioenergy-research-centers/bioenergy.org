@@ -1,37 +1,19 @@
 <script setup lang="ts">
 import {RouterLink, useRoute, useRouter} from "vue-router";
 import {onBeforeMount, ref, watch, onMounted} from "vue"; // Fixed import
-import {useSearchStore} from '@/store/searchStore';
+import {applySearchToURL, useSearchStore} from '@/store/searchStore';
 
 const router = useRouter();
 const route = useRoute();
 const searchStore = useSearchStore();
 
-// Enhanced clearAll function that also triggers a fresh search
-const clearAll = async () => {
+const clearAll = () => {
   searchStore.clearSearchData();
-  
-  if(route.name='datasetSearch'){
-    // If already on the search page, run a new Search.
-    router.push({
-      name: 'datasetSearch',
-      query: route.query
-    });
     searchStore.runSearch();
-  }
 };
 
 const onSubmit = () => {
-  // navigate to dataSearch keeping current query params in the url, if not already there.
-  if(route.name!='datasetSearch'){
-    router.push({
-      name: 'datasetSearch',
-      query: route.query
-    });
-  } else {
-    // If already on the search page, run a new Search 
     searchStore.runSearch();
-  }
 };
 
 const preventDropdownClose = (event) => {

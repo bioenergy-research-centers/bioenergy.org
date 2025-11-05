@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import DatasetDataService from "../services/DatasetDataService";
-import {ref, watch, onMounted, nextTick} from "vue";
+import {ref, watch, watchPostEffect, onMounted, nextTick} from "vue";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
 import AuthorList from '@/components/AuthorList.vue';
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
@@ -23,40 +23,39 @@ const{searchResults, searchResultsLoading, searchResultsError} = storeToRefs(sea
 const results = searchResults;
 const loading = searchResultsLoading;
 const error = searchResultsError;
-const handleSearch = searchStore.runSearch;
-
 // Add refs for D3 containers and chart state
 const chartContainer = ref<HTMLElement>();
 const showChart = ref(true);
 const activeTab = ref('resources'); // 'count', 'sources', 'topics', 'resources'
 
-//https://router.vuejs.org/guide/advanced/navigation-guards.html#The-Full-Navigation-Resolution-Flow
-// Refresh store when navigating within this component (back button)
-// Initial state is setup in router beforeEnter 
-onBeforeRouteUpdate(async (to, from) => {
-  console.log("SearchResult - onBeforeRouteUpdate", to.query, from.query)
-  if (to.query !== from.query) {
+
+// Apply query params after any route change
+// Use deep watcher for query param changes
+watch(
+  ()=>route.query,
+  (newQuery, _oldQuery)=>{
     // this runs every time the URL query params are updated, including updates from the store
-    searchStore.refreshFromURLQuery(to.query);
-  }
-})
+    searchStore.runSearchFromURL(newQuery);
+  },
+  { immediate: true, deep: true }
+)
 
 // When the search results change, redraw all charts
-watch(results, () => {
+// Use post-flush to ensure DOM has been updated
+// https://vuejs.org/guide/essentials/watchers#post-watchers
+watchPostEffect(() => {
   console.log("SearchResults View - SearchStore.searchResults updated")
-  nextTick(() => {
     console.log('Creating visualization after filtering');
     if (showChart.value) {
       createVisualization();
     }
-  });
 })
 // Watch for tab changes to update visualization
-watch(activeTab, () => {
+// Use post-flush to ensure DOM has been updated
+// https://vuejs.org/guide/essentials/watchers#post-watchers
+watchPostEffect(() => {
   if (showChart.value) {
-    nextTick(() => {
       createVisualization();
-    });
   }
 });
 
