@@ -100,7 +100,7 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
           <p>
             To access the dataset click on the large “Access Dataset” button. This will
             open a new browser tab in the repository where the dataset is stored and allow you to download its
-            contents. Note, some dataset repositories will require you to create a free login for access.
+            contents. Note, some repositories will require you to create a login to access or download datasets.
           </p>
         </div>
       </div>
