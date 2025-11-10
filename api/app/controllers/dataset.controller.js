@@ -141,7 +141,7 @@ exports.findAll = (req, res) => {
       ['json.date', 'DESC'] 
     ],
     where: mergedWhereConditions,
-  }
+  };
   if (limitQueryTerm) {
     queryOptions.limit = Math.min(parseInt(limitQueryTerm)||1, MAXROWLIMIT);
   }
@@ -494,9 +494,9 @@ exports.getMetrics = async (req, res) => {
     console.error(e);
     res.status(500).send({
       message: `Error retrieving Dataset metrics`
-    })
+    });
   }
-}
+};
 
 // Add this to the END of your existing dataset.controller.js file
 
