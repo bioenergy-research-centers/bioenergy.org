@@ -142,7 +142,7 @@
           </table>
         </div>
 
-        <div v-if="selectedResult.relatedItem" class="mt-4">
+        <div v-if="selectedResult.relatedItem && selectedResult.relatedItem.length" class="mt-4">
           <div class="small text-uppercase mt-5 fw-bold">Related Items</div>
           <div v-for="item in selectedResult.relatedItem">
             <div class="text-muted italic mt-2 fw-bold">
