@@ -7,6 +7,8 @@ import { useRoute } from 'vue-router'
 import DatasetDataService from "../services/DatasetDataService";
 import sanitizeHtml from 'sanitize-html';
 
+const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
+
 const imgUrls = import.meta.glob('../assets/*.png', {
   import: 'default',
   eager: true
@@ -95,7 +97,7 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
             Use the graphs and search tools on this site to discover the breadth of datasets available.
             Enter Keywords in the search bar to find specific datasets or click on a section of a
             graph to display datasets meeting those criteria, which allows further exploration.
-            See the API Docs for additional options.
+            See the <a :href="docs_link" target="_blank" rel="noopener noreferrer">API Docs</a> for additional options.
           </p>
           <p>
             To access the dataset click on the large “Access Dataset” button. This will
