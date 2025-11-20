@@ -1,6 +1,9 @@
 import {createRouter, createWebHistory} from 'vue-router';
 import HomeView from '../views/HomeView.vue';
+import DataHomeView from '../views/DataHomeView.vue';
 import DatasetView from '../views/DatasetView.vue';
+import DatasetShowView from '../views/DatasetShowView.vue';
+import {useSearchStore} from '@/store/searchStore';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,8 +16,19 @@ const router = createRouter({
         },
         {
             path: '/data',
-            name: 'data',
-            component: DatasetView
+            name: 'dataHome',
+            component: DataHomeView
+        },
+        {
+            path: '/search',
+            name: 'datasetSearch',
+            component: DatasetView,
+        },
+        {
+            path: '/datasets/:id',
+            name: 'datasetShow',
+            props: true,
+            component: DatasetShowView
         },
         {
             path: '/contact',

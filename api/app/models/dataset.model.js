@@ -8,6 +8,9 @@ module.exports = (sequelize, Sequelize) => {
     toClientJSON() {
       const jsonData = this.json;
       jsonData.schema_version = this.schema_version;
+      jsonData.uid = this.uid;
+      jsonData.created_at = this.createdAt;
+      jsonData.updated_at = this.updatedAt;
       return jsonData;
     }
   }

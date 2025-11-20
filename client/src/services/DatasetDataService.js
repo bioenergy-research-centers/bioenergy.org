@@ -7,7 +7,7 @@ class DatasetDataService {
   }
 
   get(id) {
-    return http.get(`/datasets/${id}`);
+    return http.get(`/datasets/${encodeURIComponent(id)}`);
   }
 
   published() {
@@ -33,6 +33,10 @@ class DatasetDataService {
 
   runFilteredSearch(payload) {
     return http.post('/datasets/filters', payload);
+  }
+
+  getMetrics(payload) {
+    return http.get('/datasets/metrics', payload);
   }
 
   // Query for datasets using multiple filters

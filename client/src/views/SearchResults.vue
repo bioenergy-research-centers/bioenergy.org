@@ -1,332 +1,86 @@
 <script setup lang="ts">
 import DatasetDataService from "../services/DatasetDataService";
-import {ref, watch, onMounted, nextTick} from "vue";
+import {ref, watch, watchPostEffect, onMounted, nextTick} from "vue";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
-import { useRouter, useRoute } from 'vue-router';
-
+import AuthorList from '@/components/AuthorList.vue';
+import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
+import Search from '@/components/Search.vue';
+import {useSearchStore} from '@/store/searchStore';
+import { storeToRefs } from 'pinia'
 // Add D3 imports
 import { select, scaleLinear, scaleBand, axisBottom, axisLeft, pie, arc, schemeCategory10 } from 'd3';
+import sanitizeHtml from 'sanitize-html';
 
 const router = useRouter();
 const route = useRoute()
+const searchStore = useSearchStore();
 
-import sanitizeHtml from 'sanitize-html';
 const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
 
-const results = ref([]);
-const loading = ref(true);
-const error = ref(null);
-const selectedResult = ref(null);
-
+// Creating a reactive value from the store requires destructuring with storeToRefs
+// https://pinia.vuejs.org/core-concepts/#Destructuring-from-a-Store
+const{searchResults, searchResultsLoading, searchResultsError} = storeToRefs(searchStore);
+const results = searchResults;
+const loading = searchResultsLoading;
+const error = searchResultsError;
 // Add refs for D3 containers and chart state
 const chartContainer = ref<HTMLElement>();
-const showChart = ref(false);
-const activeTab = ref('count'); // 'count', 'sources', 'topics', 'resources'
-
-const activeFilters = ref({
-  brc: null,        // For sources chart
-  repository: null, // For resources chart
-  species: null,    // For species chart
-  analysisType: null, // For analysis type chart
-  topic: null, // for topics chart
-  year: null, // for dataset/year count chart
-  personName: null, // for advanced search field only, not used in charts
-});
-
-const props = defineProps({
-  filter: String,
-  dnaSequence: String,
-  filters: String,
-});
-
-// Parse filters from URL
-const urlFilters = ref({});
+const showChart = ref(true);
+const activeTab = ref('resources'); // 'count', 'sources', 'topics', 'resources'
 
 
-// Parse filters from URL and apply them
-// Update the URL filters watcher to handle new fields
-watch(() => props.filters, async (newFilters, oldFilters) => {
-  console.log('=== SEARCHRESULTS URL WATCHER DEBUG ===');
-  console.log('Old filters:', oldFilters);
-  console.log('New filters:', newFilters);
-  
-  // Always update activeFilters to match URL, regardless of current state
-  if (newFilters) {
-    try {
-      const parsedFilters = JSON.parse(newFilters);
-      console.log('Parsed filters:', parsedFilters);
-      
-      // Reset ALL filters first, then apply the ones from URL
-      activeFilters.value = {
-        brc: null,
-        repository: null,
-        species: null,
-        analysisType: null,
-        topic: null,
-        year: null,
-        personName: null
-      };
-      
-      // Apply filters from URL
-      Object.keys(parsedFilters).forEach(key => {
-        if (activeFilters.value.hasOwnProperty(key)) {
-          activeFilters.value[key] = parsedFilters[key];
-          console.log(`Set ${key} filter to:`, parsedFilters[key]);
-        }
-      });
-      
-      console.log('Updated activeFilters:', activeFilters.value);
-      
-      await nextTick();
-      
-      console.log('Triggering search with URL filters...');
-      if (!props.filter && !props.dnaSequence) {
-        console.log('Calling fetchAllData with filters...');
-        await fetchAllData();
-      } else {
-        console.log('Calling handleSearch with filters...');
-        await handleSearch();
-      }
-      
-    } catch (e) {
-      console.error('Error parsing filters from URL:', e);
-    }
-  } else {
-    // No filters in URL - clear everything and search
-    console.log('No filters in URL, clearing ALL activeFilters');
-    activeFilters.value = {
-      brc: null,
-      repository: null,
-      species: null,
-      analysisType: null,
-      topic: null,
-      year: null,
-      personName: null
-    };
-    
-    console.log('Triggering search after clearing filters...');
-    await nextTick();
-    if (!props.filter && !props.dnaSequence) {
-      await fetchAllData();
-    } else {
-      await handleSearch();
-    }
-  }
-  console.log('=== END SEARCHRESULTS URL WATCHER DEBUG ===');
-}, { immediate: true });
+// Apply query params after any route change
+// Use deep watcher for query param changes
+watch(
+  ()=>route.query,
+  (newQuery, _oldQuery)=>{
+    // this runs every time the URL query params are updated, including updates from the store
+    searchStore.runSearchFromURL(newQuery);
+  },
+  { immediate: true, deep: true }
+)
 
-// New emit for search updates
-const emit = defineEmits(['clear-dna-sequence', 'update-search']);
-
-// Add a reactive trigger for visualization updates
-const visualizationTrigger = ref(0);
-
-// Add debugging watchers
-watch(() => props.filter, (newFilter) => {
-  console.log('Props filter changed:', newFilter);
-});
-
-watch(() => props.filters, (newFilters) => {
-  console.log('Props filters changed:', newFilters);
-});
-
-watch(() => props.dnaSequence, (newSequence) => {
-  console.log('Props dnaSequence changed:', newSequence);
-});
-
-// Updated handleSearch to ensure proper chart updates after filtering
-const handleSearch = async () => {
-  loading.value = true;
-  error.value = null;
-  results.value = [];
-  selectedResult.value = null;
-
-  try {
-    let response;
-    
-    // Check if we have any active filters
-    const hasActiveFilters = Object.values(activeFilters.value).some(filter => filter !== null);
-    
-    if (hasActiveFilters) {
-      // Use filtered search when filters are active
-      const filterPayload = {
-        textQuery: props.filter || '',
-        filters: {
-          brc: activeFilters.value.brc,
-          repository: activeFilters.value.repository,
-          species: activeFilters.value.species,
-          analysisType: activeFilters.value.analysisType,
-          topic: activeFilters.value.topic,         // Add this
-          year: activeFilters.value.year,           // Add this
-          personName: activeFilters.value.personName
-        }
-      };
-      
-      // Remove null values from filters
-      Object.keys(filterPayload.filters).forEach(key => {
-        if (filterPayload.filters[key] === null) {
-          delete filterPayload.filters[key];
-        }
-      });
-      
-      console.log('Using filtered search with payload:', filterPayload);
-      response = await DatasetDataService.runFilteredSearch(filterPayload);
-    } else if (!props.filter && !props.dnaSequence) {
-      response = await DatasetDataService.getAll();
-    } else {
-      response = await DatasetDataService.runAdvancedSearch(
-        props.filter,
-        props.dnaSequence
-      );
-    }
-    
-    results.value = response.data;
-    selectedResult.value = results.value.length > 0 ? results.value[0] : null;
-    
-    console.log('Search results count:', results.value.length);
-    
-  } catch (err) {
-    results.value = [];
-    console.error('error', err);
-    error.value = 'Failed to fetch search results.';
-  } finally {
-    loading.value = false;
-    
-    await nextTick();
+// When the search results change, redraw all charts
+// Use post-flush to ensure DOM has been updated
+// https://vuejs.org/guide/essentials/watchers#post-watchers
+watchPostEffect(() => {
+  console.log("SearchResults View - SearchStore.searchResults updated")
+    console.log('Creating visualization after filtering');
     if (showChart.value) {
-      console.log('Creating visualization after filtering');
       createVisualization();
     }
-  }
-};
-
-const fetchAllData = async () => {
-  console.log('fetchAllData called');
-  loading.value = true;
-  error.value = null;
-
-  try {
-    let response;
-    
-    // Check if we have any active filters
-    const hasActiveFilters = Object.values(activeFilters.value).some(filter => filter !== null);
-    
-    if (hasActiveFilters) {
-      // Use filtered search when filters are active
-      const filterPayload = {
-        textQuery: '',
-        filters: {
-          brc: activeFilters.value.brc,
-          repository: activeFilters.value.repository,
-          species: activeFilters.value.species,
-          analysisType: activeFilters.value.analysisType,
-          topic: activeFilters.value.topic,         
-          year: activeFilters.value.year,           
-          personName: activeFilters.value.personName
-        }
-      };
-
-      
-      // Remove null values from filters
-      Object.keys(filterPayload.filters).forEach(key => {
-        if (filterPayload.filters[key] === null) {
-          delete filterPayload.filters[key];
-        }
-      });
-      
-      console.log('fetchAllData - Using filtered search with payload:', filterPayload);
-      response = await DatasetDataService.runFilteredSearch(filterPayload);
-    } else {
-      response = await DatasetDataService.getAll();
-    }
-    
-    results.value = response.data;
-    selectedResult.value = results.value.length > 0 ? results.value[0] : null;
-    
-    console.log('fetchAllData - results count:', results.value.length);
-    
-  } catch (e) {
-    error.value = 'There was an error while fetching search results.';
-    console.error(e);
-    results.value = [];
-  } finally {
-    loading.value = false;
-    
-    await nextTick();
-    if (showChart.value) {
-      console.log('fetchAllData - creating visualization after filtering');
+})
+// Watch for tab changes to update visualization
+// Use post-flush to ensure DOM has been updated
+// https://vuejs.org/guide/essentials/watchers#post-watchers
+watchPostEffect(() => {
+  if (showChart.value) {
       createVisualization();
-    }
   }
-};
-
-const forceVisualizationUpdate = async () => {
-  if (showChart.value && results.value.length > 0) {
-    await nextTick();
-    createVisualization();
-  }
-};
+});
 
 // Updated legend click handler that properly updates URL
 const handleLegendClick = async (legendValue, chartType) => {
   console.log('=== LEGEND CLICK DEBUG ===');
   console.log('Legend clicked:', legendValue, 'for chart:', chartType);
   console.log('Current route query:', route.query);
-  console.log('Current activeFilters before update:', JSON.stringify(activeFilters.value));
-  
-  // Calculate what the new filters should be
-  const updatedFilters = { ...activeFilters.value };
-  
+
   // Update the appropriate filter
   if (chartType === 'sources') {
-    updatedFilters.brc = legendValue;
+    searchStore.brc = legendValue;
     console.log('Set BRC filter to:', legendValue);
   } else if (chartType === 'resources') {
-    updatedFilters.repository = legendValue;
+    searchStore.repository = legendValue;
     console.log('Set Repository filter to:', legendValue);
   } else if (chartType === 'species') {
-    updatedFilters.species = legendValue;
+    searchStore.species = legendValue;
     console.log('Set Species filter to:', legendValue);
   } else if (chartType === 'analysis') {
-    updatedFilters.analysisType = legendValue;
+    searchStore.analysisType = legendValue;
     console.log('Set Analysis Type filter to:', legendValue);
   }
-  
-  console.log('Updated filters after change:', updatedFilters);
-  
-  // Create clean filters object for URL (excluding null values)
-  const cleanFilters = {};
-  Object.keys(updatedFilters).forEach(key => {
-    if (updatedFilters[key] !== null) {
-      cleanFilters[key] = updatedFilters[key];
-    }
-  });
-  
-  console.log('Clean filters for URL:', cleanFilters);
-  
-  // Update the URL with the new filter state
-  const currentQuery = props.filter || '';
-  const hasFilters = Object.keys(cleanFilters).length > 0;
-  
-  console.log('Updating URL with legend click...');
-  console.log('Current query:', currentQuery);
-  console.log('Has filters:', hasFilters);
-  
-  try {
-    await router.push({
-      path: '/data',
-      query: {
-        q: currentQuery || undefined,
-        filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
-      }
-    });
-    console.log('URL updated successfully from legend click');
-  } catch (error) {
-    console.error('Error updating URL from legend click:', error);
-  }
-  
+  searchStore.runSearch();
   console.log('=== END LEGEND CLICK DEBUG ===');
-
 };
 
 // Main visualization function that routes to specific chart types
@@ -343,9 +97,9 @@ const createVisualization = () => {
     case 'count':
       createCountVisualization();
       break;
-    case 'sources':
-      createSourcesVisualization();
-      break;
+    // case 'sources':
+    //   createSourcesVisualization();
+    //   break;
     case 'topics':
       createTopicsVisualization();
       break;
@@ -683,7 +437,7 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel, enableClickable
   // adjust bottom margin for title issue
   const margin = { top: 40, right: 30, bottom: 100, left: 60 };
   const width = 700 - margin.left - margin.right;
-  const height = 400 - margin.top - margin.bottom;
+  const height = 300 - margin.top - margin.bottom;
 
   const svg = select(chartContainer.value)
     .append('svg')
@@ -784,12 +538,12 @@ const createBarChart = (data, xKey, yKey, title, xLabel, yLabel, enableClickable
     .style('font-size', '12px')
     .text(yLabel);
 
-  svg.append('text')
-    .attr('x', (width + margin.left + margin.right) / 2)
-    .attr('y', height + margin.top + margin.bottom - 10)
-    .style('text-anchor', 'middle')
-    .style('font-size', '12px')
-    .text(xLabel);
+  // svg.append('text')
+  //   .attr('x', (width + margin.left + margin.right) / 2)
+  //   .attr('y', height + margin.top + margin.bottom - 10)
+  //   .style('text-anchor', 'middle')
+  //   .style('font-size', '12px')
+  //   .text(xLabel);
 };
 
 // Updated bar click handler that properly updates URL
@@ -798,52 +552,24 @@ const handleBarClick = async (barValue, chartType) => {
   console.log('Bar clicked:', barValue, 'for chart:', chartType);
   console.log('Current route query:', route.query);
   
-  // Calculate what the new filters should be
-  const updatedFilters = { ...activeFilters.value };
-  
   // Handle different chart types
   if (chartType === 'topics') {
-    updatedFilters.topic = barValue;
+    searchStore.topic = barValue;
     console.log('Set Topic filter to:', barValue);
   } else if (chartType === 'count') {
-    updatedFilters.year = barValue;
+    searchStore.year = barValue;
     console.log('Set Year filter to:', barValue);
   }
-  
-  // Create clean filters object for URL
-  const cleanFilters = {};
-  Object.keys(updatedFilters).forEach(key => {
-    if (updatedFilters[key] !== null) {
-      cleanFilters[key] = updatedFilters[key];
-    }
-  });
-  
-  const currentQuery = props.filter || '';
-  const hasFilters = Object.keys(cleanFilters).length > 0;
-  
-  console.log('Updating URL with bar click...');
-  
-  try {
-    await router.push({
-      path: '/data',
-      query: {
-        q: currentQuery || undefined,
-        filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
-      }
-    });
-    console.log('URL updated successfully from bar click');
-  } catch (error) {
-    console.error('Error updating URL from bar click:', error);
-  }
-  
+  searchStore.runSearch();
   console.log('=== END BAR CLICK DEBUG ===');
 };
 
 // Helper function to create pie charts
 const createPieChart = (data, title, enableClickableLabels = false, chartType = null) => {
   const width = 700;
-  const height = 400;
+  const height = 300;
   const radius = Math.min(width, height) / 2 - 40;
+  const clickablePercent = 0.25; // arc ratio required to enable clicking
 
   const svg = select(chartContainer.value)
     .append('svg')
@@ -895,7 +621,7 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
     .style('cursor', (d) => {
       // Only make slices clickable if they're >= 3% AND labels are enabled
       const percentage = (d.data.value / totalValue) * 100;
-      return (enableClickableLabels && chartType && percentage >= 3) ? 'pointer' : 'default';
+      return (enableClickableLabels && chartType && percentage >= clickablePercent) ? 'pointer' : 'default';
     });
 
   // Add click functionality to slices if enabled
@@ -905,7 +631,7 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
         const percentage = (d.data.value / totalValue) * 100;
         
         // Only add hover effects for slices >= 3%
-        if (percentage >= 3) {
+        if (percentage >= clickablePercent) {
           select(this)
             .attr('opacity', 1)
             .style('filter', 'brightness(1.25)'); // Slightly brighter on hover
@@ -925,7 +651,7 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
       .on('mouseout', function(event, d) {
         const percentage = (d.data.value / totalValue) * 100;
         
-        if (percentage >= 3) {
+        if (percentage >= clickablePercent) {
           select(this)
             .attr('opacity', 0.8)
             .style('filter', 'none');
@@ -942,7 +668,7 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
         const percentage = (d.data.value / totalValue) * 100;
         
         // Only handle clicks for slices >= 3%
-        if (percentage >= 3) {
+        if (percentage >= clickablePercent) {
           console.log('Pie slice clicked:', d.data.label, 'for chart:', chartType);
           handleLegendClick(d.data.label, chartType);
         } else {
@@ -956,7 +682,7 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
     .attr('transform', d => {
       // Only show text for slices larger than 3% of the total
       const percentage = (d.data.value / totalValue) * 100;
-      if (percentage < 3) return 'translate(0,0) scale(0)'; // Hide small labels
+      if (percentage < 4) return 'translate(0,0) scale(0)'; // Hide small labels
       return `translate(${arcGenerator.centroid(d)})`;
     })
     .attr('text-anchor', 'middle')
@@ -973,12 +699,12 @@ const createPieChart = (data, title, enableClickableLabels = false, chartType = 
     .style('text-shadow', '1px 1px 1px rgba(0,0,0,0.5)') // Add shadow for better readability
     .text(d => {
       const percentage = (d.data.value / totalValue) * 100;
-      return percentage >= 3 ? d.data.value : ''; // Only show numbers for slices >= 3%
+      return percentage >= 4 ? d.data.value : ''; // Only show numbers for slices >= 3%
     });
 
   // Determine if we need scrolling (only for more than 18 items that would exceed available space)
   const legendItemHeight = 18;
-  const maxLegendHeight = 320; // Maximum height before scrolling
+  const maxLegendHeight = 200; // Maximum height before scrolling
   const estimatedContentHeight = data.length * legendItemHeight + 10; // +10 for padding
   const needsScrolling = estimatedContentHeight > maxLegendHeight;
   
@@ -1133,296 +859,179 @@ if (needsScrolling) {
 
 };
 
-
-// Clean removeFilter function with proper route access
-const removeFilter = async (filterType) => {
-  console.log('=== REMOVE FILTER DEBUG ===');
-  console.log('Removing filter:', filterType);
-  console.log('Current route query:', route.query);
-  console.log('Current activeFilters:', activeFilters.value);
-  
-  // Calculate what the new filters should be
-  const updatedFilters = { ...activeFilters.value };
-  updatedFilters[filterType] = null;
-  
-  // Create clean filters object for URL (excluding null values)
-  const cleanFilters = {};
-  Object.keys(updatedFilters).forEach(key => {
-    if (updatedFilters[key] !== null) {
-      cleanFilters[key] = updatedFilters[key];
-    }
-  });
-  
-  console.log('Clean filters for URL:', cleanFilters);
-  
-  const currentQuery = props.filter || '';
-  const hasFilters = Object.keys(cleanFilters).length > 0;
-  
-  console.log('Updating URL...');
-  console.log('Current query:', currentQuery);
-  console.log('Has filters:', hasFilters);
-  
-  try {
-    await router.push({
-      path: '/data',
-      query: {
-        q: currentQuery || undefined,
-        filters: hasFilters ? JSON.stringify(cleanFilters) : undefined
-      }
-    });
-    console.log('URL updated successfully');
-  } catch (error) {
-    console.error('Error updating URL:', error);
-  }
-  
-  console.log('=== END REMOVE FILTER DEBUG ===');
-};
-
-// New function to handle internal search updates
-const handleInternalSearchUpdate = async (newFilter) => {
-  console.log('Updating internal search to:', newFilter);
-  
-  loading.value = true;
-  error.value = null;
-  results.value = [];
-  selectedResult.value = null;
-
-  try {
-    const response = await DatasetDataService.runAdvancedSearch(
-        newFilter,
-        props.dnaSequence // Keep the existing DNA sequence if any
-    );
-    results.value = response.data;
-    selectedResult.value = results.value.length > 0 ? results.value[0] : null;
-    
-    // Trigger visualization update
-    visualizationTrigger.value++;
-    
-    await nextTick();
-    if (showChart.value) {
-      createVisualization();
-    }
-    
-    // Also emit to parent component so it can update its search state if needed
-    emit('update-search', newFilter);
-    
-  } catch (err) {
-    results.value = [];
-    console.error('error', err);
-    error.value = 'Failed to fetch search results.';
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Watch for changes in props to trigger search
-watch(
-    () => [props.filter, props.dnaSequence],
-    ([newFilter, newDnaSequence]) => {
-      handleSearch();
-    },
-    { immediate: true }
-);
-
-// Watch for tab changes to update visualization
-watch(activeTab, () => {
-  if (showChart.value) {
-    nextTick(() => {
-      createVisualization();
-    });
-  }
-});
-
-watch(visualizationTrigger, () => {
-  if (showChart.value && results.value.length > 0) {
-    nextTick(() => {
-      createVisualization();
-    });
-  }
-});
-
-const onSelectResult = (result: any) => {
-  selectedResult.value = result;
-  
-  // Auto-hide analytics when user selects a dataset
-  if (showChart.value) {
-    showChart.value = false;
-    console.log('Auto-hiding analytics because user selected a dataset');
-  }
-}
-
 const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
   if (str.length <= maxStart + maxEnd) return str;
   return str.slice(0, maxStart) + "…" + str.slice(-maxEnd);
 }
 
-const toggleChart = () => {
-  showChart.value = !showChart.value;
-  if (showChart.value) {
-    nextTick(() => {
-      createVisualization();
-    });
-  }
-};
-
 const setActiveTab = (tab: string) => {
   activeTab.value = tab;
+};
+
+const clearAll = async () => {
+  searchStore.clearSearchData();
+  searchStore.runSearch();
+};
+
+const onAdvancedSearch = () => {  
+  searchStore.runSearch()
 };
 
 </script>
 
 <template>
   <div class="page-container">
-    <!-- Loading Indicator -->
-    <div v-if="loading" class="loading-indicator">
-      Running search...
-    </div>
-
-    <!-- No Results Found -->
-    <div v-else-if="results && results.length === 0" class="no-results-container">
-      <div class="no-results-message">
-        <h2>Uh oh!</h2>
-        <p>Your search did not match any records. Please refine your query and try again.</p>
-      </div>
-    </div>
-
     <!-- Results Found -->
-    <div v-else class="results-container">
-      <!-- Left Column: Search Results -->
-      <div class="left-column">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <div class="fw-bold text-center small">{{ results.length }} results found</div>
-          <button 
-            @click="toggleChart" 
-            class="btn btn-sm btn-outline-primary"
-          >
-            {{ showChart ? 'Hide Analytics' : 'Show Analytics' }}
-          </button>
+    <div class="new-ui results-container">
+      <!-- Full Column: Keyword and Advanced Search Inputs -->
+      <div class="full-width">
+        <div class="d-inline-block w-75 me-2">
+          <Search />
         </div>
-
-        <div class="list-group">
-          <div
-              class="list-group-item d-flex justify-content-between list-group-item-action cursor-pointer"
-              v-for="result in results"
-              :key="result.identifier"
-              :class="{ active: selectedResult.identifier === result.identifier }"
-              @click="onSelectResult(result)"
-          >
-            <div class="list-group-item-content ms-2 me-auto">
-              <div class="mb-2 fw-bold">{{ truncateMiddle(result.identifier, 25,25) }}</div>
-              <div class="small" v-html="sanitizeHtml(truncateMiddle(result.title), ALLOWED_HTML)"></div>
-            </div>
-            <small class="ps-1" style="font-size: 0.75em">{{ result.date }}</small>
-          </div>
-        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary p-2" @click="clearAll">
+          Clear
+        </button>
       </div>
+      <div class="columns">
+        <!-- Left Column: Filters -->
+        <div class="left-column">
+          <h3>Filters</h3>
+          <div class="filter-container">
+            <form @submit.prevent="onAdvancedSearch">
+              <!--- Bioenergy Research Center Filter -->
+              <div class="mb-2">
+                <label class="form-label small" for="bioenergy">Bioenergy Research Center (BRC)</label>
+                <select class="form-select form-select-sm" id="bioenergy" v-model="searchStore.brc">
+                  <option value="">Any BRC</option>
+                  <option value="JBEI">JBEI</option>
+                  <option value="GLBRC">GLBRC</option>
+                  <option value="CABBI">CABBI</option>
+                  <option value="CBI">CBI</option>
+                </select>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small" for="repository">Repository</label>
+                <input type="text" class="form-control form-control-sm"
+                  placeholder="e.g., ICE, GitHub, NCBI" id="repository"
+                  v-model="searchStore.repository">
+              </div>
+              <!-- Species Filter -->
+              <div class="mb-2">
+                <label class="form-label small" for="species">Species</label>
+                <input type="text" class="form-control form-control-sm" placeholder="e.g., E. coli, Sorghum bicolor"
+                  id="species" v-model="searchStore.species">
+              </div>
 
-      <!-- Right Column: Selected Result Details OR Chart -->
-      <div class="right-column">
-        <!-- Chart View -->
-        <div v-if="showChart" class="chart-view">
-          <div class="chart-header">
-            <h4>Dataset Analytics</h4>
-            <div class="chart-tabs">
-              <button 
-                v-for="tab in [
-                  { key: 'count', label: 'Dataset Count' },
-                  { key: 'sources', label: 'Sources' },
-                  { key: 'topics', label: 'Topics' },
-                  { key: 'resources', label: 'Resources' },
-                  { key: 'species', label: 'Species' },
-                  { key: 'analysis', label: 'Analysis Type' }
-                ]"
-                :key="tab.key"
-                @click="setActiveTab(tab.key)"
-                :class="['tab-button', { active: activeTab === tab.key }]"
-              >
-                {{ tab.label }}
-              </button>
+              <!-- Analysis Type Filter -->
+              <div class="mb-2">
+                <label class="form-label small" for="analysis-type">Analysis Type</label>
+                <input type="text" class="form-control form-control-sm" placeholder="e.g., Genomic, Code"
+                  id="analysis-type" v-model="searchStore.analysisType">
+              </div>
+
+              <!-- Person Filter -->
+              <div class="mb-2">
+                <label class="form-label small" for="person">Person Name</label>
+                <input type="text" class="form-control form-control-sm" placeholder="e.g., Jane Doe" id="person"
+                  v-model="searchStore.personName">
+                <small class="form-text text-muted">Searches both creators and contributors</small>
+              </div>
+              
+              <!-- Filter Buttons -->
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary">
+                  Filter Results
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" @click="clearAll">
+                  Clear
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Column: Results -->
+        <div class="right-column">
+          <!-- Loading Indicator -->
+          <div v-if="loading" class="loading-indicator">
+            Running search...
+          </div>
+
+          <!-- No Results Found -->
+          <div v-else-if="!results || (results && results.length === 0)" class="no-results-container">
+            <div class="no-results-message">
+              <h2>Uh oh!</h2>
+              <p>Your search did not match any records. Please refine your query and try again.</p>
             </div>
-            
-            <!-- Filter Tags -->
-          <!-- Filter Tags - Updated to include topic and year -->
-          <div v-if="activeFilters.brc || activeFilters.repository || activeFilters.species || activeFilters.analysisType || activeFilters.topic || activeFilters.year" class="filter-tags">
-            <span class="filter-label">Active Filters:</span>
-            <span 
-              v-if="activeFilters.brc" 
-              class="filter-tag"
-              @click="removeFilter('brc')"
-              title="Click to remove filter"
-            >
-              BRC: {{ activeFilters.brc }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.repository" 
-              class="filter-tag"
-              @click="removeFilter('repository')"
-              title="Click to remove filter"
-            >
-              Repository: {{ activeFilters.repository }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.species" 
-              class="filter-tag"
-              @click="removeFilter('species')"
-              title="Click to remove filter"
-            >
-              Species: {{ activeFilters.species }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.analysisType" 
-              class="filter-tag"
-              @click="removeFilter('analysisType')"
-              title="Click to remove filter"
-            >
-              Analysis: {{ activeFilters.analysisType }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.topic" 
-              class="filter-tag"
-              @click="removeFilter('topic')"
-              title="Click to remove filter"
-            >
-              Topic: {{ activeFilters.topic }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.year" 
-              class="filter-tag"
-              @click="removeFilter('year')"
-              title="Click to remove filter"
-            >
-              Year: {{ activeFilters.year }}
-              <i class="bi bi-x"></i>
-            </span>
-            <span 
-              v-if="activeFilters.personName" 
-              class="filter-tag"
-              @click="removeFilter('personName')"
-              title="Click to remove filter"
-            >
-              Person: {{ activeFilters.personName }}
-              <i class="bi bi-x"></i>
-            </span>
           </div>
-          </div>
-          <div class="chart-container">
-            <div ref="chartContainer" class="d3-chart"></div>
-          </div>
-        </div>
+          <div v-else>
+            <div v-if="showChart" class="chart-view">
+              <div class="chart-header">
+                <h3>Dataset Analytics</h3>
+                <div class="chart-tabs">
+                  <button v-for="tab in [
+                    { key: 'resources', label: 'Repositories' },
+                    { key: 'species', label: 'Species' },
+                    { key: 'topics', label: 'Topics' },
+                    { key: 'count', label: 'Publication Year' },
+                    // { key: 'analysis', label: 'Analysis Type' }
+                  ]" :key="tab.key" @click="setActiveTab(tab.key)"
+                    :class="['tab-button', { active: activeTab === tab.key }]">
+                    {{ tab.label }}
+                  </button>
+                </div>
+              </div>
+              <div class="chart-container">
+                <div ref="chartContainer" class="d3-chart"></div>
+              </div>
+            </div>
+            <h3>{{ results.length }} Results Found</h3>
+            <div class="list-group">
+              <div class="list-group-item" v-for="result in results" :key="result.uid">
+                <div class="list-group-item-content py-2">
 
-        <!-- Detail View -->
-        <div v-else-if="selectedResult && !loading" class="detail-view">
-          <component :is="resolveComponentVersion(selectedResult)" :selectedResult></component>
-        </div>
+                  <div class="row">
+                    <div class="col-md order-md-1 fs-6 fw-bold order-1">
+                      <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }"
+                        class="pe-4">
+                        <span
+                          v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
+                      </router-link>
+                    </div>
+                  </div>
 
-        <!-- Default message when no result selected and no chart -->
-        <div v-else class="no-selection-message">
-          <p>Select a dataset from the left to view details, or click "Show Analytics" to view data visualizations.</p>
+                  <div class="row">
+                    <div class="fs-6 fw-light">
+                      <AuthorList :creators="result.creator" />
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="mt-2">
+                      <p><small
+                          v-html="sanitizeHtml(truncateMiddle(result.description || 'No Description Provided', 150, 75), ALLOWED_HTML)"></small>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="row mt-1 fs-6">
+                    <div class="col-12 col-md">
+                      <span class="text-muted fw-lighter">{{ result.analysisType }}</span>
+                    </div>
+                    <div class="col-12 col-md-auto text-md-end ps-md-3">
+                      <div
+                        class="d-inline-flex flex-row-reverse flex-md-row flex-wrap gap-1 justify-content-start justify-content-md-end">
+                        <span class="badge bg-light text-muted fw-light">{{ result.repository }}</span>
+                        <span class="badge bg-brc-light-blue fw-light text-muted">{{ result.date }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1438,21 +1047,17 @@ const setActiveTab = (tab: string) => {
 
 .page-container {
   display: flex;
-  height: 100vh;
   width: 100%;
-  overflow: hidden;
   position: relative;
 }
 
 /* Chart-specific styles */
 .chart-view {
-  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .chart-header {
-  padding: 20px 20px 0 20px;
   border-bottom: 1px solid #dee2e6;
   margin-bottom: 20px;
 }
@@ -1485,19 +1090,20 @@ const setActiveTab = (tab: string) => {
 }
 
 .tab-button.active {
-  background: #72a530;
+  background: #0d6efd;
   color: white;
-  border-color: #72a530;
+  border-color: #0d6efd;
 }
 
 .chart-container {
   flex: 1;
-  background-color: #f8f9fa;
+  background-color: #fff;
   border: 1px solid #dee2e6;
   border-radius: 0.375rem;
   padding: 20px;
-  margin: 0 20px 20px 20px;
+  margin: 0 0 20px 0;
   overflow: auto;
+  height: 440px;
 }
 
 .d3-chart {
@@ -1550,6 +1156,51 @@ const setActiveTab = (tab: string) => {
   color: #555;
 }
 
+/* TODO New UI Container Styles */
+.new-ui.results-container {
+  display: flex;
+  flex-direction: column; /* Stack full-width on top of columns */
+  flex: 1;
+}
+.new-ui .full-width {
+  padding: 20px;
+  border-bottom: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+.new-ui .left-column {
+  padding: 20px;
+  box-sizing: border-box;
+}
+.new-ui .right-column {
+  box-sizing: border-box;
+  padding: 20px;
+}
+.filter-container {
+  background-color: #fff;
+  border:1px solid #ddd;
+  padding:15px;
+  margin-top:10px;
+}
+
+@media (min-width: 968px) {
+  .new-ui .columns {
+    display: flex;
+    flex: 1;
+  }
+  .new-ui .left-column {
+    border-right: 1px solid #ddd;
+    min-width: 300px;
+    width: 400px;
+  }
+  .new-ui .right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* TODO End New UI Container Styles */
+
 /* Results Container Styles */
 .results-container {
   display: flex;
@@ -1563,13 +1214,12 @@ const setActiveTab = (tab: string) => {
   width: 400px;
   overflow-y: auto;
   padding: 20px;
-  border-right: 1px solid #ddd;
+  /* border-right: 1px solid #ddd; */
 }
 
 /* Right Column Styles */
 .right-column {
   flex: 1;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
