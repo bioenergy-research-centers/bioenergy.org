@@ -18,4 +18,9 @@
     "version": "0.1.4",
     "filename": "brc_schema_0.1.4.json",
     "supported": true
-}]
+},{
+    "version": "0.1.7",
+    "filename": "brc_schema_0.1.7.json",
+    "supported": true
+}
+]
