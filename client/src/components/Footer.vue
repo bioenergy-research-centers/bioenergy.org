@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <div class="my-5">
+  <div class="container my-5">
     <div class="small text-center">
       
       InterBRC Data Products Portal 
