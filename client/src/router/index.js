@@ -14,11 +14,6 @@ const router = createRouter({
             component: DataHomeView
         },
         {
-            path: '/data',
-            name: 'dataHome',
-            component: DataHomeView
-        },
-        {
             path: '/search',
             name: 'datasetSearch',
             component: DatasetView,

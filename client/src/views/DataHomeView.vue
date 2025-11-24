@@ -76,19 +76,15 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
   <HeaderView />
   <div class="container">
     <div class="row">
-      <div class="col-12 lead mt-4">
+      <div class="col-12 lead page-heading">
         <h2>
           A collaborative information platform brought to you by the four US Department of Energy funded
         <a href="https://www.genomicscience.energy.gov/bioenergy-research-centers/" class="" target="_blank" rel="noopener noreferrer">
         Bioenergy Research Centers
         </a>
         </h2>
-
       </div>
-      <div class="col-12 mt-4">
-         <!-- <h2>Available Data</h2> -->
-      </div>
-      <div class="col-sm-12 col-md-9 mt-3">
+      <div class="col-sm-12 col-md-9">
         <div>
           <p class="lead">
             The Bioenergy Research Centers (BRCs) work across diverse scientific disciplines

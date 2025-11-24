@@ -48,8 +48,8 @@
   <HeaderView />
   <div class="container">
 
-    <div class="row mt-3">
-      <h2>Contact Us</h2>
+    <div class="row">
+      <h2 class="page-heading">Contact Us</h2>
       <hr/>
       <p class="lead">
         This site is dedicated to creating FAIR datasets to share across bioenergy research centers (BRCs) and to the global research community.
