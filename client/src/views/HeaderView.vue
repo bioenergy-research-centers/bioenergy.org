@@ -23,13 +23,13 @@ const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
         <hr>
         <nav>
           <div class="col-12 text-center">
-            <router-link :to="{ name: 'datasetSearch'}" class="small text-muted me-3 py-3">
+            <router-link :to="{ name: 'datasetSearch'}" class="text-muted me-3 py-3">
               Search
             </router-link>
-            <router-link :to="{ name: 'contact'}" class=" small text-muted me-3 py-3">
+            <router-link :to="{ name: 'contact'}" class="text-muted me-3 py-3">
               Contact
             </router-link>
-            <router-link :to="{ name: 'about'}" class=" small text-muted me-3 py-3">
+            <router-link :to="{ name: 'about'}" class="text-muted me-3 py-3">
               About Us
             </router-link>
           </div>
