@@ -84,7 +84,7 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
         </a>
         </h2>
       </div>
-      <div class="col-sm-12 col-md-9 mt-3">
+      <div class="col-sm-12 col-md-9">
         <div>
           <p class="lead">
             The Bioenergy Research Centers (BRCs) work across diverse scientific disciplines
