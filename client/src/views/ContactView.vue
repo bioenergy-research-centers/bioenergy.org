@@ -52,7 +52,7 @@
       <h2 class="page-heading">Contact Us</h2>
       <hr/>
       <p class="lead">
-        This site is dedicated to creating FAIR datasets to share across bioenergy research centers (BRCs) and to the global research community.
+        This site is dedicated to creating FAIR datasets to share across Bioenergy Research Centers (BRCs) and to the global research community.
       </p>
       <p class="lead">
         Please contact us with any questions or suggestions for additional data using the form below.
