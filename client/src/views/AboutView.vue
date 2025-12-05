@@ -1,120 +1,116 @@
-<script setup>
-  import HeaderView from "@/views/HeaderView.vue";
-  import { onMounted, onUnmounted, onActivated, ref } from 'vue'
-  import { useTurnstile } from '@/composables/useTurnstile'
-  import MessageDataService from "../services/MessageDataService";
+<script setup lang="ts">
+import HeaderView from "@/views/HeaderView.vue";
+import Search from '@/components/Search.vue';
 
-  useTurnstile("#cf-turnstile-container");
+import mapImage from "@/assets/brc-bioenergy-map.png"
+import cabbiLogo from "@/assets/cabbi-logo.png"
+import cbiLogo from "@/assets/cbi-logo.png"
+import glbrcLogo from "@/assets/glbrc-logo.png"
+import jbeiLogo from "@/assets/jbei-logo.png"
+import doeLogo from "@/assets/doe-logo.png"
 
-  const contactReasons = [
-    "Adding data to the site",
-    "Site feature/bug/update",
-    "Other"
-  ]
-  const form = ref(null);
-  const contactAgree = ref(false);
-  const message = ref('')
-  const messageClass = ref('')
-
-  const handleSubmit = async () => {
-    if (!form.value) return;
-    // collect form data, including field added by turnstile
-    const formData = new FormData(form.value);
-
-    try {
-        const response = await MessageDataService.create(formData);
-
-        const result = await response.data;
-
-        if (result.success) {
-            message.value = "Thank you for your feedback!";
-            if(result.message){
-              message.value = result.message + " " + message.value 
-            }
-            messageClass.value = "alert alert-success";
-        } else {
-            message.value = result.error || "Something went wrong.";
-            messageClass.value = "alert alert-danger";
-        }
-    } catch (err) {
-        console.error('error', err)
-        message.value = "Network error. Please try again.";
-        messageClass.value = "alert alert-danger";
-    }
-  }
 </script>
 
 <template>
   <HeaderView />
   <div class="container">
+    <div class="row">
+      <div class="col-12">
+         <h2 class="page-heading">What is Bioenergy.org</h2>
+      </div>
+      <div class="col-md-12 col-lg-8">
+        <p class="lead">
+          The InterBRC Data Products Portal is a collaborative information platform brought to you by the four US Department of Energy funded <a href="https://www.genomicscience.energy.gov/bioenergy-research-centers/" class="" target="_blank" rel="noopener noreferrer">Bioenergy Research Centers</a>
+        </p>
 
-    <div class="row mt-3">
-      <h2>Contact Us</h2>
-      <hr/>
-      <p class="lead">
-        This site is dedicated to creating FAIR datasets to share across bioenergy research centers (BRCs) and to the global research community.
-      </p>
-      <p class="lead">
-        Please contact us with any questions or suggestions for additional data using the form below.
-      </p>
+        <p class="lead">
+          The Bioenergy Research Centers (BRCs) are driving major 
+          advancements in biotechnology underpinning the production of fuels and chemicals from
+          dedicated bioenergy crops such as switchgrass, poplar, and energy sorghum. This research
+          can enhance energy security; create domestic supply chains for a range of fuels,
+          chemicals, and materials; generate jobs in rural areas, and ensure U.S. leadership in 
+          a globally competitive bioeconomy.
+        </p>
+        
+        <p class="lead">
+          <a href="https://www.jbei.org/wp-content/uploads/2024/08/BRCFlyer_2024-1.pdf" target="_blank" rel="noopener noreferrer">Download our brochure</a> to learn more about the BRCs. Or visit us individually: 
+        </p>
+
+        <img :src="mapImage" alt="" width=100% class="mb-3">
+      </div>
+      <div class="col-md-12 col-lg-4">
+        <div class="text-center">
+          <a href="https://cabbi.bio/" target="_blank" rel="noopener noreferrer">
+            <img :src="cabbiLogo" width=65%>
+          </a>
+        </div>
+        <hr/>
+
+        <div class="text-center">
+          <a href="https://cbi.ornl.gov/" target="_blank" rel="noopener noreferrer">
+            <img :src="cbiLogo" width=80%>
+          </a>
+        </div>
+        <hr/>
+
+        <div class="text-center">
+          <a href="https://www.glbrc.org/" target="_blank" rel="noopener noreferrer">
+            <img :src="glbrcLogo" width=80%%>
+          </a>
+        </div>
+        <hr/>
+
+        <div class="text-center">
+          <a href="https://www.jbei.org/" target="_blank" rel="noopener noreferrer">
+            <img :src="jbeiLogo" width=70%>
+          </a>
+        </div>
+        <hr/>
+
+        <div class="text-center mt-5">
+          <p>
+            The Bionergy Research Centers are supported by the Office of Science of the U.S. Department of Energy.
+            The Office of Science is the single largest supporter of basic research in the physical sciences in the United States,
+            and is working to address some of the most pressing challenges of our time. For more information, please visit <a href="https://science.energy.gov">science.energy.gov</a>.
+          </p>
+          <a href="https://science.energy.gov" target="_blank" rel="noopener noreferrer">
+            <img :src="doeLogo" width=70%>
+          </a>
+        </div>
+
+      </div>
     </div>
-    
-    <div v-if="message" :class="messageClass">
-      {{ message }}
-    </div>
-
-    <form ref="form" @submit.prevent="handleSubmit" class="col-md-8 mt-3" action="/contact" method="POST">
-      
-      <div class="mb-3">
-        <label for="contact_email" class="form-label">Email</label>
-        <input type="email" class="form-control" placeholder="" name="contact_email" required/>
-      </div>
-
-      <div class="mb-3">
-        <label for="contact_name" class="form-label">Name</label>
-        <input type="text" class="form-control" placeholder="" name="contact_name" required/>
-      </div>
-
-      <div class="mb-3">
-        <label for="contact_email" class="form-label">Company, Institution, or other Affiliation</label>
-        <input type="text" class="form-control" placeholder="" name="contact_affiliation"/>
-      </div>
-
-      <div class="mb-3">
-        <label for="contact_reason" class="form-label">Why are you contacting us?</label>
-        <select class="form-select" name="contact_reason" required>
-            <option disabled selected defaultValue="" value=""> -- select an option --</option>
-            <option v-for="reason in contactReasons">
-              {{ reason }}
-            </option>
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label for="contact_feedback" class="form-label">Description</label>
-        <textarea rows="5" cols="50" class="form-control" placeholder="" name="contact_comment" maxlength="10000" required/>
-      </div>
-
-      <br/>
-      <div class="cf-turnstile" id='cf-turnstile-container'></div>
-      <br/>
-
-      <div id="userSubmitAcknowledgementHelpBlock" class="form-text">
-        <b>By submitting this form, you agree to share your information with all bioenergy.org project members and permit bioenergy.org to communicate with you.</b>
-      </div>
-      <br/>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="" v-model="contactAgree" id="contactAgreeCheck">
-        <label class="form-check-label" for="contactAgreeCheck">
-          <b>I Agree</b>
-        </label>
-      </div>
-      <br/>
-      <button type="submit" class="btn btn-primary btn-sm" :disabled="!contactAgree">Send Feedback</button>
-      <br/>
-      <br/>
-    </form>
-
   </div>
 
+
 </template>
+
+<style scoped>
+
+.brc-listing {
+  /* background-color: #DBE8C5; */
+  background-color: #ffffff;
+  min-height: 100%;
+  border-radius: 5px;
+  margin: 0px 0 0px;
+}
+.brc-listing .intro {
+  /* color: #72a530; */
+}
+/* .brc-listing .intro a {
+  color: #4C8D87;
+} */
+.brc-listing hr {
+  color: #599D0E;
+  background-color: #599D0E;
+  height: 3px;
+  border:none;
+  opacity: .8;
+}
+.callout {
+  background-color: #0d6efd;
+  border-radius: 5px;
+  margin: 20px 0 40px;
+  padding: 20px 20px 40px;
+}
+</style>
