@@ -6,6 +6,7 @@ import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import DatasetDataService from "../services/DatasetDataService";
 import sanitizeHtml from 'sanitize-html';
+import { useSearchStore } from '@/store/searchStore';
 
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
 
@@ -14,6 +15,7 @@ const imgUrls = import.meta.glob('../assets/*.png', {
   eager: true
 })
 const route = useRoute()
+const searchStore = useSearchStore();
 
 const recentDatasets = ref([])
 const recentDataLoading = ref(false)
@@ -70,6 +72,12 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
   return str.slice(0, maxStart) + "…" + str.slice(-maxEnd);
 }
 
+const suggestedQuery = 'switchgrass or isoprenol';
+
+const applySuggestedQuery = () => {
+  searchStore.searchTerm = suggestedQuery;
+};
+
 </script>
 
 <template>
@@ -109,7 +117,10 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
             contents. Note, some repositories will require you to create a login to access or download data.
           </p>
           <p class="lead">
-            Try searching for "2024" to get started!
+            Try searching for "{{ suggestedQuery }}" to get started!
+            <button type="button" class="btn btn-outline-primary btn-sm" @click="applySuggestedQuery()">
+              Apply Query
+            </button>
           </p>
         </div>
       </div>
