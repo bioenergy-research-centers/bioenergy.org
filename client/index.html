@@ -5,6 +5,23 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bioenergy</title>
+    <script type="module">
+      const rybbitUrl = "%VITE_RYBBIT_URL%";
+      const rybbitId = "%VITE_RYBBIT_ID%";
+
+      const rybbitConfigured =
+        rybbitUrl && !rybbitUrl.startsWith("%") &&
+        rybbitId && !rybbitId.startsWith("%");
+
+      if (rybbitConfigured) {
+        const s = document.createElement("script");
+        s.defer = true;
+        s.src = rybbitUrl;
+        s.dataset.siteId = rybbitId;
+        document.head.appendChild(s);
+      }
+
+    </script>
   </head>
   <body>
     <div id="app"></div>
