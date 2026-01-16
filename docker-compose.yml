@@ -24,6 +24,8 @@ services:
       args:
         VITE_BIOENERGY_ORG_API_URI: ${VITE_BIOENERGY_ORG_API_URI}
         VITE_TURNSTILE_SITEKEY: ${VITE_TURNSTILE_SITEKEY}
+        VITE_RYBBIT_URL: ${VITE_RYBBIT_URL}
+        VITE_RYBBIT_ID: ${VITE_RYBBIT_ID}
     restart: unless-stopped
     env_file:
       - .env

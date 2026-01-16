@@ -6,6 +6,7 @@ import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import DatasetDataService from "../services/DatasetDataService";
 import sanitizeHtml from 'sanitize-html';
+import { useSearchStore } from '@/store/searchStore';
 
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
 
@@ -14,6 +15,7 @@ const imgUrls = import.meta.glob('../assets/*.png', {
   eager: true
 })
 const route = useRoute()
+const searchStore = useSearchStore();
 
 const recentDatasets = ref([])
 const recentDataLoading = ref(false)
@@ -70,39 +72,55 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
   return str.slice(0, maxStart) + "…" + str.slice(-maxEnd);
 }
 
+const suggestedQuery = 'switchgrass or isoprenol';
+
+const applySuggestedQuery = () => {
+  searchStore.searchTerm = suggestedQuery;
+};
+
 </script>
 
 <template>
   <HeaderView />
   <div class="container">
     <div class="row">
-      <div class="col-12 mt-4">
-         <h2>Available Data</h2>
+      <div class="col-12 lead page-heading">
+        <h2>
+          A collaborative information platform brought to you by the four US Department of Energy funded
+        <a href="https://www.genomicscience.energy.gov/bioenergy-research-centers/" class="" target="_blank" rel="noopener noreferrer">
+        Bioenergy Research Centers
+        </a>
+        </h2>
       </div>
-      <div class="col-sm-12 col-md-9 mt-3">
+      <div class="col-sm-12 col-md-9">
         <div>
           <p class="lead">
-            The BRCs work across diverse scientific disciplines
+            The Bioenergy Research Centers (BRCs) work across diverse scientific disciplines
             that produce an extensive collection of datasets. These datasets include plant and
             biomass analytics, genomic sequencing, genetic engineering, proteomics, metabolomics,
             phenomics, atmospheric and soil measurements, and economic and TEA/LCA models and many
             others that span the nearly 20 year period of the BRCs existence. This portal aims to
-            provide a single location where stakeholders can more easily find and access these
-            important BRC-generated datasets.
+            provide a single location to find and access these important BRC-generated datasets.
           </p>
-          <p class="">
-            <!-- How do I use this site? -->
+          <p class="lead">
+            How do I use this site?
           </p>
-          <p class="">
-            Use the graphs and search tools on this site to discover the breadth of datasets available.
+          <p>
+            Use the graphs and search tools to discover the breadth of data available and access published datasets.
             Enter Keywords in the search bar to find specific datasets or click on a section of a
             graph to display datasets meeting those criteria, which allows further exploration.
             See the <a :href="docs_link" target="_blank" rel="noopener noreferrer">API Docs</a> for additional options.
           </p>
           <p>
-            To access the dataset click on the large “Access Dataset” button. This will
+            To access a dataset click on the large “Access Dataset” button. This will
             open a new browser tab in the repository where the dataset is stored and allow you to download its
-            contents. Note, some repositories will require you to create a login to access or download datasets.
+            contents. Note, some repositories will require you to create a login to access or download data.
+          </p>
+          <p class="lead">
+            Try searching for "{{ suggestedQuery }}" to get started!
+            <button type="button" class="btn btn-outline-primary btn-sm" @click="applySuggestedQuery()">
+              Apply Query
+            </button>
           </p>
         </div>
       </div>
