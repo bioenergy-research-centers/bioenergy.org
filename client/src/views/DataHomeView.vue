@@ -100,7 +100,7 @@ const applySuggestedQuery = () => {
       <div class="row my-3">
         <div class="col-12 col-md-3">
           <div class="d-flex align-items-center p-3 border border-light rounded">
-            <i class="bi bi-database display-3"></i>
+            <i class="bi bi-database display-4"></i>
             <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalDatasets }}</span>
               <span>Published Datasets</span>
@@ -110,7 +110,7 @@ const applySuggestedQuery = () => {
         
         <div class="col-12 col-md-3">
           <div class="d-flex align-items-center p-3 border border-light rounded">
-            <i class="bi bi-person display-3" style="font-size:4rem"></i>
+            <i class="bi bi-person display-4"></i>
             <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalPrimaryCreators }}</span>
               <span>Contributors</span>
@@ -120,7 +120,7 @@ const applySuggestedQuery = () => {
       
         <div class="col-12 col-md-3">
           <div class="d-flex align-items-center p-3 border border-light rounded">
-            <i class="bi bi-flower3 display-3" style="font-size:4rem"></i>
+            <i class="bi bi-flower3 display-4"></i>
             <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalTaxIds }}</span>
               <span>Unique Species</span>
@@ -130,7 +130,7 @@ const applySuggestedQuery = () => {
         
         <div class="col-12 col-md-3">
           <div class="d-flex align-items-center p-3 border border-light rounded">
-            <i class="bi bi-house-door display-3" style="font-size:4rem"></i>
+            <i class="bi bi-house-door display-4"></i>
             <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.repositoryCounts }}</span>
               <span>Repositories</span>
@@ -142,70 +142,95 @@ const applySuggestedQuery = () => {
     
   </section> 
   
-  
-    <section class="py-4">
-      <div class="container text-center">
-        <h2 class="subsection-header">Themes and Categories</h2>
-        <p>Jump to datasets based on core research themes or categories.</p>
-        <ul>
-          <li><a href="">Feedstock Development</a></li>
-          <li><a href="">Deconstruction and Separation</a></li>
-          <li><a href="">Conversion</a></li>
-          <li><a href="">Sustainability</a></li>
-        </ul>
-        <ul>
-          <li><a href="">Genetic Engineering</a></li>
-          <li><a href="">Microbiology</a></li>
-          <li><a href="">Analytics & Methods</a></li>
-          <li><a href="">Plant Biology</a></li>
-          <li><a href="">Enzymes & Proteins</a></li>
-          <li><a href="">Process Engineering</a></li>
-          <li><a href="">Bioenergy Production</a></li>
-          <li><a href="">Biomass & Feedstock</a></li>
-        </ul>
+  <section class="py-4">
+    <div class="container text-center">
+      <h2 class="subsection-header">Themes and Categories</h2>
+      <p>Jump to datasets based on core research themes or categories.</p>
+      <div class="container py-5">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 text-center">
+          <div class="col">
+            <div class="card h-100 shadow-sm border-0 p-4">
+              <div class="icon-placeholder"></div>
+              <h5 class="fw-bold mt-2">Feedstock<br>Development</h5>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card h-100 shadow-sm border-0 p-4">
+              <div class="icon-placeholder"></div>
+              <h5 class="fw-bold mt-2">Deconstruction<br>and Separation</h5>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card h-100 shadow-sm border-0 p-4">
+              <div class="icon-placeholder"></div>
+              <h5 class="fw-bold mt-2">Conversion</h5>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card h-100 shadow-sm border-0 p-4">
+              <div class="icon-placeholder"></div>
+              <h5 class="fw-bold mt-2">Sustainability</h5>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </section>
+      <ul class="list-unstyled list-inline">
+        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Genetic Engineering</a></li>
+        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Microbiology</a></li>
+        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Analytics & Methods</a></li>
+        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Plant Biology</a></li>
+        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Enzymes & Proteins</a></li>
+        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Process Engineering</a></li>
+        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Bioenergy Production</a></li>
+        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Biomass & Feedstock</a></li>
+      </ul>
+    </div>
+  </section>
     
-    <section class="py-4" style="background-color:#fff;">
-      <div class="container text-center">
-        <h2 class="subsection-header">Recent Datasets</h2>
-        <p>Latest datasets from each bioenergy research center</p>
-      </div>
-    </section>
+  <section class="py-4" style="background-color:#fff;">
+    <div class="container text-center">
+      <h2 class="subsection-header">Recent Datasets</h2>
+      <p>Latest datasets from each bioenergy research center</p>
+    </div>
+  </section>
     
-    <section class="py-4">
-      <div class="container text-center">
-        <h2 class="subsection-header">Data Portal Features</h2>
+  <section class="py-4">
+    <div class="container text-center">
+      <h2 class="subsection-header">Data Portal Features</h2>
+      
+      <div class="row">
+        <div class="col-12 col-md-4">
+          <h3>Advanced Searching with Boolean Logic</h3>
+          <p>Instantly pinpoint relevant studies using powerful AND/OR/NOT filters, turning complex queries into precise results.</p>
+        </div>
         
-        <div class="row">
-          <div class="col-12 col-md-4">
-            <h3>Advanced Searching with Boolean Logic</h3>
-            <p>Instantly pinpoint relevant studies using powerful AND/OR/NOT filters, turning complex queries into precise results.</p>
-          </div>
-          
-          <div class="col-12 col-md-4">
-            <h3>Charts and Visual Analytics</h3>
-            <p>Transform raw data into striking, interactive visualizations that reveal insights at a glance.</p>
-          </div>
-          
-          <div class="col-12 col-md-4">
-            <h3>API Access</h3>
-            <p>Seamlessly integrate our research database into your own applications with fast, secure, and developer‑friendly endpoints.</p>
-          </div>
+        <div class="col-12 col-md-4">
+          <h3>Charts and Visual Analytics</h3>
+          <p>Transform raw data into striking, interactive visualizations that reveal insights at a glance.</p>
+        </div>
+        
+        <div class="col-12 col-md-4">
+          <h3>API Access</h3>
+          <p>Seamlessly integrate our research database into your own applications with fast, secure, and developer‑friendly endpoints.</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
     
-    <section class="py-4" style="background-color:#fff;">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-3">
-            <h2 class="subsection-header">Your Data, Everywhere – Powered by a Multitude of Trusted Repositories</h2>
-            <p>Our research datasets are instantly accessible across a host of leading platforms—GitHub, Zenodo, Figshare, and many more.</p>
-          </div>
+  <section class="py-4" style="background-color:#fff;">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-3">
+          <h2 class="subsection-header">Your Data, Everywhere – Powered by a Multitude of Trusted Repositories</h2>
+          <p>Our research datasets are instantly accessible across a host of leading platforms—GitHub, Zenodo, Figshare, and many more.</p>
         </div>
-      </div> 
-    </section>
+      </div>
+    </div> 
+  </section>
   
   <!-- Existing homepage code -->
   <div class="container">
