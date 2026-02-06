@@ -232,25 +232,58 @@ const applySuggestedQuery = () => {
   </section>
     
   <section class="py-4" style="background-color:#fff;">
-    <div class="container text-center">
-      <h2 class="subsection-header">Data Portal Features</h2>
+    <div class="container">
+      <h2 class="subsection-header text-center">Data Portal Features</h2>
       
-      <div class="row">
-        <div class="col-12 col-md-4">
-          <h3>Advanced Searching with Boolean Logic</h3>
-          <p>Instantly pinpoint relevant studies using powerful AND/OR/NOT filters, turning complex queries into precise results.</p>
-        </div>
-        
-        <div class="col-12 col-md-4">
-          <h3>Charts and Visual Analytics</h3>
-          <p>Transform raw data into striking, interactive visualizations that reveal insights at a glance.</p>
-        </div>
-        
-        <div class="col-12 col-md-4">
-          <h3>API Access</h3>
-          <p>Seamlessly integrate our research database into your own applications with fast, secure, and developer‑friendly endpoints.</p>
+      <div class="row g-4">
+        <div class="row g-4">
+
+            <div class="col-12 col-lg-4">
+              <div class="d-flex">
+                <div class="me-3">
+                  <i class="bi bi-check-lg"></i>
+                </div>
+                <div>
+                  <h5 class="subsection-header">Advanced Searching with Boolean Logic</h5>
+                  <p class="mb-0">
+                    Instantly pinpoint relevant studies using powerful AND/OR/NOT filters,
+                    turning complex queries into precise results.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12 col-lg-4">
+              <div class="d-flex">
+                <div class="feature-icon me-3">
+                  <i class="bi bi-check-lg"></i>
+                </div>
+                <div>
+                  <h5 class="subsection-header">Charts and Visual Analytics</h5>
+                  <p class="mb-0">
+                    Transform raw data into striking, interactive visualizations that reveal insights at a glance.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12 col-lg-4">
+              <div class="d-flex">
+                <div class="feature-icon me-3">
+                  <i class="bi bi-check-lg"></i>
+                </div>
+                <div>
+                  <h5 class="subsection-header">API Access</h5>
+                  <p class="mb-0">
+                    Seamlessly integrate our research database into your own applications with fast, secure, and developer-friendly endpoints.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
         </div>
       </div>
+      
     </div>
   </section>
     
