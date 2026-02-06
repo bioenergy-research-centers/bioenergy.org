@@ -142,7 +142,7 @@ const applySuggestedQuery = () => {
     
   </section> 
   
-  <section class="py-4">
+  <section class="py-4" style="background-color:#fff;">
     <div class="container text-center">
       <h2 class="subsection-header">Themes and Categories</h2>
       <p>Jump to datasets based on core research themes or categories.</p>
@@ -191,14 +191,47 @@ const applySuggestedQuery = () => {
     </div>
   </section>
     
-  <section class="py-4" style="background-color:#fff;">
+  <section class="py-4">
     <div class="container text-center">
       <h2 class="subsection-header">Recent Datasets</h2>
       <p>Latest datasets from each bioenergy research center</p>
+      
+      <div>
+        <div class="container">
+          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+
+            <div class="col" v-for="result in orderedRecentData" :key="result.uid">
+              <div class="card research-card h-100 shadow-sm border-0 p-4">
+                <div class="logo-placeholder">
+                  <img :src="imgUrls[`../assets/${result.brc?.toLowerCase()}-logo.png`]" style="max-width:200px;" :alt="`${result.brc.toLowerCase()} logo`"></img>
+                </div>
+                <h5 class="card-title mb-2">
+                   <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }" class="pe-4">
+                  <span
+                    v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
+                </router-link>
+                </h5>
+                <div class="card-author mb-3">
+                  <AuthorList :creators="result.creator" />
+                </div>
+                <p class="card-text">
+                  <small
+                    v-html="sanitizeHtml(truncateMiddle(result.description || '', 150, 75), ALLOWED_HTML)"></small>
+                </p>
+                <p>
+                  <span class="badge text-muted">{{ result.date }}</span>
+                </p>
+              </div>
+            </div>
+          
+          </div>
+        </div>
+      </div>
+      
     </div>
   </section>
     
-  <section class="py-4">
+  <section class="py-4" style="background-color:#fff;">
     <div class="container text-center">
       <h2 class="subsection-header">Data Portal Features</h2>
       
@@ -221,7 +254,7 @@ const applySuggestedQuery = () => {
     </div>
   </section>
     
-  <section class="py-4" style="background-color:#fff;">
+  <section class="py-4">
     <div class="container">
       <div class="row">
         <div class="col-md-3">
@@ -456,5 +489,8 @@ const applySuggestedQuery = () => {
 }
 .herospace .browse-all {
   color: #fff;
+}
+.research-card {
+  font-size: 14px;
 }
 </style>
