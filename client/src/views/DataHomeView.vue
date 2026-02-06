@@ -83,34 +83,34 @@ const applySuggestedQuery = () => {
 <template>
   <HeaderView />
   <!-- New homepage code -->
-  <section style="background-color:#175929;color:#fff;" class="py-4">
+  <section class="py-4 herospace">
     <div class="container">
       <h2 class="subtitle fw-bold">Your Portal to Bioenergy Research Data</h2>
       
-      <p class="py-3">The Bioenergy Research Centers (BRCs) work across diverse scientific disciplines that produce an extensive collection of datasets. This portal aims to provide a single location to find and access these important BRC-generated datasets.</p>
+      <p class="py-3">The Bioenergy Research Centers (BRCs) work across diverse scientific disciplines that generate an extensive collection of datasets, many of which can be leveraged with artificial‑intelligence techniques. This portal aims to provide a single location to find and access these important BRC‑generated datasets.</p>
       
       <div class="search-form">
         <search />
-        <router-link :to="{ name: 'datasetSearch'}" class="">Browse All Datasets
+        <router-link :to="{ name: 'datasetSearch'}" class="browse-all">Browse All Datasets
           <i class="bi bi-arrow-right pe-3" aria-hidden="true"></i>
         </router-link>
       </div>
       
       <!-- Metrics -->
       <div class="row my-3">
-        <div class="col-12 col-md-2">
-          <div class="p-3 border border-light rounded">
-            <i class="bi bi-database display-3 me-4"></i>
-            <div>
+        <div class="col-12 col-md-3">
+          <div class="d-flex align-items-center p-3 border border-light rounded">
+            <i class="bi bi-database display-3"></i>
+            <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalDatasets }}</span>
               <span>Published Datasets</span>
             </div>
           </div>
         </div>
         
-        <div class="col-12 col-md-2">
-          <div class="p-3 border border-light rounded">
-            <i class="bi bi-person display-3 me-4" style="font-size:4rem"></i>
+        <div class="col-12 col-md-3">
+          <div class="d-flex align-items-center p-3 border border-light rounded">
+            <i class="bi bi-person display-3" style="font-size:4rem"></i>
             <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalPrimaryCreators }}</span>
               <span>Contributors</span>
@@ -118,9 +118,9 @@ const applySuggestedQuery = () => {
           </div>
         </div>
       
-        <div class="col-12 col-md-2">
-          <div class="p-3 border border-light rounded">
-            <i class="bi bi-flower3 display-3 me-4" style="font-size:4rem"></i>
+        <div class="col-12 col-md-3">
+          <div class="d-flex align-items-center p-3 border border-light rounded">
+            <i class="bi bi-flower3 display-3" style="font-size:4rem"></i>
             <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalTaxIds }}</span>
               <span>Unique Species</span>
@@ -128,9 +128,9 @@ const applySuggestedQuery = () => {
           </div>
         </div>
         
-        <div class="col-12 col-md-2">
-          <div class="p-3 border border-light rounded">
-            <i class="bi bi-house-door display-3 me-4" style="font-size:4rem"></i>
+        <div class="col-12 col-md-3">
+          <div class="d-flex align-items-center p-3 border border-light rounded">
+            <i class="bi bi-house-door display-3" style="font-size:4rem"></i>
             <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.repositoryCounts }}</span>
               <span>Repositories</span>
@@ -424,5 +424,12 @@ const applySuggestedQuery = () => {
 .subsection-header {
   color: #063828;
   font-weight: 700;
+}
+.herospace {
+  background-color:#175929;
+  color:#fff;
+}
+.herospace .browse-all {
+  color: #fff;
 }
 </style>
