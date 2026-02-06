@@ -82,6 +82,132 @@ const applySuggestedQuery = () => {
 
 <template>
   <HeaderView />
+  <!-- New homepage code -->
+  <section style="background-color:#175929;color:#fff;" class="py-4">
+    <div class="container">
+      <h2 class="subtitle fw-bold">Your Portal to Bioenergy Research Data</h2>
+      
+      <p class="py-3">The Bioenergy Research Centers (BRCs) work across diverse scientific disciplines that produce an extensive collection of datasets. This portal aims to provide a single location to find and access these important BRC-generated datasets.</p>
+      
+      <div class="search-form">
+        <search />
+        <router-link :to="{ name: 'datasetSearch'}" class="">Browse All Datasets
+          <i class="bi bi-arrow-right pe-3" aria-hidden="true"></i>
+        </router-link>
+      </div>
+      
+      <!-- Metrics -->
+      <div class="row my-3">
+        <div class="col-12 col-md-2">
+          <div class="p-3 border border-light rounded">
+            <i class="bi bi-database display-3 me-4"></i>
+            <div>
+              <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalDatasets }}</span>
+              <span>Published Datasets</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12 col-md-2">
+          <div class="p-3 border border-light rounded">
+            <i class="bi bi-person display-3 me-4" style="font-size:4rem"></i>
+            <div class="d-flex flex-column justify-content-center">
+              <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalPrimaryCreators }}</span>
+              <span>Contributors</span>
+            </div>
+          </div>
+        </div>
+      
+        <div class="col-12 col-md-2">
+          <div class="p-3 border border-light rounded">
+            <i class="bi bi-flower3 display-3 me-4" style="font-size:4rem"></i>
+            <div class="d-flex flex-column justify-content-center">
+              <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalTaxIds }}</span>
+              <span>Unique Species</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12 col-md-2">
+          <div class="p-3 border border-light rounded">
+            <i class="bi bi-house-door display-3 me-4" style="font-size:4rem"></i>
+            <div class="d-flex flex-column justify-content-center">
+              <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.repositoryCounts }}</span>
+              <span>Repositories</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </section> 
+  
+  
+    <section class="py-4">
+      <div class="container text-center">
+        <h2 class="subsection-header">Themes and Categories</h2>
+        <p>Jump to datasets based on core research themes or categories.</p>
+        <ul>
+          <li><a href="">Feedstock Development</a></li>
+          <li><a href="">Deconstruction and Separation</a></li>
+          <li><a href="">Conversion</a></li>
+          <li><a href="">Sustainability</a></li>
+        </ul>
+        <ul>
+          <li><a href="">Genetic Engineering</a></li>
+          <li><a href="">Microbiology</a></li>
+          <li><a href="">Analytics & Methods</a></li>
+          <li><a href="">Plant Biology</a></li>
+          <li><a href="">Enzymes & Proteins</a></li>
+          <li><a href="">Process Engineering</a></li>
+          <li><a href="">Bioenergy Production</a></li>
+          <li><a href="">Biomass & Feedstock</a></li>
+        </ul>
+      </div>
+    </section>
+    
+    <section class="py-4" style="background-color:#fff;">
+      <div class="container text-center">
+        <h2 class="subsection-header">Recent Datasets</h2>
+        <p>Latest datasets from each bioenergy research center</p>
+      </div>
+    </section>
+    
+    <section class="py-4">
+      <div class="container text-center">
+        <h2 class="subsection-header">Data Portal Features</h2>
+        
+        <div class="row">
+          <div class="col-12 col-md-4">
+            <h3>Advanced Searching with Boolean Logic</h3>
+            <p>Instantly pinpoint relevant studies using powerful AND/OR/NOT filters, turning complex queries into precise results.</p>
+          </div>
+          
+          <div class="col-12 col-md-4">
+            <h3>Charts and Visual Analytics</h3>
+            <p>Transform raw data into striking, interactive visualizations that reveal insights at a glance.</p>
+          </div>
+          
+          <div class="col-12 col-md-4">
+            <h3>API Access</h3>
+            <p>Seamlessly integrate our research database into your own applications with fast, secure, and developer‑friendly endpoints.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section class="py-4" style="background-color:#fff;">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-3">
+            <h2 class="subsection-header">Your Data, Everywhere – Powered by a Multitude of Trusted Repositories</h2>
+            <p>Our research datasets are instantly accessible across a host of leading platforms—GitHub, Zenodo, Figshare, and many more.</p>
+          </div>
+        </div>
+      </div> 
+    </section>
+  
+  <!-- Existing homepage code -->
   <div class="container">
     <div class="row">
       <div class="col-12 lead page-heading">
@@ -288,8 +414,15 @@ const applySuggestedQuery = () => {
 	flex-wrap: wrap;
 	gap: 1rem;
 }
+/* new styles */
 .search-form {
-	flex: 1 1 300px;
 	max-width: 600px;
+}
+.subtitle {
+  font-size: 56px;
+}
+.subsection-header {
+  color: #063828;
+  font-weight: 700;
 }
 </style>
