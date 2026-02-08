@@ -8,6 +8,7 @@ import DatasetDataService from "../services/DatasetDataService";
 import sanitizeHtml from 'sanitize-html';
 import { useSearchStore } from '@/store/searchStore';
 
+import speciesIcon from "@/assets/species-icon.png"
 import feedstockIcon from "@/assets/feedstock-development-icon.svg"
 import deconstructionIcon from "@/assets/deconstruction-icon.svg"
 import conversionIcon from "@/assets/conversion-icon.svg"
@@ -126,7 +127,7 @@ const applySuggestedQuery = () => {
       
         <div class="col-12 col-md-3">
           <div class="d-flex align-items-center p-3 border border-light rounded">
-            <i class="bi bi-flower3 display-4"></i>
+            <img :src="speciesIcon" class="" alt="" />
             <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalTaxIds }}</span>
               <span>Unique Species</span>
