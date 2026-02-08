@@ -8,6 +8,10 @@ import DatasetDataService from "../services/DatasetDataService";
 import sanitizeHtml from 'sanitize-html';
 import { useSearchStore } from '@/store/searchStore';
 
+import feedstockIcon from "@/assets/feedstock-development-icon.svg"
+import deconstructionIcon from "@/assets/deconstruction-icon.svg"
+import conversionIcon from "@/assets/conversion-icon.svg"
+import sustainabilityIcon from "@/assets/sustainability-icon.svg"
 import repoImage from "@/assets/repo-logos.png"
 
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
@@ -146,50 +150,63 @@ const applySuggestedQuery = () => {
   
   <section class="py-4" style="background-color:#fff;">
     <div class="container text-center">
-      <h2 class="subsection-header">Themes and Categories</h2>
-      <p>Jump to datasets based on core research themes or categories.</p>
-      <div class="container py-5">
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 text-center">
-          <div class="col">
-            <div class="card h-100 shadow-sm border-0 p-4">
-              <div class="icon-placeholder"></div>
-              <h5 class="fw-bold mt-2">Feedstock<br>Development</h5>
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-10">
+          <h2 class="subsection-header">Themes and Categories</h2>
+          <p>Jump to datasets based on core research themes or categories.</p>
+        
+          <div class="py-5">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 text-center">
+              <div class="col">
+                <div class="theme-card h-100 shadow-sm border-0 p-4">
+                  <div class="icon-placeholder">
+                    <img :src="feedstockIcon" class="w-50" alt="Illustration of tall grasses and plant stems, representing feedstock development." />
+                  </div>
+                  <h5 class="fw-bold mt-2">Feedstock<br>Development</h5>
+                </div>
+              </div>
+
+              <div class="col">
+                <div class="theme-card h-100 shadow-sm border-0 p-4">
+                  <div class="icon-placeholder">
+                    <img :src="deconstructionIcon" class="w-50" alt="Illustration of a molecule chain, representing deconstruction and separation." />
+                  </div>
+                  <h5 class="fw-bold mt-2">Deconstruction<br>and Separation</h5>
+                </div>
+              </div>
+
+              <div class="col">
+                <div class="theme-card h-100 shadow-sm border-0 p-4">
+                  <div class="icon-placeholder">
+                    <img :src="conversionIcon" class="w-50" alt="Illustration of lab glassware and fuel pump,representing biofuel conversion research." />
+                  </div>
+                  <h5 class="fw-bold mt-2">Conversion</h5>
+                </div>
+              </div>
+
+              <div class="col">
+                <div class="theme-card h-100 shadow-sm border-0 p-4">
+                  <div class="icon-placeholder">
+                    <img :src="sustainabilityIcon" class="w-50" alt="Illustration of a leaf overlaying a recycling arrow, representing sustainability." />
+                  </div>
+                  <h5 class="fw-bold mt-2">Sustainability</h5>
+                </div>
+              </div>
+
             </div>
           </div>
-
-          <div class="col">
-            <div class="card h-100 shadow-sm border-0 p-4">
-              <div class="icon-placeholder"></div>
-              <h5 class="fw-bold mt-2">Deconstruction<br>and Separation</h5>
-            </div>
-          </div>
-
-          <div class="col">
-            <div class="card h-100 shadow-sm border-0 p-4">
-              <div class="icon-placeholder"></div>
-              <h5 class="fw-bold mt-2">Conversion</h5>
-            </div>
-          </div>
-
-          <div class="col">
-            <div class="card h-100 shadow-sm border-0 p-4">
-              <div class="icon-placeholder"></div>
-              <h5 class="fw-bold mt-2">Sustainability</h5>
-            </div>
-          </div>
-
+          <ul class="list-unstyled list-inline">
+            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Genetic Engineering</a></li>
+            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Microbiology</a></li>
+            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Analytics & Methods</a></li>
+            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Plant Biology</a></li>
+            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Enzymes & Proteins</a></li>
+            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Process Engineering</a></li>
+            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Bioenergy Production</a></li>
+            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Biomass & Feedstock</a></li>
+          </ul>
         </div>
       </div>
-      <ul class="list-unstyled list-inline">
-        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Genetic Engineering</a></li>
-        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Microbiology</a></li>
-        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Analytics & Methods</a></li>
-        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Plant Biology</a></li>
-        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Enzymes & Proteins</a></li>
-        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Process Engineering</a></li>
-        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Bioenergy Production</a></li>
-        <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Biomass & Feedstock</a></li>
-      </ul>
     </div>
   </section>
     
@@ -527,6 +544,15 @@ const applySuggestedQuery = () => {
 }
 .herospace .browse-all {
   color: #fff;
+}
+.theme-card {
+  background-color: #f1f1f1;
+  border-radius: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.theme-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,.15);
 }
 .research-card {
   font-size: 14px;
