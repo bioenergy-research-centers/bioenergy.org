@@ -8,6 +8,8 @@ import DatasetDataService from "../services/DatasetDataService";
 import sanitizeHtml from 'sanitize-html';
 import { useSearchStore } from '@/store/searchStore';
 
+import repoImage from "@/assets/repo-logos.png"
+
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
 
 const imgUrls = import.meta.glob('../assets/*.png', {
@@ -241,7 +243,7 @@ const applySuggestedQuery = () => {
             <div class="col-12 col-lg-4">
               <div class="d-flex">
                 <div class="me-3">
-                  <i class="bi bi-check-lg"></i>
+                  <i class="bi bi-check2-square"></i>
                 </div>
                 <div>
                   <h5 class="subsection-header">Advanced Searching with Boolean Logic</h5>
@@ -256,7 +258,7 @@ const applySuggestedQuery = () => {
             <div class="col-12 col-lg-4">
               <div class="d-flex">
                 <div class="feature-icon me-3">
-                  <i class="bi bi-check-lg"></i>
+                  <i class="bi bi-check2-square"></i>
                 </div>
                 <div>
                   <h5 class="subsection-header">Charts and Visual Analytics</h5>
@@ -270,7 +272,7 @@ const applySuggestedQuery = () => {
             <div class="col-12 col-lg-4">
               <div class="d-flex">
                 <div class="feature-icon me-3">
-                  <i class="bi bi-check-lg"></i>
+                  <i class="bi bi-check2-square"></i>
                 </div>
                 <div>
                   <h5 class="subsection-header">API Access</h5>
@@ -289,10 +291,13 @@ const applySuggestedQuery = () => {
     
   <section class="py-4">
     <div class="container">
-      <div class="row">
-        <div class="col-md-3">
-          <h2 class="subsection-header">Your Data, Everywhere – Powered by a Multitude of Trusted Repositories</h2>
+      <div class="row align-items-center">
+        <div class="col-12 col-md-5">
+          <h2 class="h4 subsection-header">Your Data, Everywhere – Powered by a Multitude of Trusted Repositories</h2>
           <p>Our research datasets are instantly accessible across a host of leading platforms—GitHub, Zenodo, Figshare, and many more.</p>
+        </div>
+        <div class="col-12 col-md-7">
+          <img :src="repoImage" class="img-fluid" alt="Logos from a host of leading platforms, including Github, Zenodo, Figshare, and many more." />
         </div>
       </div>
     </div> 
