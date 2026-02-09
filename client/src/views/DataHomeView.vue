@@ -29,8 +29,8 @@ async function loadRecentData() {
   try {
     // Todo replace with query for distinct values
     ['CABBI','CBI','GLBRC','JBEI'].forEach(async function(brc){
-      const res = await DatasetDataService.findByParams( {brc: brc, limit: 1} );
-      recentDatasets.value.push(...res.data)
+      const res = await DatasetDataService.getAll( { rows: 1, filters: {brc: brc}, nofacets: true} );
+      recentDatasets.value.push(...res.data.items)
     })
   } catch (e) {
     if (e.name !== 'AbortError') error.value = e.message || String(e)
