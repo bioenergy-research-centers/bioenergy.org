@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {RouterLink, useRoute, useRouter} from "vue-router";
-import headerIcon from "@/assets/brc-bioenergy-icon.png"
+import headerIcon from "@/assets/brc-bioenergy-icon-v2.png"
 import {onBeforeMount, ref, watch, onMounted} from "vue"; // Fixed import
 import {useSearchStore} from '@/store/searchStore';
 

@@ -5,10 +5,10 @@
 </script>
 
 <template>
-  <footer>
+  <footer class="mt-5">
     <div class="container-fluid">
       <div class="row justify-content-center">
-        <div class="col-12 col-lg-6">
+        <div class="col-12 col-md-8 col-lg-4 col-xl-4 col-xxl-4">
 
           <div class="row align-items-center">
             <div class="col-12 col-md-5 mb-3 mb-md-0">
