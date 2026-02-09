@@ -8,12 +8,13 @@ import DatasetDataService from "../services/DatasetDataService";
 import sanitizeHtml from 'sanitize-html';
 import { useSearchStore } from '@/store/searchStore';
 
-import speciesIcon from "@/assets/species-icon.png"
-import feedstockIcon from "@/assets/feedstock-development-icon.svg"
-import deconstructionIcon from "@/assets/deconstruction-icon.svg"
-import conversionIcon from "@/assets/conversion-icon.svg"
-import sustainabilityIcon from "@/assets/sustainability-icon.svg"
-import repoImage from "@/assets/repo-logos.png"
+import heroBg from "@/assets/hero-bg.png";
+import speciesIcon from "@/assets/species-icon.png";
+import feedstockIcon from "@/assets/feedstock-development-icon.svg";
+import deconstructionIcon from "@/assets/deconstruction-icon.svg";
+import conversionIcon from "@/assets/conversion-icon.svg";
+import sustainabilityIcon from "@/assets/sustainability-icon.svg";
+import repoImage from "@/assets/repo-logos.png";
 
 const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
 
@@ -90,64 +91,75 @@ const applySuggestedQuery = () => {
 <template>
   <HeaderView />
   <!-- New homepage code -->
-  <section class="py-4 herospace">
-    <div class="container">
-      <h2 class="subtitle fw-bold">Your Portal to Bioenergy Research Data</h2>
-      
-      <p class="py-3">This portal serves as a centralized point for Bioenergy Research Center-generated datasets to improve findability and accessibility including support for artificial intelligence development and computational analysis.
-      </p>
-      
-      <div class="search-form">
-        <search />
-        <router-link :to="{ name: 'datasetSearch'}" class="browse-all">Browse All Datasets
-          <i class="bi bi-arrow-right pe-3" aria-hidden="true"></i>
-        </router-link>
-      </div>
-      
-      <!-- Metrics -->
-      <div class="row my-3">
-        <div class="col-12 col-md-3">
-          <div class="d-flex align-items-center p-3 border border-light rounded">
-            <i class="bi bi-database display-4"></i>
-            <div class="d-flex flex-column justify-content-center">
-              <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalDatasets }}</span>
-              <span>Published Datasets</span>
+  <section class="herospace">
+   <div
+      :style="{
+        backgroundImage: `url(${heroBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }">
+      <div class="container">
+        <div class="row gradient">
+          <div class="col-lg-7 py-5">
+            <h2 class="subtitle fw-bold">Your Portal to Bioenergy Research Data</h2>
+            
+            <p class="py-3">This portal serves as a centralized point for Bioenergy Research Center-generated datasets to improve findability and accessibility including support for artificial intelligence development and computational analysis.
+            </p>
+            
+            <div class="search-form">
+              <search />
+              <router-link :to="{ name: 'datasetSearch'}" class="browse-all">Browse All Datasets
+                <i class="bi bi-arrow-right pe-3" aria-hidden="true"></i>
+              </router-link>
             </div>
-          </div>
-        </div>
-        
-        <div class="col-12 col-md-3">
-          <div class="d-flex align-items-center p-3 border border-light rounded">
-            <i class="bi bi-person display-4"></i>
-            <div class="d-flex flex-column justify-content-center">
-              <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalPrimaryCreators }}</span>
-              <span>Contributors</span>
-            </div>
-          </div>
-        </div>
-      
-        <div class="col-12 col-md-3">
-          <div class="d-flex align-items-center p-3 border border-light rounded">
-            <img :src="speciesIcon" alt="DNA Helix icon representing Unique Species" />
-            <div class="d-flex flex-column justify-content-center">
-              <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalTaxIds }}</span>
-              <span>Unique Species</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-12 col-md-3">
-          <div class="d-flex align-items-center p-3 border border-light rounded">
-            <i class="bi bi-house-door display-4"></i>
-            <div class="d-flex flex-column justify-content-center">
-              <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.repositoryCounts }}</span>
-              <span>Repositories</span>
+            
+            <!-- Metrics -->
+            <div class="row my-3">
+              <div class="col-12 col-md-3">
+                <div class="d-flex align-items-center p-3 border border-light rounded">
+                  <i class="bi bi-database display-4"></i>
+                  <div class="d-flex flex-column justify-content-center">
+                    <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalDatasets }}</span>
+                    <span>Datasets</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-12 col-md-3">
+                <div class="d-flex align-items-center p-3 border border-light rounded">
+                  <i class="bi bi-person display-4"></i>
+                  <div class="d-flex flex-column justify-content-center">
+                    <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalPrimaryCreators }}</span>
+                    <span>Contributors</span>
+                  </div>
+                </div>
+              </div>
+            
+              <div class="col-12 col-md-3">
+                <div class="d-flex align-items-center p-3 border border-light rounded">
+                  <img :src="speciesIcon" alt="DNA Helix icon representing Unique Species" />
+                  <div class="d-flex flex-column justify-content-center">
+                    <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalTaxIds }}</span>
+                    <span>Species</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-12 col-md-3">
+                <div class="d-flex align-items-center p-3 border border-light rounded">
+                  <i class="bi bi-house-door display-4"></i>
+                  <div class="d-flex flex-column justify-content-center">
+                    <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.repositoryCounts }}</span>
+                    <span>Repositories</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
   </section> 
   
   <section class="py-4" style="background-color:#fff;">
@@ -157,7 +169,7 @@ const applySuggestedQuery = () => {
           <h2 class="subsection-header">Themes and Categories</h2>
           <p>Jump to datasets based on core research themes or categories.</p>
         
-          <div class="py-5">
+          <div class="pt-3 pb-5">
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 text-center">
               <div class="col">
                 <div class="theme-card h-100 shadow-sm border-0 p-4">
@@ -384,7 +396,7 @@ const applySuggestedQuery = () => {
   font-weight: 700;
 }
 .herospace {
-  background-color:#175929;
+  background-color:#175A29;
   color:#fff;
 }
 .herospace .browse-all {
@@ -401,5 +413,13 @@ const applySuggestedQuery = () => {
 }
 .research-card {
   font-size: 14px;
+}
+.background-image {
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.gradient {
+  background: #175A29;
+  background: linear-gradient(90deg, rgba(23, 90, 41, 1) 0%, rgba(23, 90, 41, 0.92) 66%, rgba(23, 90, 41, 0) 100%);
 }
 </style>
