@@ -94,7 +94,8 @@ const applySuggestedQuery = () => {
     <div class="container">
       <h2 class="subtitle fw-bold">Your Portal to Bioenergy Research Data</h2>
       
-      <p class="py-3">The Bioenergy Research Centers (BRCs) work across diverse scientific disciplines that generate an extensive collection of datasets, many of which can be leveraged with artificial‑intelligence techniques. This portal aims to provide a single location to find and access these important BRC‑generated datasets.</p>
+      <p class="py-3">This portal serves as a centralized point for Bioenergy Research Center-generated datasets to improve findability and accessibility including support for artificial intelligence development and computational analysis.
+      </p>
       
       <div class="search-form">
         <search />
@@ -127,7 +128,7 @@ const applySuggestedQuery = () => {
       
         <div class="col-12 col-md-3">
           <div class="d-flex align-items-center p-3 border border-light rounded">
-            <img :src="speciesIcon" class="" alt="" />
+            <img :src="speciesIcon" alt="DNA Helix icon representing Unique Species" />
             <div class="d-flex flex-column justify-content-center">
               <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalTaxIds }}</span>
               <span>Unique Species</span>
