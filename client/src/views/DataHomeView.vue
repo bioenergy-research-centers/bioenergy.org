@@ -109,48 +109,48 @@ const applySuggestedQuery = () => {
             
             <div class="search-form">
               <search />
-              <router-link :to="{ name: 'datasetSearch'}" class="browse-all">Browse All Datasets
+              <router-link :to="{ name: 'datasetSearch'}" class="browse-all d-block mt-2">Browse All Datasets
                 <i class="bi bi-arrow-right pe-3" aria-hidden="true"></i>
               </router-link>
             </div>
             
             <!-- Metrics -->
-            <div class="row my-3">
+            <div class="row mt-4 mb-3">
               <div class="col-12 col-md-3">
-                <div class="d-flex align-items-center p-3 border border-light rounded">
-                  <i class="bi bi-database display-4"></i>
+                <div class="d-flex align-items-center p-3 metrics-border">
+                  <i class="bi bi-database display-5"></i>
                   <div class="d-flex flex-column justify-content-center">
-                    <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalDatasets }}</span>
+                    <span v-if="dataMetrics" class="fs-4 fw-bold lh-1">{{ dataMetrics.totalDatasets }}</span>
                     <span>Datasets</span>
                   </div>
                 </div>
               </div>
               
               <div class="col-12 col-md-3">
-                <div class="d-flex align-items-center p-3 border border-light rounded">
-                  <i class="bi bi-person display-4"></i>
+                <div class="d-flex align-items-center p-3 metrics-border">
+                  <i class="bi bi-person display-5"></i>
                   <div class="d-flex flex-column justify-content-center">
-                    <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalPrimaryCreators }}</span>
+                    <span v-if="dataMetrics" class="fs-4 fw-bold lh-1">{{ dataMetrics.totalPrimaryCreators }}</span>
                     <span>Contributors</span>
                   </div>
                 </div>
               </div>
             
               <div class="col-12 col-md-3">
-                <div class="d-flex align-items-center p-3 border border-light rounded">
+                <div class="d-flex align-items-center p-3 metrics-border">
                   <img :src="speciesIcon" alt="DNA Helix icon representing Unique Species" />
                   <div class="d-flex flex-column justify-content-center">
-                    <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.totalTaxIds }}</span>
+                    <span v-if="dataMetrics" class="fs-4 fw-bold lh-1">{{ dataMetrics.totalTaxIds }}</span>
                     <span>Species</span>
                   </div>
                 </div>
               </div>
               
               <div class="col-12 col-md-3">
-                <div class="d-flex align-items-center p-3 border border-light rounded">
-                  <i class="bi bi-house-door display-4"></i>
-                  <div class="d-flex flex-column justify-content-center">
-                    <span v-if="dataMetrics" class="fs-3 fw-bold lh-1">{{ dataMetrics.repositoryCounts }}</span>
+                <div class="d-flex align-items-center p-3 metrics-border">
+                  <i class="bi bi-house-door display-5"></i>
+                  <div class="d-flex flex-column justify-content-center" style="min-width: 0;">
+                    <span v-if="dataMetrics" class="fs-4 fw-bold lh-1">{{ dataMetrics.repositoryCounts }}</span>
                     <span>Repositories</span>
                   </div>
                 </div>
@@ -162,7 +162,7 @@ const applySuggestedQuery = () => {
     </div>
   </section> 
   
-  <section class="py-4" style="background-color:#fff;">
+  <section class="py-5" style="background-color:#fff;">
     <div class="container text-center">
       <div class="row justify-content-center">
         <div class="col-12 col-lg-10 col-xl-10">
@@ -172,7 +172,7 @@ const applySuggestedQuery = () => {
           <div class="pt-3 pb-5">
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 text-center">
               <div class="col">
-                <div class="theme-card h-100 shadow-sm border-0 p-4">
+                <div class="theme-card feedstock-development h-100 shadow-sm p-4">
                   <div class="icon-placeholder">
                     <img :src="feedstockIcon" class="w-50" alt="Illustration of tall grasses and plant stems, representing feedstock development." />
                   </div>
@@ -181,7 +181,7 @@ const applySuggestedQuery = () => {
               </div>
 
               <div class="col">
-                <div class="theme-card h-100 shadow-sm border-0 p-4">
+                <div class="theme-card deconstruction-separation h-100 shadow-sm p-4">
                   <div class="icon-placeholder">
                     <img :src="deconstructionIcon" class="w-50" alt="Illustration of a molecule chain, representing deconstruction and separation." />
                   </div>
@@ -190,7 +190,7 @@ const applySuggestedQuery = () => {
               </div>
 
               <div class="col">
-                <div class="theme-card h-100 shadow-sm border-0 p-4">
+                <div class="theme-card conversion h-100 shadow-sm p-4">
                   <div class="icon-placeholder">
                     <img :src="conversionIcon" class="w-50" alt="Illustration of lab glassware and fuel pump,representing biofuel conversion research." />
                   </div>
@@ -199,7 +199,7 @@ const applySuggestedQuery = () => {
               </div>
 
               <div class="col">
-                <div class="theme-card h-100 shadow-sm border-0 p-4">
+                <div class="theme-card sustainability h-100 shadow-sm p-4">
                   <div class="icon-placeholder">
                     <img :src="sustainabilityIcon" class="w-50" alt="Illustration of a leaf overlaying a recycling arrow, representing sustainability." />
                   </div>
@@ -209,22 +209,79 @@ const applySuggestedQuery = () => {
 
             </div>
           </div>
-          <ul class="list-unstyled list-inline">
-            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Genetic Engineering</a></li>
-            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Microbiology</a></li>
-            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Analytics & Methods</a></li>
-            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Plant Biology</a></li>
-            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Enzymes & Proteins</a></li>
-            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Process Engineering</a></li>
-            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Bioenergy Production</a></li>
-            <li class="list-inline-item"><a href="" class="btn btn-outline-secondary">Biomass & Feedstock</a></li>
+          <ul class="list-unstyled list-inline categories">
+            <li class="list-inline-item">
+              <a href="" class="btn btn-labeled btn-success mb-2">
+                <span class="btn-label">
+                  <i class="bi bi-bookmark-fill"></i>
+                </span>
+                Genetic Engineering
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <a href="" class="btn btn-labeled btn-success mb-2">
+                <span class="btn-label">
+                  <i class="bi bi-bookmark-fill"></i>
+                </span>
+                Microbiology
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <a href="" class="btn btn-labeled btn-success mb-2">
+                <span class="btn-label">
+                  <i class="bi bi-bookmark-fill"></i>
+                </span>
+                Analytics & Methods
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <a href="" class="btn btn-labeled btn-success mb-2">
+                <span class="btn-label">
+                  <i class="bi bi-bookmark-fill"></i>
+                </span>
+                Plant Biology
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <a href="" class="btn btn-labeled btn-success mb-2">
+                <span class="btn-label">
+                  <i class="bi bi-bookmark-fill"></i>
+                </span>
+                Enzymes & Proteins
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <a href="" class="btn btn-labeled btn-success mb-2">
+                <span class="btn-label">
+                  <i class="bi bi-bookmark-fill"></i>
+                </span>
+                Process Engineering
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <a href="" class="btn btn-labeled btn-success mb-2">
+                <span class="btn-label">
+                  <i class="bi bi-bookmark-fill"></i>
+                </span>
+                Bioenergy Production
+              </a>
+            </li>
+             <li class="list-inline-item">
+              <a href="" class="btn btn-labeled btn-success mb-2">
+                <span class="btn-label">
+                  <i class="bi bi-bookmark-fill"></i>
+                </span>
+                Biomass & Feedstock
+              </a>
+            </li>
           </ul>
+
         </div>
       </div>
     </div>
   </section>
     
-  <section class="py-4">
+  <section class="py-5">
     <div class="container text-center">
       <h2 class="subsection-header">Recent Datasets</h2>
       <p>Latest datasets from each bioenergy research center</p>
@@ -234,26 +291,25 @@ const applySuggestedQuery = () => {
           <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
 
             <div class="col" v-for="result in orderedRecentData" :key="result.uid">
-              <div class="card research-card h-100 shadow-sm border-0 p-4">
+              <div class="card research-card h-100 shadow-sm border-0 p-3">
                 <div class="logo-placeholder">
-                  <img :src="imgUrls[`../assets/${result.brc?.toLowerCase()}-logo.png`]" style="max-width:200px;" :alt="`${result.brc.toLowerCase()} logo`"></img>
+                  <img :src="imgUrls[`../assets/${result.brc?.toLowerCase()}-logo.png`]" style="max-width:125px;" :alt="`${result.brc.toLowerCase()} logo`"></img>
                 </div>
-                <h5 class="card-title mb-2">
-                   <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }" class="pe-4">
-                  <span
+                <h5 class="h6 my-3 text-start">
+                  <span class="fw-bold"
                     v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
-                </router-link>
                 </h5>
-                <div class="card-author mb-3">
+                <div class="card-author mb-3 text-start">
                   <AuthorList :creators="result.creator" />
                 </div>
-                <p class="card-text">
-                  <small
-                    v-html="sanitizeHtml(truncateMiddle(result.description || '', 150, 75), ALLOWED_HTML)"></small>
+                <p class="card-text text-start">
+                  <span
+                    v-html="sanitizeHtml(truncateMiddle(result.description || '', 150, 75), ALLOWED_HTML)"></span>
                 </p>
-                <p>
-                  <span class="badge text-muted">{{ result.date }}</span>
-                </p>
+                <!-- <p class="text-start">
+                  <span class="text-muted">{{ result.date }}</span>
+                </p> -->
+                <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }" class="stretched-link"></router-link>
               </div>
             </div>
           
@@ -264,7 +320,7 @@ const applySuggestedQuery = () => {
     </div>
   </section>
     
-  <section class="py-4" style="background-color:#fff;">
+  <section class="py-5" style="background-color:#fff;">
     <div class="container">
       <h2 class="subsection-header text-center">Data Portal Features</h2>
       
@@ -274,7 +330,7 @@ const applySuggestedQuery = () => {
             <div class="col-12 col-lg-4">
               <div class="d-flex">
                 <div class="me-3">
-                  <i class="bi bi-check2-square"></i>
+                  <i class="bi bi-check-square-fill"></i>
                 </div>
                 <div>
                   <h5 class="subsection-header">Advanced Searching with Boolean Logic</h5>
@@ -289,7 +345,7 @@ const applySuggestedQuery = () => {
             <div class="col-12 col-lg-4">
               <div class="d-flex">
                 <div class="feature-icon me-3">
-                  <i class="bi bi-check2-square"></i>
+                  <i class="bi bi-check-square-fill"></i>
                 </div>
                 <div>
                   <h5 class="subsection-header">Charts and Visual Analytics</h5>
@@ -303,7 +359,7 @@ const applySuggestedQuery = () => {
             <div class="col-12 col-lg-4">
               <div class="d-flex">
                 <div class="feature-icon me-3">
-                  <i class="bi bi-check2-square"></i>
+                  <i class="bi bi-check-square-fill"></i>
                 </div>
                 <div>
                   <h5 class="subsection-header">API Access</h5>
@@ -320,7 +376,7 @@ const applySuggestedQuery = () => {
     </div>
   </section>
     
-  <section class="py-4" style="background-color:#fff;border:1px solid #ddd;">
+  <section class="py-5" style="background-color:#fff;border:1px solid #ddd;">
     <div class="container">
       <div class="row align-items-center">
         <div class="col-12 col-md-5">
@@ -384,12 +440,13 @@ const applySuggestedQuery = () => {
 	flex-wrap: wrap;
 	gap: 1rem;
 }
+
 /* new styles */
 .search-form {
 	max-width: 600px;
 }
 .subtitle {
-  font-size: 56px;
+  font-size: 2.85em;
 }
 .subsection-header {
   color: #063828;
@@ -401,18 +458,38 @@ const applySuggestedQuery = () => {
 }
 .herospace .browse-all {
   color: #fff;
+  text-decoration: none;
+}
+.herospace .browse-all:hover {
+  text-decoration: underline;
 }
 .theme-card {
   background-color: #f1f1f1;
+  border: 1px solid #e1e0e0;
   border-radius: 0.75rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.theme-card:hover {
+.feedstock-development {
+  background: linear-gradient(0deg,rgba(241, 241, 241, 1) 0%, rgba(69, 142, 52, 0.20) 100%);
+}
+.deconstruction-separation {
+  background: linear-gradient(0deg,rgba(241, 241, 241, 1) 0%, rgba(0, 83, 135, 0.20) 100%);
+}
+.conversion {
+  background: linear-gradient(0deg,rgba(241, 241, 241, 1) 0%, rgba(247, 148, 29, 0.20) 100%);
+}
+.sustainability {
+  background: linear-gradient(0deg,rgba(241, 241, 241, 1) 0%, rgba(169, 38, 62, 0.20) 100%);
+}
+.theme-card:hover  {
   transform: translateY(-4px);
   box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,.15);
 }
-.research-card {
-  font-size: 14px;
+.categories a {
+  transition: transform 0.2s ease;
+}
+.categories a:hover {
+  transform: translateY(-4px);
 }
 .background-image {
   background-repeat: no-repeat;
@@ -420,6 +497,25 @@ const applySuggestedQuery = () => {
 }
 .gradient {
   background: #175A29;
-  background: linear-gradient(90deg, rgba(23, 90, 41, 1) 0%, rgba(23, 90, 41, 0.92) 66%, rgba(23, 90, 41, 0) 100%);
+  background: linear-gradient(90deg, rgba(23, 90, 41, 1) 0%, rgba(23, 90, 41, 0.97) 61%, rgba(23, 90, 41, 0) 100%);
+}
+.metrics-border {
+  border: 1px solid rgba(255, 255, 255, 0.50);
+  border-radius: 8px;
+}
+.logo-placeholder {
+  min-height: 45px;
+}
+.btn-label {
+	position: relative;
+	left: -12px;
+	display: inline-block;
+	padding: 6px 12px;
+	background: rgba(0, 0, 0, 0.15);
+	border-radius: 3px 0 0 3px;
+}
+.btn-labeled {
+	padding-top: 0;
+	padding-bottom: 0;
 }
 </style>
