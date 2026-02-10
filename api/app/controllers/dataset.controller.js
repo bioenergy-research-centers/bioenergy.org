@@ -14,11 +14,11 @@ exports.findAll = async (req, res) => {
   const titleQueryTerm = req.query.filters?.title;
   const brcQueryTerm = req.query.filters?.brc;
   const categoryQueryTerm = req.query.filters?.topic;
-  const yearQueryTerm = req.query.filters?.year
-  const personNameQueryTerm = req.query.filters?.personName
-  const repositoryQueryTerm = req.query.filters?.repository
-  const speciesQueryTerm = req.query.filters?.species
-  const analysisTypeQueryTerm = req.query.filters?.analysisType
+  const yearQueryTerm = req.query.filters?.year;
+  const personNameQueryTerm = req.query.filters?.personName;
+  const repositoryQueryTerm = req.query.filters?.repository;
+  const speciesQueryTerm = req.query.filters?.species;
+  const analysisTypeQueryTerm = req.query.filters?.analysisType;
   const includeFacets = !req.query.nofacets;
 
   // Pagination parameters.  Default page index is 1 and default size is 10.
@@ -126,7 +126,7 @@ exports.findAll = async (req, res) => {
 
   if (speciesQueryTerm) {   
     if(Array.isArray(speciesQueryTerm)) {
-      const speciesQueryTermArray = speciesQueryTerm.map(t => {return `%${t}%`});
+      const speciesQueryTermArray = speciesQueryTerm.map(t => {return `%${t}%`;});
       conditions.push(
         where(json("json.species"), { [Op.iLike]: { [Op.any]: speciesQueryTermArray } })
       );
@@ -152,8 +152,8 @@ exports.findAll = async (req, res) => {
               where(json('json.date'), { [Op.regexp]: '^\\d{4}' }),
               where(fn('SUBSTRING', json('json.date'), 1, 4), { [Op.eq]: t })
             ]
-          }
-        })
+          };
+        });
        conditions.push({
         [Op.or]: yearQueryTermMapping
        });
@@ -170,7 +170,7 @@ exports.findAll = async (req, res) => {
   
   if(personNameQueryTerm) {
     if(Array.isArray(personNameQueryTerm)){
-      const personNameQueryTermMapping = personNameQueryTerm.map(t => {return `%${t}%`});
+      const personNameQueryTermMapping = personNameQueryTerm.map(t => {return `%${t}%`;});
       conditions.push({
         [Op.or]: [
           where(json("json.creator"), { [Op.iLike]: { [Op.any]: personNameQueryTermMapping } }),
@@ -205,7 +205,7 @@ exports.findAll = async (req, res) => {
       mergedWhereConditions,
     });
 
-    [data, facets] = await Promise.all([dataQuery, facetQuery])
+    [data, facets] = await Promise.all([dataQuery, facetQuery]);
   } else {
     data = await dataQuery;
   }
@@ -412,7 +412,7 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
     const rows = await db.sequelize.query(facetSql, { type: db.sequelize.QueryTypes.SELECT, replacements: categoryReplacements});
     const facets = { year: [], brc: [], repository: [], species: [], analysisType: [], personName: [], topic: [] };
     for (const r of rows) facets[r.facet].push({ value: r.value, count: r.count });
-    return facets
+    return facets;
   }catch(e){
     console.error('Error in faceted search:', e);
     return { year: {}, brc: {}, repository: {}, species: {} };
@@ -423,7 +423,7 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
 function keywordToTsqueryFragment(keyword) {
   const tokens = String(keyword)
     .toLowerCase()
-    .split(/[\s\-_]+/g)
+    .split(/[\s\-_]+/g);
   if (tokens.length === 0) return null;
 
   if (tokens.length === 1) return tokens[0];
@@ -454,8 +454,8 @@ function buildCategoryWhere(categoryName) {
   if(Array.isArray(categoryName)) {
     // OR across all keywords for multiple selected categories
     q = categoryName.map(cat => { return buildCategoryTsquery(cat); })
-                    .filter(c => {return (c && c.length>0)})
-                    .join(" | ")
+                    .filter(c => {return (c && c.length>0);})
+                    .join(" | ");
   } else {
     q = buildCategoryTsquery(categoryName);
   }

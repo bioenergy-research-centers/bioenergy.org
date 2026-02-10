@@ -84,7 +84,7 @@ export const useSearchStore = defineStore('searchStore', () => {
     searchResultsError.value = null;
 
     // reset page to 1 if there are pending filter changes
-    if (filterChanges.value) { currentPage.value = 1}
+    if (filterChanges.value) { currentPage.value = 1; }
 
     // Update the query url to match the current search
     if (updateURL) { await this.applySearchToURL(); }
@@ -184,8 +184,8 @@ export const useSearchStore = defineStore('searchStore', () => {
     try {
       const sameFilters = JSON.stringify(filters.value) === query.filters;
       const sameSearch = searchTerm.value === query.q;
-      const samePage = (currentPage.value === query.page && pageSize.value === query.rows)
-      return !(sameSearch && sameFilters && samePage)
+      const samePage = (currentPage.value === query.page && pageSize.value === query.rows);
+      return !(sameSearch && sameFilters && samePage);
     } catch (e) {
       console.error("searchStore URL comparison error.", e);
       return false;
