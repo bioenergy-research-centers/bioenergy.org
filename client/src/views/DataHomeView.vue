@@ -514,55 +514,6 @@ const applySuggestedQuery = () => {
 </template>
 
 <style scoped>
-
-.right-sidebar {
-  padding: 0 0 10px 0;
-  margin-top: 20px;
-  min-height: 100%
-}
-@media (min-width: 768px) {
-  .right-sidebar {
-    border-left: 1px solid #ddd;
-    margin-top: 0;
-    padding: 0 0 10px 20px;
-  } 
-}
-.text-accent {
-  color: #4C8D87;
-  border-color: #4C8D87;
-}
-.brc-listing .intro {
-  color: #72a530;
-}
-.brc-listing .intro a {
-  color: #72a530;
-}
-.brc-listing hr {
-  color: #599D0E;
-  background-color: #599D0E;
-  height: 3px;
-  border:none;
-  opacity: .8;
-}
-.callout {
-  background-color: #0d6efd;
-  border-radius: 5px;
-  margin: 0 0 40px;
-  padding: 20px 0 10px 20px;
-}
-.brc-tag {
-  /* background-color: #4C8D87; */
-  border-radius: 5px;
-  padding: 5px;
-}
-.search-section {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 1rem;
-}
-
-/* new styles */
 .search-form {
 	max-width: 600px;
 }
