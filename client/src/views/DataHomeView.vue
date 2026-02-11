@@ -174,11 +174,10 @@ const applySuggestedQuery = () => {
         <div class="col-12 col-lg-10 col-xl-10">
           <h2 class="subsection-header">Themes and Categories</h2>
           <p>Jump to datasets based on core research themes or categories.</p>
-        
-          <div class="pt-3 pb-5">
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 text-center">
-              <div class="col">
-                <div class="theme-card feedstock-development h-100 shadow p-4 position-relative">
+                  
+          <div class="themes-row pt-3 pb-5">
+            <div class="theme-item">
+              <div class="theme-card feedstock-development h-100 shadow p-4 position-relative">
                   <div class="icon-placeholder">
                     <img :src="feedstockIcon" class="w-50" alt="Illustration of tall grasses and plant stems, representing feedstock development." />
                   </div>
@@ -196,10 +195,9 @@ const applySuggestedQuery = () => {
                     <span class="visually-hidden">View Feedstock Development datasets</span>
                   </router-link>
                 </div>
-              </div>
-
-              <div class="col">
-                <div class="theme-card deconstruction-separation h-100 shadow p-4 position-relative">
+            </div>
+            <div class="theme-item">
+              <div class="theme-card deconstruction-separation h-100 shadow p-4 position-relative">
                   <div class="icon-placeholder">
                     <img :src="deconstructionIcon" class="w-50" alt="Illustration of a molecule chain, representing deconstruction and separation." />
                   </div>
@@ -217,10 +215,9 @@ const applySuggestedQuery = () => {
                     <span class="visually-hidden">View Deconstruction and Separation datasets</span>
                   </router-link>
                 </div>
-              </div>
-
-              <div class="col">
-                <div class="theme-card conversion h-100 shadow p-4 position-relative">
+            </div>
+            <div class="theme-item">
+              <div class="theme-card conversion h-100 shadow p-4 position-relative">
                   <div class="icon-placeholder">
                     <img :src="conversionIcon" class="w-50" alt="Illustration of lab glassware and fuel pump,representing biofuel conversion research." />
                   </div>
@@ -238,10 +235,9 @@ const applySuggestedQuery = () => {
                     <span class="visually-hidden">View Conversion datasets</span>
                   </router-link>
                 </div>
-              </div>
-
-              <div class="col">
-                <div class="theme-card sustainability h-100 shadow p-4 position-relative">
+            </div>
+            <div class="theme-item">
+              <div class="theme-card sustainability h-100 shadow p-4 position-relative">
                   <div class="icon-placeholder">
                     <img :src="sustainabilityIcon" class="w-50" alt="Illustration of a leaf overlaying a recycling arrow, representing sustainability." />
                   </div>
@@ -259,10 +255,9 @@ const applySuggestedQuery = () => {
                     <span class="visually-hidden">View Sustainability datasets</span>
                   </router-link>
                 </div>
-              </div>
-
             </div>
           </div>
+          
           <ul class="list-unstyled list-inline categories">
             <li class="list-inline-item">
               <router-link
@@ -654,19 +649,22 @@ const applySuggestedQuery = () => {
 	padding-bottom: 0;
 }
 
-.metrics-row {
+.metrics-row,
+.themes-row {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(2, 1fr); /* 2 per row on mobile */
 }
 
 @media (min-width: 768px) {
-  .metrics-row {
+  .metrics-row,
+  .themes-row {
     grid-template-columns: repeat(4, 1fr); /* 4 per row on md+ */
   }
 }
 
-.metric-item {
+.metric-item,
+.theme-item {
   display: flex;
 }
 
@@ -674,5 +672,9 @@ const applySuggestedQuery = () => {
   flex: 1;
 }
 
-
+.theme-card {
+  flex: 1; /* make it fill the parent .theme-item */
+  display: flex;
+  flex-direction: column; /* keeps content vertical */
+}
 </style>

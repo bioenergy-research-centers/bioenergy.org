@@ -26,10 +26,15 @@ a {
 .navbar-brand {
     color: #04652F;
     font-weight: bold;
-    font-size: 3em;
+    font-size: 2.5em;
 }
 .navbar-brand:hover {
   color: #0A8A43;
+}
+@media (min-width: 576px) {
+  .navbar-brand {
+    font-size: 3em;
+  }
 }
 
 .page-heading {
