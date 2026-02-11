@@ -92,12 +92,9 @@ const applySuggestedQuery = () => {
   <HeaderView />
   <!-- New homepage code -->
   <section class="herospace">
-   <div
+   <div class="background-image"
       :style="{
-        backgroundImage: `url(${heroBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        '--hero-bg': `url(${heroBg})`
       }">
       <div class="container">
         <div class="row gradient">
@@ -622,9 +619,17 @@ const applySuggestedQuery = () => {
   background: linear-gradient(0deg,rgba(241, 241, 241, 1) 0%, rgba(169, 38, 62, 0.20) 100%);
 }
 .background-image {
+  background-image: url();
   background-repeat: no-repeat;
   background-size: cover;
+  background-position: center;
 }
+@media (min-width: 768px) {
+  .background-image {
+    background-image: var(--hero-bg);
+  }
+}
+
 .gradient {
   background: #175A29;
   background: linear-gradient(90deg, rgba(23, 90, 41, 1) 0%, rgba(23, 90, 41, 0.97) 61%, rgba(23, 90, 41, 0) 100%);
