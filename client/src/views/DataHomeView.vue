@@ -142,7 +142,7 @@ const applySuggestedQuery = () => {
 
               <div class="metric-item">
                 <div class="d-flex align-items-center p-3 metrics-border">
-                  <img :src="speciesIcon" alt="DNA Helix icon representing Unique Species" class="me-2"/>
+                  <img :src="speciesIcon" alt="DNA Helix icon representing Unique Species" class="me-2" style="margin-top:-5px;"/>
                   <div class="d-flex flex-column justify-content-center">
                     <span v-if="dataMetrics" class="fs-4 fw-bold lh-1">
                       {{ dataMetrics.totalTaxIds }}
