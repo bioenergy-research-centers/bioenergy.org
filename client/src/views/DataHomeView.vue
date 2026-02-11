@@ -519,15 +519,15 @@ const applySuggestedQuery = () => {
 }
 .search-form :deep(.btn.btn-sm.btn-light.search),
 .search-form :deep(.btn.btn-sm.btn-light.advanced) {
-  background-color: #72A531;
-  color: #fff;
+  background-color: #CBDCEA;
+  color: #000;
 }
 .search-form :deep(.btn.btn-sm.btn-light.search:hover),
 .search-form :deep(.btn.btn-sm.btn-light.advanced:hover) {
-  filter: brightness(110%); /* Makes it 10% brighter on hover */
+  filter: brightness(120%); /* Makes it 10% brighter on hover */
 }
 .search-form :deep(button.search .bi-search) {
-  color: #fff;
+  color: #000;
 }
 .subtitle {
   font-size: 2.85em;
