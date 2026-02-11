@@ -29,7 +29,7 @@ a {
     font-size: 2.5em;
 }
 .navbar-brand:hover {
-  color: #0A8A43;
+  color: #0A8843;
 }
 @media (min-width: 576px) {
   .navbar-brand {

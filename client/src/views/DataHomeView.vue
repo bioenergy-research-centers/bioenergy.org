@@ -106,7 +106,7 @@ const applySuggestedQuery = () => {
             
             <div class="search-form">
               <search />
-              <router-link :to="{ name: 'datasetSearch'}" class="browse-all d-block mt-2">Browse All Datasets
+              <router-link :to="{ name: 'datasetSearch'}" class="browse-all d-inline-block mt-2">Browse All Datasets
                 <i class="bi bi-arrow-right pe-3" aria-hidden="true"></i>
               </router-link>
             </div>
@@ -516,6 +516,18 @@ const applySuggestedQuery = () => {
 <style scoped>
 .search-form {
 	max-width: 600px;
+}
+.search-form :deep(.btn.btn-sm.btn-light.search),
+.search-form :deep(.btn.btn-sm.btn-light.advanced) {
+  background-color: #72A531;
+  color: #fff;
+}
+.search-form :deep(.btn.btn-sm.btn-light.search:hover),
+.search-form :deep(.btn.btn-sm.btn-light.advanced:hover) {
+  filter: brightness(110%); /* Makes it 10% brighter on hover */
+}
+.search-form :deep(button.search .bi-search) {
+  color: #fff;
 }
 .subtitle {
   font-size: 2.85em;

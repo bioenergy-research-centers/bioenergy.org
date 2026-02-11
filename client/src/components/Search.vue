@@ -31,14 +31,14 @@ const preventDropdownClose = (event) => {
           <label for="main-search-input" class="visually-hidden">Search Datasets</label>
           <input id="main-search-input" class="form-control" placeholder="Search bioenergy.org datasets" v-model.lazy="searchStore.searchTerm"/>
           <button type="submit" class="btn btn-sm btn-light search">
-            <span class="visually-hidden">Search</span>
-            <i class="bi bi-search text-muted"></i>
+            <span>Search Datasets</span>
+            <i class="bi bi-search ms-2"></i>
           </button>
           
           <!-- Advanced Search Dropdown Toggle -->
           <button type="button" class="btn btn-sm btn-light dropdown-toggle advanced" data-bs-toggle="dropdown"
                   aria-expanded="false">
-            Advanced
+            <span class="visually-hidden">Advanced</span>
           </button>
           
           <!-- Advanced Search Dropdown -->
