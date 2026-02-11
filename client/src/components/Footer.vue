@@ -6,13 +6,13 @@
 
 <template>
   <footer class="mt-5">
-    <div class="container-fluid">
+    <div class="container">
       <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-4 col-xl-4 col-xxl-4">
+        <div class="col-12 col-md-12 col-lg-9">
 
           <div class="row align-items-center">
-            <div class="col-12 col-md-5 mb-3 mb-md-0">
-              <img :src="doeLogo" class="img-fluid" alt="U.S. Department of Energy logo" />
+            <div class="col-12 col-md-5 mb-3 mb-md-0 doe-logo-container">
+              <img :src="doeLogo" class="doe-logo me-3 mb-2" alt="U.S. Department of Energy Biological and Environmental Research Program" />
             </div>
 
             <div class="col-12 col-md-7">

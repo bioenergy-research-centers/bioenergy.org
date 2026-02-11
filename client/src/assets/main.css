@@ -54,3 +54,15 @@ a {
 .bg-brc-light-blue {
   background-color: #C5DBE8;
 }
+
+.doe-logo {
+  width: 260px;
+}
+.doe-logo-container {
+  text-align: center;
+}
+@media (min-width: 1200px) {
+  .doe-logo-container {
+    text-align: right;
+  }
+}
