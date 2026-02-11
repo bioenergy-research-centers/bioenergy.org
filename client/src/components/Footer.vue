@@ -16,7 +16,7 @@
             </div>
 
             <div class="col-12 col-md-7">
-              <p class="mb-0" style="font-size:0.7em">
+              <p class="doe-disclosure mb-0">
                 The Bionergy Research Centers are supported by the Office of Science of the U.S. Department of Energy. The Office of Science is the single largest supporter of basic research in the physical sciences in the United States, and is working to address some of the most pressing challenges of our time. For more information, please visit <a href="https://science.energy.gov">science.energy.gov</a>.
               </p>
             </div>

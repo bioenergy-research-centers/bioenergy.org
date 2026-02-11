@@ -431,7 +431,9 @@ const applySuggestedQuery = () => {
                 <!-- <p class="text-start">
                   <span class="text-muted">{{ result.date }}</span>
                 </p> -->
-                <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }" class="stretched-link"></router-link>
+                <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }" class="stretched-link">
+                  <span class="visually-hidden" v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
+                </router-link>
               </div>
             </div>
           

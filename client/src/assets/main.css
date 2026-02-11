@@ -61,6 +61,12 @@ a {
 .doe-logo-container {
   text-align: center;
 }
+.doe-disclosure {
+  font-size: 0.7em;
+}
+.doe-disclosure a {
+  color: #000;
+}
 @media (min-width: 1200px) {
   .doe-logo-container {
     text-align: right;
