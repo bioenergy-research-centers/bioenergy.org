@@ -90,7 +90,6 @@ const applySuggestedQuery = () => {
 
 <template>
   <HeaderView />
-  <!-- New homepage code -->
   <section class="herospace">
    <div class="background-image"
       :style="{
@@ -519,7 +518,8 @@ const applySuggestedQuery = () => {
 }
 .search-form :deep(.btn.btn-sm.btn-light.search),
 .search-form :deep(.btn.btn-sm.btn-light.advanced) {
-  background-color: #CBDCEA;
+  background-color: #71A42F;
+  border: 1px solid #ddd;
   color: #000;
 }
 .search-form :deep(.btn.btn-sm.btn-light.search:hover),
