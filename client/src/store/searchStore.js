@@ -13,6 +13,17 @@ export const useSearchStore = defineStore('searchStore', () => {
   const searchResultsError = ref(null);
   const filters = ref({});
   const searchTerm = ref('');
+
+  // page state
+  const defaultPageSize = 50;
+  const totalResults = ref(0);
+  const currentPage = ref(1);
+  const resultPage = ref(1);
+  const pageSize = ref(defaultPageSize);
+  const totalPages = ref(1);
+  const facets = ref({});
+  const filterChanges = ref(false);
+
   // Helper Function - reduce boilerplate for filter terms
   function filterField(key, fallback) {
     return computed({
@@ -28,37 +39,42 @@ export const useSearchStore = defineStore('searchStore', () => {
           filterValues[key] = v;
         }
         filters.value = filterValues;
+        // track changes to reset page on next search
+        filterChanges.value = true;
       }
     });
   }
-  const brc = filterField('brc', '');
-  const year = filterField('year', '');
-  const repository = filterField('repository', '');
+  const brc = filterField('brc', []);
+  const year = filterField('year', []);
+  const repository = filterField('repository', []);
   const species = filterField('species', '');
   const personName = filterField('personName', '');
   const analysisType = filterField('analysisType', '');
-  const topic = filterField('topic', '');
+  const topic = filterField('topic', []);
 
-  // Check for changes in the provided URL and update if found.
-  // Use to initialize and refresh state from router and component whenever the query params change.
+  // Retrieve results matching current search filters and store in searchResults
+  // pass updateURL false to skip syncing changes to URL and potential route navigation
   function runSearchFromURL(query) {
-    console.log("searchStore - refreshing query", query);
     if (anyQueryURLChanges(query)) {
-      console.log("searchStore - refreshing query - changes found");
       // Save the URL changes
       this.importFromURLQuery(query);
       // run search without updating URL
       this.runSearch(false);
-    } else {
-      console.log("searchStore - refreshing query - Nothing to do", searchTerm.value, filters.value);
     }
   }
 
-  // Reset all stored state
   function clearSearchData() {
     searchTerm.value = '';
     dnaSequence.value = '';
     filters.value = {};
+    currentPage.value = 1;
+    pageSize.value = defaultPageSize;
+    totalPages.value = 1;
+    facets.value = {};
+    totalResults.value = 0;
+    searchResults.value = [];
+    filterChanges.value = true;
+    resultPage.value = 1;
   }
 
   // Retrieve results matching current search filters and store in searchResults
@@ -66,7 +82,9 @@ export const useSearchStore = defineStore('searchStore', () => {
   async function runSearch(updateURL = true) {
     searchResultsLoading.value = true;
     searchResultsError.value = null;
-    searchResults.value = [];
+
+    // reset page to 1 if there are pending filter changes
+    if (filterChanges.value) { currentPage.value = 1; }
 
     // Update the query url to match the current search
     if (updateURL) { await this.applySearchToURL(); }
@@ -77,41 +95,55 @@ export const useSearchStore = defineStore('searchStore', () => {
 
     try {
       let response;
-      console.log("searchStore - Running Search", filters.value);
-      if (filters.value) {
-        // Use filtered search when filters are active
-        const filterPayload = {
-          textQuery: searchTerm.value || '',
-          filters: filters.value || {}
-        };
-        console.log('Using filtered search with payload:', filterPayload);
-        response = await DatasetDataService.runFilteredSearch(filterPayload);
-      } else if (!searchTerm.value && !dnaSequence.value) {
-        response = await DatasetDataService.getAll();
+      if (dnaSequence.value) {
+        // TODO setup pagination for Advanced search
+        response = await DatasetDataService.runAdvancedSearch(searchTerm.value, this.dnaSequence);
       } else {
-        response = await DatasetDataService.runAdvancedSearch(
-          searchTerm.value,
-          this.dnaSequence
-        );
+        response = await DatasetDataService.getAll({
+          page: currentPage.value,
+          rows: pageSize.value,
+          query: searchTerm.value,
+          filters: filters.value
+        });
       }
-      this.searchResults = response.data;
-      console.log('searchStore - Search results count:', this.searchResults.length);
+      // Handle paginated response shape
+      if (response.data && Array.isArray(response.data.items)) {
+        this.searchResults = response.data.items;
+        totalPages.value = response.data.totalPages || 1;
+        resultPage.value = response.data.query.page;
+        currentPage.value = response.data.query.page || currentPage.value;
+        facets.value = response.data.facets || {};
+        totalResults.value = response.data.totalResults||0;
+      } else {
+        // Fallback for responses that return raw arrays
+        this.searchResults = response.data;
+        totalPages.value = 1;
+        currentPage.value = 1;
+        facets.value = {};
+        totalResults.value = response.data.length;
+      }
     } catch (err) {
       this.searchResults = [];
       console.error('error', err);
-      this.searchResultsError = 'Failed to fetch search results.';
+      searchResultsError.value = 'Failed to fetch search results.';
     } finally {
-      this.searchResultsLoading = false;
+      searchResultsLoading.value = false;
+       filterChanges.value = false;
     }
   }
 
   // Update the URL to match the current state of this store
   async function applySearchToURL() {
+    // avoid duplicate url updates
+    if(!anyQueryURLChanges(route.query)) { return; }
+
     // serialize JSON filters
     let jsonFilterString = '';
     const filterPresent = filters.value && Object.keys(filters.value).length > 0;
     if (filterPresent) {
-      try { jsonFilterString = JSON.stringify(filters.value); } catch {
+      try {
+        jsonFilterString = JSON.stringify(filters.value);
+      } catch {
         console.error("searchStore URL update error. Bad url query format: 'filters'", filters);
       }
     }
@@ -120,14 +152,15 @@ export const useSearchStore = defineStore('searchStore', () => {
       query: {
         ...route.query,
         q: (searchTerm.value && searchTerm.value.length > 0) ? searchTerm.value : undefined,
-        filters: (jsonFilterString && jsonFilterString.length > 0) ? jsonFilterString : undefined
+        filters: (jsonFilterString && jsonFilterString.length > 0) ? jsonFilterString : undefined,
+        page: currentPage.value !== 1 ? currentPage.value : undefined,
+        rows: pageSize.value
       }
     });
   }
 
   // Update this store to match the provided URL query terms
   function importFromURLQuery(query) {
-    console.log("searchStore - Import from URL", query);
     // simple assignment for search term string
     searchTerm.value = query.q;
     // convert json string with filters into object
@@ -137,30 +170,64 @@ export const useSearchStore = defineStore('searchStore', () => {
       try { jsonFilters = JSON.parse(jsonFilterString); } catch (e) {
         console.error("searchStore parsing error. Bad url query format: 'filters'", query.filters, e);
       }
-      if (Object.keys(jsonFilters).length > 0) {
-        filters.value = jsonFilters;
-      } else {
-        filters.value = undefined;
-      }
+      filters.value = Object.keys(jsonFilters).length > 0 ? jsonFilters : undefined;
     } else {
       filters.value = undefined;
     }
+    currentPage.value = parseInt(query.page) > 0 ? parseInt(query.page) : 1;
+    pageSize.value = parseInt(query.size) > 0 ? parseInt(query.size) : defaultPageSize;
   }
 
   // Compare current state to provided value
   // Required to watch for route query changes within the active component (back button)
   function anyQueryURLChanges(query) {
     try {
-      return !((searchTerm.value === query.q) && (JSON.stringify(filters.value) === query.filters));
+      const sameFilters = JSON.stringify(filters.value) === query.filters;
+      const sameSearch = searchTerm.value === query.q;
+      const samePage = (currentPage.value === query.page && pageSize.value === query.rows);
+      return !(sameSearch && sameFilters && samePage);
     } catch (e) {
       console.error("searchStore URL comparison error.", e);
       return false;
     }
   }
 
+  function goToPage(page) {
+    const pageNum = parseInt(page) || 1;
+    const allowedPage = Math.min(Math.max(pageNum, 1), totalPages.value || 1);
+    currentPage.value = allowedPage;
+    this.runSearch();
+  }
+
   return {
-    searchResults, searchResultsLoading, searchResultsError, runSearch, lastSearchQuery, clearSearchData,
-    importFromURLQuery, applySearchToURL, runSearchFromURL, searchTerm, dnaSequence,
-    filters, brc, year, repository, species, personName, analysisType, topic
+    // state
+    searchResults,
+    searchResultsLoading,
+    searchResultsError,
+    lastSearchQuery,
+    searchTerm,
+    dnaSequence,
+    filters,
+    brc,
+    year,
+    repository,
+    species,
+    personName,
+    analysisType,
+    topic,
+    currentPage,
+    resultPage,
+    pageSize,
+    totalPages,
+    totalResults,
+    facets,
+    // actions
+    runSearch,
+    clearSearchData,
+    applySearchToURL,
+    importFromURLQuery,
+    runSearchFromURL,
+    goToPage,
+    anyQueryURLChanges
   };
 });

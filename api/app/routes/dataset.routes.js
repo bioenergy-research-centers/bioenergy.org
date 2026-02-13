@@ -31,7 +31,7 @@
  *   description: The datasets managing API
  * /api/datasets/:
  *   get:
- *    summary: Returns the list of all the datasets
+ *    summary: Returns a list of datasets matching optional filters.
  *    tags: [Datasets]
  *    responses:
  *      200:
@@ -62,17 +62,29 @@
  *          application/json:
  *            schema:
  *              $ref: '#/components/schemas/Dataset'
-* /api/datasets/published:
+* /api/datasets/metrics:
  *  get:
- *    summary: Get all published datasets
- *    tags: [Datasets]
+ *    summary: Get dataset metrics
  *    responses:
  *      200:
- *        description: The published dataset list
+ *        description: Object with dataset count metrics
  *        content:
  *          application/json:
  *            schema:
- *              $ref: '#/components/schemas/Dataset'
+ *              type: object
+ *              properties:
+ *                totalDatasets:
+ *                  type: integer
+ *                  description: Count of total imported datasets.
+ *                totalPrimaryCreators:
+ *                  type: integer
+ *                  description: Count of total unique email addresses for dataset creators noted as primary contact.
+ *                totalTaxIds:
+ *                  type: integer
+ *                  description: Count of total unique NCBI Taxonomy ID values for dataset species field.
+ *                repositoryCounts:
+ *                  type: integer
+ *                  description: Count of total unique repositories for datasets.
  */
 
 
@@ -82,14 +94,6 @@ const {search} = require("../controllers/searchController");
 
 // Retrieve all Datasets
 router.get("/", datasets.findAll);
-
-// Retrieve all published Datasets
-router.get("/published", datasets.findAllPublished);
-
-// Note: These routes must come BEFORE the /:id route
-router.get("/analyze-keywords", datasets.analyzeKeywords);
-router.post("/analyze-keywords", datasets.analyzeKeywords);
-router.post("/filters", datasets.findByFilters);  // Make sure this line exists
 
 // Retrieve aggregated metrics on Dataasets
 router.get("/metrics", datasets.getMetrics);

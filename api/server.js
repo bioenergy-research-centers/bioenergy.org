@@ -51,11 +51,10 @@ const options = {
       title: "Bioenergy.org API with Swagger",
       version: "0.1.0",
       description:
-        "This is a simple CRUD API application made with Express and documented with Swagger",
+        "Available API actions are detailed below.",
       contact: {
-        name: "Nathan Hillson",
-        url: "https://www.bioenergy.org",
-        email: "njhillson@lbl.gov",
+        name: "Contact us with any questions or suggestions",
+        url: "https://bioenergy.org/contact",
       },
     },
     servers: [
