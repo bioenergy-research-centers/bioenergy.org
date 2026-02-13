@@ -186,7 +186,7 @@ const applySuggestedQuery = () => {
                     :to="{
                       path: '/search',
                       query: {
-                        filters: JSON.stringify({ theme: ['Feedstock+Development'] }),
+                        filters: JSON.stringify({ theme: ['Feedstock Development'] }),
                         rows: 50
                       }
                     }"
@@ -206,7 +206,7 @@ const applySuggestedQuery = () => {
                     :to="{
                       path: '/search',
                       query: {
-                        filters: JSON.stringify({ theme: ['Deconstruction+and+Separation'] }),
+                        filters: JSON.stringify({ theme: ['Deconstruction and Separation'] }),
                         rows: 50
                       }
                     }"
@@ -264,7 +264,7 @@ const applySuggestedQuery = () => {
                 :to="{
                   path: '/search',
                   query: {
-                    filters: JSON.stringify({ topic: ['Genetic+Engineering'] }),
+                    filters: JSON.stringify({ topic: ['Genetic Engineering'] }),
                     rows: 50
                   }
                 }"
@@ -315,7 +315,7 @@ const applySuggestedQuery = () => {
                 :to="{
                   path: '/search',
                   query: {
-                    filters: JSON.stringify({ topic: ['Plant+Biology'] }),
+                    filters: JSON.stringify({ topic: ['Plant Biology'] }),
                     rows: 50
                   }
                 }"
@@ -349,7 +349,7 @@ const applySuggestedQuery = () => {
                 :to="{
                   path: '/search',
                   query: {
-                    filters: JSON.stringify({ topic: ['Process+Engineering'] }),
+                    filters: JSON.stringify({ topic: ['Process Engineering'] }),
                     rows: 50
                   }
                 }"
@@ -366,7 +366,7 @@ const applySuggestedQuery = () => {
                 :to="{
                   path: '/search',
                   query: {
-                    filters: JSON.stringify({ topic: ['Bioenergy+Production'] }),
+                    filters: JSON.stringify({ topic: ['Bioenergy Production'] }),
                     rows: 50
                   }
                 }"
