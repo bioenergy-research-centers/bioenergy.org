@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {RouterLink, useRoute, useRouter} from "vue-router";
-import headerIcon from "@/assets/brc-bioenergy-icon.png"
+import headerIcon from "@/assets/brc-bioenergy-icon-v2.png"
 import {onBeforeMount, ref, watch, onMounted} from "vue"; // Fixed import
 import {useSearchStore} from '@/store/searchStore';
 
@@ -11,18 +11,14 @@ const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
 <template>
   <header class="sticky-sm-top p-3 shadow-sm bg-white">
     <div class="container">
-      <div class="row">
+      <div class="row align-items-center">
         <div class="col-md-12 col-lg-6">
           <router-link to="/" class="navbar-brand">
             <img :src="headerIcon" alt="" width="66" height="72" class="d-inline-block align-text-bottom">
             Bioenergy.org
           </router-link>
-        </div>
-      </div>
-      <div class="row mt-2">
-        <hr>
-        <nav>
-          <div class="col-12 text-center">
+        </div>        
+        <nav class="col-12 col-lg-6 mt-2 text-end">
             <router-link :to="{ name: 'datasetSearch'}" class="text-muted me-3 py-3">
               Search
             </router-link>
@@ -32,7 +28,9 @@ const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
             <router-link :to="{ name: 'about'}" class="text-muted me-3 py-3">
               About Us
             </router-link>
-          </div>
+            <a :href="docs_link" class="text-muted me-3 py-3">
+              API Docs
+            </a>
         </nav>
       </div>
     </div>
