@@ -113,9 +113,14 @@ const onPageChange = (newPage) => {
                   <FacetFilterChecks title="Bioenergy Research Center" label="brc" :items="facets?.brc" v-model="searchStore.brc" alphabetical />
                 </div>
 
+                <!--- Theme Filter -->
+                <div class="mb-2 small">
+                  <FacetFilterChecks title="Theme" label="theme" :items="facets?.theme" v-model="searchStore.theme" showCounts />
+                </div>
+
                 <!--- Topic Filter -->
                 <div class="mb-2 small">
-                  <FacetFilterChecks title="Topics" label="topic" :items="facets?.topic" v-model="searchStore.topic" showCounts />
+                  <FacetFilterChecks title="Topic" label="topic" :items="facets?.topic" v-model="searchStore.topic" showCounts />
                 </div>
 
                 <!--- Repository Filter -->

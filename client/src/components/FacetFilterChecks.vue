@@ -34,6 +34,9 @@
 <template>
   <span class="h5">{{title}}</span>
   <div class="filter-facet-checkbox-list" role="group" :id="`${label}-check-group`" :arial-label="`${label} filter options`">
+    <div v-if="sortedItems?.length == 0">
+      <small class="text-muted">no {{ label }} options in results</small>
+    </div>
     <div v-for="(item, itemIndex) in sortedItems" class="form-check">
       <input class="form-check-input" type="checkbox" :id="`${label}-${itemIndex}-check`" v-model="model" :value="item.value">
       <label class="form-check-label" :for="`${label}-${itemIndex}-check`" >

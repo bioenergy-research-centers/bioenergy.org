@@ -19,6 +19,7 @@ exports.findAll = async (req, res) => {
   const repositoryQueryTerm = req.query.filters?.repository;
   const speciesQueryTerm = req.query.filters?.species;
   const analysisTypeQueryTerm = req.query.filters?.analysisType;
+  const themeQueryTerm = req.query.filters?.theme;
   const includeFacets = !req.query.nofacets;
 
   // Pagination parameters.  Default page index is 1 and default size is 10.
@@ -133,6 +134,19 @@ exports.findAll = async (req, res) => {
     } else{
       conditions.push(
         where(json("json.species"), { [Op.iLike]: `%${speciesQueryTerm}%` })
+      );
+    } 
+  }
+
+  if (themeQueryTerm) {   
+    if(Array.isArray(themeQueryTerm)) {
+      const themeQueryTermArray = themeQueryTerm.map(t => {return `%${t}%`;});
+      conditions.push(
+        where(json("json.theme"), { [Op.iLike]: { [Op.any]: themeQueryTermArray } })
+      );
+    } else{
+      conditions.push(
+        where(json("json.theme"), { [Op.iLike]: `%${themeQueryTerm}%` })
       );
     } 
   }
@@ -406,11 +420,22 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
         JOIN categories c
         ON to_tsvector('simple', d."json"::text) @@ to_tsquery('simple', c.qtext)
         GROUP BY c.name
+
+        UNION ALL
+
+        SELECT 'theme' AS facet,
+              jsonb_array_elements_text(d."json"->'theme') AS value,
+              COUNT(*)::int AS count
+        FROM datasets d
+        JOIN filtered_datasets f ON f.uid = d.uid
+        WHERE jsonb_typeof(d."json"->'theme') = 'array'
+          AND jsonb_array_length(d."json"->'theme') > 0
+        GROUP BY value
       ) x
       ORDER BY count DESC;
     `;
     const rows = await db.sequelize.query(facetSql, { type: db.sequelize.QueryTypes.SELECT, replacements: categoryReplacements});
-    const facets = { year: [], brc: [], repository: [], species: [], analysisType: [], personName: [], topic: [] };
+    const facets = { year: [], brc: [], repository: [], species: [], analysisType: [], personName: [], topic: [], theme: [] };
     for (const r of rows) facets[r.facet].push({ value: r.value, count: r.count });
     return facets;
   }catch(e){

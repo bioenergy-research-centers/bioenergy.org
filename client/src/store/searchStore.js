@@ -51,6 +51,7 @@ export const useSearchStore = defineStore('searchStore', () => {
   const personName = filterField('personName', '');
   const analysisType = filterField('analysisType', '');
   const topic = filterField('topic', []);
+  const theme = filterField('theme', []);
 
   // Retrieve results matching current search filters and store in searchResults
   // pass updateURL false to skip syncing changes to URL and potential route navigation
@@ -215,6 +216,7 @@ export const useSearchStore = defineStore('searchStore', () => {
     personName,
     analysisType,
     topic,
+    theme,
     currentPage,
     resultPage,
     pageSize,
