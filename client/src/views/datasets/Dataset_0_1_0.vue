@@ -87,6 +87,11 @@
           {{ Array.from(selectedResult.keywords).join(', ') }}
         </div>
 
+        <div v-if="selectedResult.theme && selectedResult.theme.length" class="mt-4">
+          <div class="small text-uppercase mt-5 fw-bold">Research Theme</div>
+          {{ Array.from(selectedResult.theme).join(', ') }}
+        </div>
+
         <div v-if="selectedResult.species && selectedResult.species.length" class="mt-4">
           <div class="small text-uppercase mt-5 fw-bold">Species</div>
           <div class="d-flex justify-content-start">
