@@ -14,7 +14,7 @@
         },
         {
             "name": "GLBRC",
-            "url": "https://fair-data.glbrc.org/glbrc.json"
+            "url": "https://fair-data.glbrc.org/glbrc-0.1.10.json"
         }
     ]
 }
