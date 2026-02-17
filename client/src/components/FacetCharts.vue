@@ -13,11 +13,12 @@ const props = defineProps({
 const emit = defineEmits(['legendClick', 'barClick', 'onClick']);
 
 const chartContainer = ref(null);
-const activeTab = ref('year');
+const activeTab = ref('resources');
 
 const tabs = [
   { key: 'resources', label: 'Repositories' },
   { key: 'species', label: 'Species' },
+  { key: 'themes', label: 'Themes' },
   { key: 'topics', label: 'Topics' },
   { key: 'year', label: 'Publication Year' }
 ];
@@ -46,8 +47,20 @@ function drawChart() {
       const yearData = facetData('year').sort((a, b) => a.label.localeCompare(b.label));
       createBarChart('year', yearData, 'label', 'value', 'Dataset Count by Year', 'Year', 'Number of Datasets');
       break;
+    case 'themes':
+      const themeData = facetData('theme').sort((a, b) => {
+        a.label.localeCompare(b.label)
+      });
+      createBarChart('themes', themeData, 'label', 'value', 'Research Themes Distribution', 'Theme', 'Number of Datasets',{
+        "default": '#72a530',
+        "Deconstruction and Separation": '#1f77b4',
+        "Conversion": '#ff7f0e',
+        "Feedstock Development": '#2ca02c',
+        "Sustainability": '#d62728'
+      });
+      break;
     case 'topics':
-      const topicData = facetData('topic').sort((a, b) => b.value - a.valu);
+      const topicData = facetData('topic').sort((a, b) => b.value - a.value);
       createBarChart('topics', topicData, 'label', 'value', 'Research Topics Distribution', 'Topic', 'Number of Datasets');
       break;
     case 'resources':
@@ -68,7 +81,9 @@ function facetData(facetKey) {
   return arrayData.map(item => ({ label: String(item.value), value: item.count }));
 }
 
-function createBarChart(chartKey, data, xKey, yKey, title, xLabel, yLabel) {
+function createBarChart(chartKey, data, xKey, yKey, title, xLabel, yLabel, colors=null) {
+  // override default colors with object containing x-axis values as keys
+  const chartColors = colors || {default: '#72a530'}
   const margin = { top: 40, right: 30, bottom: 100, left: 60 };
   const containerBounds = chartContainer.value.getBoundingClientRect();
   const width = Math.min(containerBounds.width,700) - margin.left - margin.right;
@@ -113,14 +128,14 @@ function createBarChart(chartKey, data, xKey, yKey, title, xLabel, yLabel) {
     .attr('width', xScale.bandwidth())
     .attr('y', d => yScale(d[yKey]))
     .attr('height', d => height - yScale(d[yKey]))
-    .attr('fill', '#72a530')
-    .attr('opacity', 0.8)
+    .attr('fill', d => (chartColors[d[xKey]] || chartColors['default'] || '#72a530') )
     .style('cursor', 'pointer')
     .on('mouseover', function() {
-      select(this).attr('opacity', 1).attr('fill', '#5d8a26');
+      select(this).style('filter', 'brightness(1.25)')
     })
     .on('mouseout', function() {
-      select(this).attr('opacity', 0.8).attr('fill', '#72a530');
+      select(this).attr('fill', d => (chartColors[d[xKey]] || chartColors['default'] || '#72a530') )
+      .style('filter', 'none');
     })
     .on('click', function(_event, d) {
       emit('onClick', { value: d[xKey], chartType: chartKey });
@@ -207,15 +222,9 @@ const createPieChart = (chartKey, data, title, enableClickableLabels = true) => 
     .enter().append('g')
     .attr('class', 'arc');
 
-  arcs.append('path')
-    .attr('d', arcGenerator)
-    .attr('fill', (d, i) => enhancedColors[i % enhancedColors.length])
-    .attr('opacity', 0.8);
-
     const slices = arcs.append('path')
     .attr('d', arcGenerator)
     .attr('fill', (d, i) => enhancedColors[i % enhancedColors.length])
-    .attr('opacity', 0.8)
     .style('cursor', (d) => {
       // Only make slices clickable if they're >= 3% AND labels are enabled
       const percentage = (d.data.value / totalValue) * 100;
@@ -230,9 +239,7 @@ const createPieChart = (chartKey, data, title, enableClickableLabels = true) => 
         
         // Only add hover effects for slices >= 3%
         if (percentage >= clickablePercent) {
-          select(this)
-            .attr('opacity', 1)
-            .style('filter', 'brightness(1.25)'); // Slightly brighter on hover
+          select(this).style('filter', 'brightness(1.25)'); // Slightly brighter on hover
           
           // Also highlight the corresponding legend item
           const legendItems = svg.selectAll('.legend-item');
@@ -250,9 +257,7 @@ const createPieChart = (chartKey, data, title, enableClickableLabels = true) => 
         const percentage = (d.data.value / totalValue) * 100;
         
         if (percentage >= clickablePercent) {
-          select(this)
-            .attr('opacity', 0.8)
-            .style('filter', 'none');
+          select(this).style('filter', 'none');
           
           // Reset legend highlighting
           const legendItems = svg.selectAll('.legend-item');

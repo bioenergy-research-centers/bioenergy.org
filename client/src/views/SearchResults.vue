@@ -52,6 +52,8 @@ function handleChartClick({ value, chartType }) {
     searchStore.topic = [value];
   } else if (chartType === 'year') {
     searchStore.year = [value];
+  } else if (chartType === 'themes') {
+    searchStore.theme = [value];
   }  
   // After setting the filter, execute a new search
   searchStore.runSearch();
