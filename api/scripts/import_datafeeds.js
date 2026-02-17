@@ -58,8 +58,8 @@ async function processDatafeeds() {
     // Look for a schema version at the top level of the JSON feed.
     var schema_version = datafeed_json.schema_version;
     if(process.env.FORCE_SCHEMA_VERSION){
-      console.warn('FORCE_SCHEMA_VERSION provided:', process.env.FORCE_SCHEMA_VERSION, 'overriding versions from datafeed')
-      schema_version = process.env.FORCE_SCHEMA_VERSION
+      console.warn('FORCE_SCHEMA_VERSION provided:', process.env.FORCE_SCHEMA_VERSION, 'overriding versions from datafeed');
+      schema_version = process.env.FORCE_SCHEMA_VERSION;
     }
     // Adding the schema_version field at the top level moves the dataset array into a top-level field named 'datasets'.
     // But if this field is not found, assume this is an older feed where the dataset array is at the top level.
