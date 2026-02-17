@@ -48,14 +48,15 @@ function drawChart() {
       createBarChart('year', yearData, 'label', 'value', 'Dataset Count by Year', 'Year', 'Number of Datasets');
       break;
     case 'themes':
+      const themeOrder = ["Feedstock Development", "Deconstruction and Separation", "Conversion", "Sustainability"]
       const themeData = facetData('theme').sort((a, b) => {
-        a.label.localeCompare(b.label)
+        return themeOrder.indexOf(a.label) - themeOrder.indexOf(b.label)
       });
       createBarChart('themes', themeData, 'label', 'value', 'Research Themes Distribution', 'Theme', 'Number of Datasets',{
         "default": '#72a530',
+        "Feedstock Development": '#2ca02c',
         "Deconstruction and Separation": '#1f77b4',
         "Conversion": '#ff7f0e',
-        "Feedstock Development": '#2ca02c',
         "Sustainability": '#d62728'
       });
       break;
@@ -114,7 +115,7 @@ function createBarChart(chartKey, data, xKey, yKey, title, xLabel, yLabel, color
     .style('text-anchor', 'end')
     .attr('dx', '-.8em')
     .attr('dy', '.15em')
-    .attr('transform', 'rotate(-45)');
+    .attr('transform', 'rotate(-35)');
 
   // Create Y axis
   g.append('g').call(axisLeft(yScale));
