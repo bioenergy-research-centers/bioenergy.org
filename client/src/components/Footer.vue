@@ -1,11 +1,32 @@
 <script setup>
   const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
+  
+  import doeLogo from "@/assets/doe-logo.webp"
 </script>
 
 <template>
-  <footer>
+  <footer class="mt-5">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-12 col-lg-9">
+
+          <div class="row align-items-center">
+            <div class="col-12 col-md-5 mb-3 mb-md-0 doe-logo-container">
+              <img :src="doeLogo" class="doe-logo me-3 mb-2" alt="U.S. Department of Energy Biological and Environmental Research Program" />
+            </div>
+
+            <div class="col-12 col-md-7">
+              <p class="doe-disclosure mb-0">
+                The Bionergy Research Centers are supported by the Office of Science of the U.S. Department of Energy. The Office of Science is the single largest supporter of basic research in the physical sciences in the United States, and is working to address some of the most pressing challenges of our time. For more information, please visit <a href="https://science.energy.gov">science.energy.gov</a>.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
     <div class="container my-5">
-      <div class="small text-center">
+      <div class="small text-center mt-4">
         
         InterBRC Data Products Portal 
         <i class="bi bi-c-circle small text-muted"></i>

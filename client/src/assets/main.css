@@ -24,12 +24,17 @@ a {
 }
 
 .navbar-brand {
-    color: #72a530;
+    color: #04652F;
     font-weight: bold;
-    font-size: 3em;
+    font-size: 2.5em;
 }
 .navbar-brand:hover {
-  color: #629520
+  color: #0A8843;
+}
+@media (min-width: 576px) {
+  .navbar-brand {
+    font-size: 3em;
+  }
 }
 
 .page-heading {
@@ -48,4 +53,22 @@ a {
 }
 .bg-brc-light-blue {
   background-color: #C5DBE8;
+}
+
+.doe-logo {
+  width: 260px;
+}
+.doe-logo-container {
+  text-align: center;
+}
+.doe-disclosure {
+  font-size: 0.7em;
+}
+.doe-disclosure a {
+  color: #000;
+}
+@media (min-width: 1200px) {
+  .doe-logo-container {
+    text-align: right;
+  }
 }
