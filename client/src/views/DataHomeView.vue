@@ -383,7 +383,7 @@ const applySuggestedQuery = () => {
                 :to="{
                   path: '/search',
                   query: {
-                    filters: JSON.stringify({ topic: ['Biomass & Feedback'] }),
+                    filters: JSON.stringify({ topic: ['Biomass & Feedstock'] }),
                     rows: 50
                   }
                 }"
