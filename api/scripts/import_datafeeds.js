@@ -57,7 +57,10 @@ async function processDatafeeds() {
     // Each feed might conform to a different schema version.
     // Look for a schema version at the top level of the JSON feed.
     var schema_version = datafeed_json.schema_version;
-
+    if(process.env.FORCE_SCHEMA_VERSION){
+      console.warn('FORCE_SCHEMA_VERSION provided:', process.env.FORCE_SCHEMA_VERSION, 'overriding versions from datafeed');
+      schema_version = process.env.FORCE_SCHEMA_VERSION;
+    }
     // Adding the schema_version field at the top level moves the dataset array into a top-level field named 'datasets'.
     // But if this field is not found, assume this is an older feed where the dataset array is at the top level.
     var datasets = (datafeed_json.datasets === undefined) ? datafeed_json : datafeed_json.datasets;
@@ -97,8 +100,10 @@ async function processDatafeeds() {
     }
 
     // process each dataset in the data feed
-    for (const [dataset_index, dataset] of Object.entries(datasets))
+    for (const [dataset_index, dataset] of datasets.entries())
     {
+      // Force error on empty string identifier
+      if(dataset.identifier?.trim() == ''){ dataset.identifier = null;}
       // handle malformed data gracefully (only reject individual datasets that fail validation, not entire data feeds)
       if (validate({ "datasets": [ dataset ] })) {
         datafeed_counts.valid += 1;
