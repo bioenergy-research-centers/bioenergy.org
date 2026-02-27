@@ -103,7 +103,7 @@ async function processDatafeeds() {
     for (const [dataset_index, dataset] of datasets.entries())
     {
       // Force error on empty string identifier
-      if(dataset.identifier?.trim() == ''){ dataset.identifier = null;}
+      if(typeof dataset.identifier === 'string' && dataset.identifier.trim() == ''){ dataset.identifier = null;}
       // handle malformed data gracefully (only reject individual datasets that fail validation, not entire data feeds)
       if (validate({ "datasets": [ dataset ] })) {
         datafeed_counts.valid += 1;
