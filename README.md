@@ -74,6 +74,8 @@ The following command will run a postgres container with the password `mysecretp
 
 - run `docker compose run api node scripts/import_datafeeds.js` from the root folder of the project.
 - To redirect validation errors to a file, run `docker compose run api node scripts/import_datafeeds.js 2>&1 > import_datafeeds.txt`
+- Under Windows PowerShell, use the following version of the above command to get a clean output file: `cmd /c "docker compose run api node scripts/import_datafeeds.js > import_datafeeds_after.txt 2>&1"`
+- If you see warnings like `"VITE_*" variable is not set`, add that variable to your local `.env` file as an empty placeholder.
 
 ### Resources Used to Build This Application
 
