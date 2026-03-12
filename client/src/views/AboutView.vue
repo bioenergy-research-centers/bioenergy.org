@@ -33,7 +33,7 @@ import doeLogo from "@/assets/doe-logo.png"
         </p>
         
         <p class="lead">
-          <a href="https://www.jbei.org/wp-content/uploads/2024/08/BRCFlyer_2024-1.pdf" target="_blank" rel="noopener noreferrer">Download our brochure</a> to learn more about the BRCs. Or visit us individually: 
+          <a href="https://cabbi.bio/wp-content/uploads/2026/03/BRC-Overview_20260127.pdf" target="_blank" rel="noopener noreferrer">Download our brochure</a> to learn more about the BRCs. Or visit us individually: 
         </p>
 
         <img :src="mapImage" alt="" width=100% class="mb-3">
