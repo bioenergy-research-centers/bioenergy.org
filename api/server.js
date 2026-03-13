@@ -6,6 +6,7 @@ const swaggerUi = require("swagger-ui-express");
 require("dotenv").config( {path: ['.env','../.env'] } );
 const datasetRoutes = require('./app/routes/dataset.routes');
 const messageRoutes = require('./app/routes/message.routes');
+const schemaRoutes = require('./app/routes/schema.routes');
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.get("/", (req, res) => {
 // https://expressjs.com/en/guide/routing.html#express-router
 app.use('/api/datasets', datasetRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/schema', schemaRoutes);
 
 // Swagger setup
 
