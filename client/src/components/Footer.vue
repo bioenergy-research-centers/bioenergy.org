@@ -33,7 +33,7 @@
         2025
 
         <span class="fw-light text-muted mx-2">|</span>
-        <a href="https://www.jbei.org/wp-content/uploads/2024/08/BRCFlyer_2024-1.pdf" target="_blank" rel="noopener noreferrer" class="text-muted text-decoration-none ms-1">
+        <a href="https://cabbi.bio/wp-content/uploads/2026/03/BRC-Overview_20260127.pdf" target="_blank" rel="noopener noreferrer" class="text-muted text-decoration-none ms-1">
           Bioenergy Research Center Brochure 
         </a>
 
