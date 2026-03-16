@@ -1,8 +1,34 @@
+<script setup lang="ts">
+import HeaderView from "@/views/HeaderView.vue";
+import SchemaDataService from "../services/SchemaDataService";
+import { ref, onMounted } from "vue";
+
+const loading = ref(true);
+const error = ref<string | null>(null);
+const versions = ref<string[]>([]);
+
+onMounted(async () => {
+  try {
+    const res = await SchemaDataService.getSupported();
+    versions.value = res.data?.supported || [];
+  } catch (err: any) {
+    const apiError = err?.response?.data?.error;
+    error.value = apiError || err.message || "Unknown error";
+  } finally {
+    loading.value = false;
+  }
+});
+</script>
+
 <template>
+  <HeaderView />
+
   <div class="container py-4">
     <h2 class="mb-3">Schemas</h2>
 
-    <div v-if="loading" class="text-muted">Loading...</div>
+    <div v-if="loading" class="text-muted">
+      Loading...
+    </div>
 
     <div v-else-if="error" class="alert alert-danger">
       <strong>Error:</strong> {{ error }}
@@ -38,30 +64,5 @@
   </div>
 </template>
 
-<script>
-import SchemaDataService from "../services/SchemaDataService";
-
-export default {
-  name: "SchemaIndexView",
-
-  data() {
-    return {
-      loading: true,
-      error: null,
-      versions: [],
-    };
-  },
-
-  async mounted() {
-    try {
-      const res = await SchemaDataService.getSupported();
-      this.versions = res.data?.supported || [];
-    } catch (err) {
-      const apiError = err?.response?.data?.error;
-      this.error = apiError || err.message || "Unknown error";
-    } finally {
-      this.loading = false;
-    }
-  },
-};
-</script>
+<style scoped>
+</style>

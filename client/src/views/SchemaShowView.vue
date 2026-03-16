@@ -1,4 +1,73 @@
+<script setup lang="ts">
+import HeaderView from "@/views/HeaderView.vue";
+import SchemaDataService from "../services/SchemaDataService";
+import { computed, ref, watchEffect } from "vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
+
+const version = computed(() => route.params.version as string);
+
+const schema = ref(null);
+const loading = ref(true);
+const error = ref<string | null>(null);
+
+const debug = ref({
+  status: null as number | null,
+  contentType: null as string | null,
+  url: null as string | null,
+});
+
+const formattedSchema = computed(() => {
+  return schema.value ? JSON.stringify(schema.value, null, 2) : "";
+});
+
+watchEffect(async () => {
+  error.value = null;
+  loading.value = true;
+  schema.value = null;
+  debug.value = {
+    status: null,
+    contentType: null,
+    url: null,
+  };
+
+  if (!version.value) {
+    loading.value = false;
+    error.value = "No schema version provided.";
+    return;
+  }
+
+  try {
+    const res = await SchemaDataService.get(version.value);
+    debug.value = {
+      status: res.status ?? null,
+      contentType: res.headers?.["content-type"] ?? null,
+      url: res.config?.url ?? null,
+    };
+    schema.value = res.data;
+  } catch (err: any) {
+    debug.value = {
+      status: err?.response?.status ?? null,
+      contentType: err?.response?.headers?.["content-type"] ?? null,
+      url: err?.config?.url ?? null,
+    };
+
+    const apiError = err?.response?.data?.error;
+    error.value =
+      apiError ||
+      (err?.response?.status ? `Request failed with status ${err.response.status}` : null) ||
+      err?.message ||
+      "Unknown error";
+  } finally {
+    loading.value = false;
+  }
+});
+</script>
+
 <template>
+  <HeaderView />
+
   <div class="container py-4">
     <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
       <div>
@@ -10,8 +79,8 @@
       </div>
 
       <div class="text-end">
-        <router-link class="link-secondary small" to="/datasets">
-          ← Back to datasets
+        <router-link class="link-secondary small" to="/schema">
+          ← Back to schemas
         </router-link>
       </div>
     </div>
@@ -49,89 +118,11 @@
 
       <pre
         class="bg-light p-3 border rounded small"
-        style="overflow-x:auto; max-height: 70vh;"
+        style="overflow-x: auto; max-height: 70vh;"
       >{{ formattedSchema }}</pre>
     </div>
   </div>
 </template>
 
-<script>
-import SchemaDataService from "../services/SchemaDataService";
-
-export default {
-  name: "SchemaShowView",
-
-  data() {
-    return {
-      loading: true,
-      error: null,
-      schema: null,
-      debug: {
-        status: null,
-        contentType: null,
-        url: null,
-      },
-    };
-  },
-
-  computed: {
-    version() {
-      return this.$route.params.version;
-    },
-
-    formattedSchema() {
-      if (!this.schema) return "";
-      return JSON.stringify(this.schema, null, 2);
-    },
-  },
-
-  watch: {
-    // If user navigates between versions while staying on this view
-    "$route.params.version": {
-      handler() {
-        this.loadSchema();
-      },
-    },
-  },
-
-  mounted() {
-    this.loadSchema();
-  },
-
-  methods: {
-    async loadSchema() {
-      this.loading = true;
-      this.error = null;
-      this.schema = null;
-      this.debug = { status: null, contentType: null, url: null };
-
-      try {
-        // axios response
-        const res = await SchemaDataService.get(this.version);
-
-        this.debug.status = res.status;
-        this.debug.contentType = res.headers?.["content-type"] || null;
-        this.debug.url = res.config?.url || null;
-
-        this.schema = res.data;
-      } catch (err) {
-        // axios error handling
-        const status = err?.response?.status;
-        const contentType = err?.response?.headers?.["content-type"];
-        const apiError = err?.response?.data?.error;
-
-        this.debug.status = status || null;
-        this.debug.contentType = contentType || null;
-
-        this.error =
-          apiError ||
-          (status ? `Request failed with status ${status}` : null) ||
-          err.message ||
-          "Unknown error";
-      } finally {
-        this.loading = false;
-      }
-    },
-  },
-};
-</script>
+<style scoped>
+</style>
