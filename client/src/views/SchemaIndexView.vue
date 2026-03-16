@@ -2,6 +2,13 @@
 import HeaderView from "@/views/HeaderView.vue";
 import SchemaDataService from "../services/SchemaDataService";
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+const goBack = () => {
+  router.back();
+};
 
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -24,7 +31,16 @@ onMounted(async () => {
   <HeaderView />
 
   <div class="container py-4">
-    <h2 class="mb-3">Schemas</h2>
+    <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+      <div>
+        <h2 class="mb-1">Schemas</h2>
+      </div>
+      <div class="text-end">
+        <button @click="goBack" class="btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5">
+          <i class="bi bi-arrow-left pe-3" aria-hidden="true"></i>Return to previous page
+        </button>
+      </div>
+    </div>
 
     <div v-if="loading" class="text-muted">
       Loading...

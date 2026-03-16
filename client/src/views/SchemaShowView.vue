@@ -2,7 +2,13 @@
 import HeaderView from "@/views/HeaderView.vue";
 import SchemaDataService from "../services/SchemaDataService";
 import { computed, ref, watchEffect } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+
+const router = useRouter();
+
+const goBack = () => {
+  router.back();
+};
 
 const route = useRoute();
 
@@ -69,19 +75,14 @@ watchEffect(async () => {
   <HeaderView />
 
   <div class="container py-4">
-    <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+    <div class="d-flex align-items-start justify-content-between gap-3">
       <div>
         <h2 class="mb-1">Schema {{ version }}</h2>
-        <div class="text-muted small">
-          API endpoint:
-          <code>/api/schema/{{ version }}</code>
-        </div>
       </div>
-
       <div class="text-end">
-        <router-link class="link-secondary small" to="/schema">
-          ← Back to schemas
-        </router-link>
+        <button @click="goBack" class="btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5">
+          <i class="bi bi-arrow-left pe-3" aria-hidden="true"></i>Return to previous page
+        </button>
       </div>
     </div>
 
@@ -101,19 +102,32 @@ watchEffect(async () => {
 
     <div v-else>
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <div class="text-muted small">
-          <span v-if="debug.contentType">Content-Type: <code>{{ debug.contentType }}</code></span>
+        <div class="d-flex flex-column text-muted small">
+          <div>
+            API endpoint:
+            <code>/api/schema/{{ version }}</code>
+          </div>
+
+          <div v-if="debug.contentType">
+            Content-Type:
+            <code>{{ debug.contentType }}</code>
+          </div>
         </div>
 
-        <a
-          class="link-primary small"
-          :href="`/api/schema/${encodeURIComponent(version)}`"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Open raw schema JSON in a new tab"
-        >
-          Open raw JSON ↗
-        </a>
+        <div class="d-flex gap-3">
+          <a
+            class="link-primary small"
+            :href="`/api/schema/${encodeURIComponent(version)}`"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open raw JSON ↗
+          </a>
+
+          <router-link class="link-secondary small" to="/schema">
+            List available schemas
+          </router-link>
+        </div>
       </div>
 
       <pre
