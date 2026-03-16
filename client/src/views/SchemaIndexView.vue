@@ -6,6 +6,8 @@ import { useRouter } from "vue-router";
 
 const router = useRouter();
 
+const apiBaseUrl = import.meta.env.VITE_BIOENERGY_ORG_API_URI;
+
 const goBack = () => {
   router.back();
 };
@@ -37,7 +39,7 @@ onMounted(async () => {
       </div>
       <div class="text-end">
         <button @click="goBack" class="btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5">
-          <i class="bi bi-arrow-left pe-3" aria-hidden="true"></i>Return to previous page
+          <i class="bi bi-arrow-left pe-3" aria-hidden="true"></i> Return to previous page
         </button>
       </div>
     </div>
@@ -67,7 +69,7 @@ onMounted(async () => {
 
           <a
             class="link-secondary small"
-            :href="`/api/schema/${encodeURIComponent(v)}`"
+            :href="apiBaseUrl + '/api/schema/' + encodeURIComponent(v)"
             target="_blank"
             rel="noopener noreferrer"
             title="Open raw schema JSON"

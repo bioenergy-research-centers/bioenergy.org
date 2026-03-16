@@ -5,14 +5,18 @@ import { computed, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const router = useRouter();
+const route = useRoute();
+
+const apiBaseUrl = import.meta.env.VITE_BIOENERGY_ORG_API_URI;
+const version = computed(() => route.params.version as string);
+
+const rawSchemaLink = computed(() =>
+  apiBaseUrl + "/api/schema/" + encodeURIComponent(version.value)
+);
 
 const goBack = () => {
   router.back();
 };
-
-const route = useRoute();
-
-const version = computed(() => route.params.version as string);
 
 const schema = ref(null);
 const loading = ref(true);
@@ -81,7 +85,7 @@ watchEffect(async () => {
       </div>
       <div class="text-end">
         <button @click="goBack" class="btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5">
-          <i class="bi bi-arrow-left pe-3" aria-hidden="true"></i>Return to previous page
+          <i class="bi bi-arrow-left pe-3" aria-hidden="true"></i> Return to previous page
         </button>
       </div>
     </div>
@@ -117,7 +121,7 @@ watchEffect(async () => {
         <div class="d-flex gap-3">
           <a
             class="link-primary small"
-            :href="`/api/schema/${encodeURIComponent(version)}`"
+            :href="rawSchemaLink"
             target="_blank"
             rel="noopener noreferrer"
           >
