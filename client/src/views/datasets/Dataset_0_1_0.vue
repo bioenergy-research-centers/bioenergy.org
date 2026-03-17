@@ -163,7 +163,8 @@
         <hr/>
         <div class='row mt-3 float-end'>
           <div class='text-end text-muted small'>
-              Schema Version: {{ selectedResult.schema_version }}<br/>
+              Schema Version: <router-link :to="`/schema/${selectedResult.schema_version}`" class="link-primary text-decoration-underline">{{ selectedResult.schema_version }}</router-link>
+              <br/>
               Record Updated: {{ updatedDate }}
           </div>
         </div>

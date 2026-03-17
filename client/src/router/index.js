@@ -3,6 +3,8 @@ import AboutView from '../views/AboutView.vue';
 import DataHomeView from '../views/DataHomeView.vue';
 import DatasetView from '../views/DatasetView.vue';
 import DatasetShowView from '../views/DatasetShowView.vue';
+import SchemaShowView from '../views/SchemaShowView.vue';
+import SchemaIndexView from '../views/SchemaIndexView.vue';
 import {useSearchStore} from '@/store/searchStore';
 
 const router = createRouter({
@@ -16,13 +18,24 @@ const router = createRouter({
         {
             path: '/search',
             name: 'datasetSearch',
-            component: DatasetView,
+            component: DatasetView
         },
         {
             path: '/datasets/:id',
             name: 'datasetShow',
             props: true,
             component: DatasetShowView
+        },
+        {
+            path: "/schema",
+            name: "schema-index",
+            component: SchemaIndexView
+        },
+        {
+            path: '/schema/:version',
+            name: 'schemaShow',
+            props: true,
+            component: SchemaShowView
         },
         {
             path: '/contact',
@@ -35,7 +48,7 @@ const router = createRouter({
         {
             path: '/about',
             name: 'about',
-            component: AboutView,
+            component: AboutView
         },
     ]
 });
