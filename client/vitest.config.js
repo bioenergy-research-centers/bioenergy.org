@@ -19,7 +19,7 @@ export default defineConfig({
       exclude: ['src/__tests__/**', 'src/main.js', 'src/models/**'],
       thresholds: {
         lines: 80,
-        functions: 65,
+        functions: 80,
         branches: 80,
         statements: 80,
       },
