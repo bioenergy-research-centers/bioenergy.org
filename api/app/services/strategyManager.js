@@ -1,9 +1,9 @@
 const config = require('../config/apis.json');
-const {searchICEInstance} = require("./iceSearchService");
+const iceSearchService = require("./iceSearchService");
 
 // search functions (one for each third party api involved in federated search)
 const strategies = {
-    ice: searchICEInstance
+    ice: (...args) => iceSearchService.searchICEInstance(...args)
 };
 
 async function runSearch(query, sequence) {

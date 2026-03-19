@@ -1,5 +1,5 @@
-const {runSearch} = require('../services/strategyManager');
-const {searchLocalDatasets} = require("../services/datasetsService");
+const strategyManager = require('../services/strategyManager');
+const datasetsService = require("../services/datasetsService");
 
 async function search(req, res) {
     const {query, sequence} = req.body;
@@ -8,11 +8,11 @@ async function search(req, res) {
     try {
         if (sequence && sequence.trim() !== '') {
             console.log('retrieving sequence results', sequence);
-            const results = await runSearch(query, sequence);
+            const results = await strategyManager.runSearch(query, sequence);
             res.json(results);
         } else {
             console.log('retrieving local results');
-            const localResults = await searchLocalDatasets({textQueryTerm: query});
+            const localResults = await datasetsService.searchLocalDatasets({textQueryTerm: query});
             res.json(localResults);
         }
     } catch (error) {

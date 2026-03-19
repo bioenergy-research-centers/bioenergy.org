@@ -1,6 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
-const {searchLocalDatasets} = require("./datasetsService");
+const datasetsService = require("./datasetsService");
 
 // service for running an ice search
 async function searchICEInstance(queryString, sequence) {
@@ -54,7 +54,7 @@ async function searchICEInstance(queryString, sequence) {
         }));
 
         // check local results
-        const dbResults = await searchLocalDatasets({brcQueryTerm: 'JBEI'});
+        const dbResults = await datasetsService.searchLocalDatasets({brcQueryTerm: 'JBEI'});
 
         // intersect
         return iceResults.filter(iceResult =>

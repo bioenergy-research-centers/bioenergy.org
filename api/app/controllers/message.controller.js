@@ -1,6 +1,6 @@
-const {validateTurnstileForm} = require('../utils/turnstileValidator');
-const {formatContactForm} = require('../utils/markdownFormatter');
-const {syncIssueComment} = require("../services/githubService");
+const turnstileValidator = require('../utils/turnstileValidator');
+const markdownFormatter = require('../utils/markdownFormatter');
+const githubService = require("../services/githubService");
 const sanitizeHtml = require('sanitize-html');
 const messageMention = process.env.MESSAGE_MENTION_STRING;
 
@@ -9,7 +9,7 @@ async function create(req, res) {
   const data = req.body;
   try {
     // Validate CF turnstile key
-    const cfValid = await validateTurnstileForm(req);
+    const cfValid = await turnstileValidator.validateTurnstileForm(req);
     if(!cfValid){
       res.json({error: "Invalid form data. Please verify you are human."});
       return;
@@ -21,11 +21,11 @@ async function create(req, res) {
     // Create or update new message
     // Title and label are used to find existing comments
     const title = `${sanitizeHtml(data.contact_name)} (${sanitizeHtml(data.contact_email)}) - ${data.contact_reason}`;
-    const formattedMessage = formatContactForm(data) + `---\n\n${messageMention}\n
+    const formattedMessage = markdownFormatter.formatContactForm(data) + `---\n\n${messageMention}\n
     Assign to the person that will respond in email.
     Comments are private to BRC organization members and can be used for discussion.
     Close this issue when the request is addressed.`;
-    const saveStatus = await syncIssueComment(title, formattedMessage, {labels: 'contact-form'}); 
+    const saveStatus = await githubService.syncIssueComment(title, formattedMessage, {labels: 'contact-form'});
     
     if(saveStatus){
       res.json({success: true, message: 'Message saved.'});
