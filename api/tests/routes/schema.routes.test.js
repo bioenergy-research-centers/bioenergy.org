@@ -1,6 +1,7 @@
 const supertest = require("supertest");
 const { createApp } = require("../helpers/createApp");
 const schemaRoutes = require("../../app/routes/schema.routes");
+const schemaList = require("../../app/schemas/schema_list.json");
 
 function buildApp() {
   const app = createApp();
@@ -13,9 +14,12 @@ describe("GET /api/schema", () => {
     const res = await supertest(buildApp()).get("/api/schema");
     expect(res.status).toBe(200);
     expect(res.body.supported).toBeInstanceOf(Array);
-    expect(res.body.supported).toContain("0.1.1");
-    expect(res.body.supported).toContain("0.1.7");
-    expect(res.body.supported).toContain("0.1.10");
+    const expectedVersions = schemaList
+      .filter(s => s.supported)
+      .map(s => s.version);
+    for (const version of expectedVersions) {
+      expect(res.body.supported).toContain(version);
+    }
   });
 });
 
@@ -27,7 +31,8 @@ describe("GET /api/schema/:version", () => {
   });
 
   it("returns schema JSON for a valid version", async () => {
-    const res = await supertest(buildApp()).get("/api/schema/0.1.7");
+    const version = schemaList.find(s => s.supported).version;
+    const res = await supertest(buildApp()).get(`/api/schema/${version}`);
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toContain("application/schema+json");
   });
