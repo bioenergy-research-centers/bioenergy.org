@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { defineComponent } from 'vue';
-import { useTurnstile } from '@/composables/useTurnstile';
+
+vi.stubEnv('VITE_TURNSTILE_SITEKEY', 'test-site-key');
+
+// Import after stubbing env so the composable picks up the test value
+const { useTurnstile } = await import('@/composables/useTurnstile');
 
 describe('useTurnstile', () => {
   beforeEach(() => {
@@ -45,7 +49,7 @@ describe('useTurnstile', () => {
 
     // Simulating the already-loaded path: since window.turnstile exists,
     // onloadTurnstileCallback is called immediately
-    expect(mockRender).toHaveBeenCalledWith('#turnstile', expect.objectContaining({ sitekey: expect.anything() }));
+    expect(mockRender).toHaveBeenCalledWith('#turnstile', { sitekey: 'test-site-key' });
   });
 
   it('calls turnstile.remove on unmount', () => {
