@@ -66,5 +66,5 @@ jobs:
             - name: Install dependencies
               run: npm install
 
-            - name: Run client tests
-              run: npx vitest run
+            - name: Run client tests with coverage
+              run: npx vitest run --coverage
