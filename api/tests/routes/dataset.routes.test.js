@@ -93,6 +93,174 @@ describe("dataset routes", () => {
       const res = await supertest(app).get("/api/datasets?rows=10");
       expect(res.body.totalPages).toBe(3);
     });
+
+    it("accepts text search query", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?q=ethanol&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("accepts text search with OR and NOT operators", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?q=ethanol%20OR%20biomass%20NOT%20corn&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("accepts text search with parentheses", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?q=(ethanol%20OR%20biomass)%20cellulose&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by single brc value", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[brc]=JBEI&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by multiple brc values", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[brc]=JBEI&filters[brc]=GLBRC&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by single repository value", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[repository]=JGI&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by multiple repository values", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[repository]=JGI&filters[repository]=NCBI&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by single analysisType", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[analysisType]=genomics&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by multiple analysisType values", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[analysisType]=genomics&filters[analysisType]=proteomics&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by single species", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[species]=Saccharomyces&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by multiple species values", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[species]=Saccharomyces&filters[species]=Escherichia&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by single theme", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[theme]=Sustainability&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by multiple theme values", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[theme]=Sustainability&filters[theme]=Conversion&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by single topic/category", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[topic]=Microbiology&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by multiple topic/category values", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[topic]=Microbiology&filters[topic]=Plant%20Biology&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by single year", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[year]=2024&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by multiple year values", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[year]=2024&filters[year]=2023&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by single personName", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[personName]=Smith&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("filters by multiple personName values", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?filters[personName]=Smith&filters[personName]=Jones&nofacets=true");
+      expect(res.status).toBe(200);
+    });
+
+    it("accepts the legacy limit parameter", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?limit=25&nofacets=true");
+      expect(res.body.query.rows).toBe(25);
+    });
+
+    it("defaults negative page to 1", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets?page=-1&nofacets=true");
+      expect(res.body.query.page).toBe(1);
+    });
   });
 
   describe("GET /api/datasets/metrics", () => {

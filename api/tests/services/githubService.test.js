@@ -111,6 +111,47 @@ describe("syncIssueComment", () => {
     expect(result).toBe(false);
   });
 
+  it("skips update when issue body matches and no comments exist", async () => {
+    await loadService();
+    mockPaginate.mockResolvedValue([{ title: "Existing", number: 1, body: "same body" }]);
+    mockListComments.mockResolvedValue({ data: [] });
+
+    await syncIssueComment("Existing", "same body", { labels: "sync" });
+    expect(mockCreateComment).not.toHaveBeenCalled();
+  });
+
+  it("returns false when write disabled and issue body differs", async () => {
+    await loadService({ write: "false" });
+    mockPaginate.mockResolvedValue([{ title: "Existing", number: 1, body: "old body" }]);
+    mockListComments.mockResolvedValue({ data: [] });
+
+    const result = await syncIssueComment("Existing", "new body", { labels: "sync" });
+    expect(result).toBe(false);
+    expect(mockCreateComment).not.toHaveBeenCalled();
+  });
+
+  it("returns false when Octokit throws an error", async () => {
+    await loadService();
+    mockPaginate.mockRejectedValue(new Error("GitHub API down"));
+
+    const result = await syncIssueComment("Title", "body", { labels: "sync" });
+    expect(result).toBe(false);
+  });
+
+  it("parses comma-separated labels into array", async () => {
+    await loadService();
+    mockPaginate.mockResolvedValue([]);
+    mockCreateIssue.mockResolvedValue({});
+
+    await syncIssueComment("Title", "body", { labels: "bug,contact-form" });
+
+    expect(mockCreateIssue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        labels: ["bug", "contact-form"],
+      })
+    );
+  });
+
   it("truncates title to 256 characters", async () => {
     await loadService();
     mockPaginate.mockResolvedValue([]);
