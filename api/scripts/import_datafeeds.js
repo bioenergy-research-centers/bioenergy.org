@@ -16,6 +16,13 @@ const fetch = require('sync-fetch'); // synchronous fetch is easier for developm
 const Ajv = require('ajv/dist/2019'); // this specific path is required to support the BRC schemas (rather than simply 'ajv');
 const addFormats = require('ajv-formats');
 
+// Configure Ajv parameters.
+// strictSchema should be set to false in order to accomodate LinkML keywords "metamodel_version" and "version"
+// strictTypes should be set to false in order to handle these warnings:
+// type "null" not allowed by context "string" at "https://w3id.org/brc/brc_schema#/properties/analysisType/anyOf/2" (strictTypes)
+// type "null" not allowed by context "string" at "https://w3id.org/brc/brc_schema#/properties/affiliation/anyOf/2" (strictTypes)
+const ajvParams = { allErrors: true, verbose: true, strictSchema: false, strictNumbers: true, strictTypes: false, strictTuples : true, strictRequired: true };
+
 // initialize the JSON schema validator
 
 const schemas = require("../app/schemas");
@@ -78,7 +85,7 @@ async function processDatafeeds() {
 
     try {
       const schema = require('../app/schemas/' + schema_filename);
-      const ajv = new Ajv({ allErrors: 'true', verbose: 'true', strict: 'false' }); // must set option "strict: 'false'" to produce specification-compliant behavior
+      const ajv = new Ajv(ajvParams);
       addFormats(ajv); // required for supporting format: date in JSON schema
       validate = ajv.compile(schema);
     } catch (err) {
