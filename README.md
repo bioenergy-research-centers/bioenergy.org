@@ -113,6 +113,16 @@ api/tests/
 - Route tests use Supertest with a lightweight Express app from `tests/helpers/createApp.js` (no Sequelize sync or Swagger setup).
 - Database calls are mocked by mutating `db.datasets.scope` and `db.sequelize.query` on the shared `require("../models")` object.
 
+#### Coverage
+
+Run tests with a coverage report:
+
+```bash
+docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run --coverage
+```
+
+Coverage is enforced at 80% for statements, branches, functions, and lines (configured in `api/vitest.config.js`). The CI workflow runs coverage on every pull request and will fail if thresholds are not met.
+
 ### Import BRC Data Feeds
 
 - run `docker compose run api node scripts/import_datafeeds.js` from the root folder of the project.
