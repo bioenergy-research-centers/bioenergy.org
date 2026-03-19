@@ -30,12 +30,18 @@ const schemas = require("../app/schemas");
 async function processDatafeeds() {
   const feed_summary = {};
   const invalid_feeds = {};
+
+  // Track dataset identifiers and URLs seen during this import run (across all feeds)
+  const processedIdentifiers = new Set();
+  const processedUrls = new Set();
+
   // query each URL expecting well-formed JSON matching the project schema structure
   for (const datafeed of datasources.urls) {
     // Initialize summary counts
-    const datafeed_counts = {valid:0,invalid:0};
+    const datafeed_counts = {valid:0,invalid:0,duplicate:0};
     // Initialize invalid record tracking
     const invalid_records = [];
+    const duplicate_records = [];
 
     if (datafeed.url === null) {
       console.error(datafeed.name + " [" + datafeed.url + "]: DATA FEED REJECTED (reason: missing URL)");
@@ -68,6 +74,7 @@ async function processDatafeeds() {
       console.warn('FORCE_SCHEMA_VERSION provided:', process.env.FORCE_SCHEMA_VERSION, 'overriding versions from datafeed');
       schema_version = process.env.FORCE_SCHEMA_VERSION;
     }
+    // TODO: This workaround for older feeds is no longer necessary, as all feeds are now in the new format. This extra check can be refactored out at any time.
     // Adding the schema_version field at the top level moves the dataset array into a top-level field named 'datasets'.
     // But if this field is not found, assume this is an older feed where the dataset array is at the top level.
     var datasets = (datafeed_json.datasets === undefined) ? datafeed_json : datafeed_json.datasets;
@@ -110,7 +117,41 @@ async function processDatafeeds() {
     for (const [dataset_index, dataset] of datasets.entries())
     {
       // Force error on empty string identifier
-      if(typeof dataset.identifier === 'string' && dataset.identifier.trim() == ''){ dataset.identifier = null;}
+      if (typeof dataset.identifier === 'string' && dataset.identifier.trim() == '') {
+        dataset.identifier = null;
+      }
+
+      // Duplicate detection (within this import run)
+      var duplicate = false;
+
+      // check for duplicate dataset identifiers
+      if (dataset.identifier !== null) {
+        const dedupeIdKey = (dataset.identifier).toString().trim().toLowerCase();
+        if (processedIdentifiers.has(dedupeIdKey)) {
+          console.warn("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " DUPLICATE - identifier: " + dataset.identifier);
+          duplicate = true;
+        } else {
+          processedIdentifiers.add(dedupeIdKey);
+        }
+      }
+
+      // check for duplicate dataset URLs
+      if (typeof dataset.dataset_url === 'string' && dataset.dataset_url.trim() !== '') {
+        const dedupeUrlKey = (dataset.dataset_url).toString().trim().toLowerCase();
+        if (processedUrls.has(dedupeUrlKey)) {
+          console.warn("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " DUPLICATE - dataset_url: " + dataset.dataset_url); 
+          duplicate = true;
+        } else {
+          processedUrls.add(dedupeUrlKey);
+        }
+      }
+
+      if (duplicate) {
+        datafeed_counts.duplicate += 1;
+        duplicate_records.push([dataset.identifier+" ("+(dataset_index+1)+")", JSON.stringify("identifier: " + dataset.identifier + ", dataset_url:" + dataset.dataset_url)]);
+        continue; // skip adding the record
+      }
+
       // handle malformed data gracefully (only reject individual datasets that fail validation, not entire data feeds)
       if (validate({ "datasets": [ dataset ] })) {
         datafeed_counts.valid += 1;
@@ -133,9 +174,15 @@ async function processDatafeeds() {
 
       await Dataset.scope('defaultScope').upsert(new_record);
     };
+
     feed_summary[datafeed.url]=datafeed_counts;
+
     if (invalid_records.length > 0) {
       invalid_feeds["Invalid Records - "+datafeed.name]=invalid_records;
+    };
+
+    if (duplicate_records.length > 0) {
+      invalid_feeds["Duplicate Records - "+datafeed.name]=duplicate_records;
     };
   }
   console.log("Data Import Summary:", feed_summary);
