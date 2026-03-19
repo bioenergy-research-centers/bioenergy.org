@@ -72,22 +72,29 @@ The following command will run a postgres container with the password `mysecretp
 
 ### Testing
 
-API tests use [Vitest](https://vitest.dev/) and [Supertest](https://github.com/ladislav-zezula/supertest). Tests run inside the api container and do not require a database connection.
+Tests use [Vitest](https://vitest.dev/) and run inside Docker containers. No database connection is required.
 
 ```bash
-# Run all tests
+# Run API tests
 docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run
+
+# Run client tests
+docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest run
 
 # Run a single test file
 docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run tests/services/githubService.test.js
+docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest run src/__tests__/components/AuthorList.test.js
 
-# Watch mode (re-runs on file changes)
+# Watch mode
 docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest
+docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest
 ```
 
 Some `stderr` output (e.g. "Error during search", "Turnstile error") is expected — these are `console.error` calls from the application code exercised by error-path tests.
 
-Tests are organized under `api/tests/` mirroring the source structure:
+#### API tests
+
+API tests use [Supertest](https://github.com/ladislav-zezula/supertest) for route-level integration tests. Tests are organized under `api/tests/` mirroring the source structure:
 
 ```text
 api/tests/
@@ -99,7 +106,7 @@ api/tests/
 └── setup.js          # Test environment variables
 ```
 
-#### Writing tests
+**Writing API tests:**
 
 - All tests are CommonJS (matching the API codebase).
 - Vitest globals (`describe`, `it`, `expect`, `vi`, `beforeEach`) are available without imports.
@@ -113,15 +120,36 @@ api/tests/
 - Route tests use Supertest with a lightweight Express app from `tests/helpers/createApp.js` (no Sequelize sync or Swagger setup).
 - Database calls are mocked by mutating `db.datasets.scope` and `db.sequelize.query` on the shared `require("../models")` object.
 
+#### Client tests
+
+Client tests use [Vue Test Utils](https://test-utils.vuejs.org/) for component testing. Tests are organized under `client/src/__tests__/`:
+
+```text
+client/src/__tests__/
+├── components/       # Component unit tests (AuthorList, Footer, FacetFilters, etc.)
+├── composables/      # Composable tests (useTurnstile)
+├── router/           # Route definition tests
+├── services/         # API service tests (Dataset, Message, Schema)
+├── store/            # Pinia store tests (searchStore)
+└── views/            # View tests (ContactView, versionComponentMap)
+```
+
+**Writing client tests:**
+
+- Tests are ESM (matching the client codebase). Import vitest functions explicitly: `import { describe, it, expect, vi } from 'vitest'`.
+- `vi.mock()` works for ESM imports. Mock HTTP calls by mocking `@/http-common`.
+- Mount components with `@vue/test-utils`. Stub child components and router as needed.
+
 #### Coverage
 
 Run tests with a coverage report:
 
 ```bash
 docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run --coverage
+docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest run --coverage
 ```
 
-Coverage is enforced at 80% for statements, branches, functions, and lines (configured in `api/vitest.config.js`). The CI workflow runs coverage on every pull request and will fail if thresholds are not met.
+Coverage is enforced at 80% for statements, branches, functions, and lines (configured in `api/vitest.config.js` and `client/vitest.config.js`). The CI workflow runs coverage on every pull request and will fail if thresholds are not met.
 
 ### Import BRC Data Feeds
 
