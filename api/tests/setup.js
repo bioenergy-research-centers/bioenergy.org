@@ -1,11 +1,11 @@
 // Set test environment variables before any module loads
-process.env.BIOENERGY_ORG_DB_HOST = "localhost";
-process.env.BIOENERGY_ORG_DB_USER = "test";
-process.env.BIOENERGY_ORG_DB_PASSWORD = "test";
-process.env.BIOENERGY_ORG_DB_NAME = "test";
-process.env.BIOENERGY_ORG_DB_LOCAL_PORT = "5432";
-process.env.BIOENERGY_ORG_CLIENT_URI = "http://localhost:3000";
-process.env.VITE_BIOENERGY_ORG_API_URI = "http://localhost:8080";
+process.env.BIOENERGY_ORG_DB_HOST = "test-db-host.invalid";
+process.env.BIOENERGY_ORG_DB_USER = "test-db-user";
+process.env.BIOENERGY_ORG_DB_PASSWORD = "test-db-password";
+process.env.BIOENERGY_ORG_DB_NAME = "test-db-name";
+process.env.BIOENERGY_ORG_DB_LOCAL_PORT = "99999";
+process.env.BIOENERGY_ORG_CLIENT_URI = "http://test-client.invalid";
+process.env.VITE_BIOENERGY_ORG_API_URI = "http://test-api.invalid";
 process.env.TURNSTILE_SECRETKEY = "test-secret";
 process.env.GITHUB_INBOX_REPO_TOKEN = "test-token";
 process.env.GITHUB_INBOX_REPO_OWNER = "test-owner";

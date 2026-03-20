@@ -701,6 +701,7 @@
                 "JGI Data Portal",
                 "JGI Gold",
                 "JGI Genome Portal",
+                "JGI MycoCosm",
                 "jPOST",
                 "MassIVE",
                 "Mendeley Data",
@@ -712,10 +713,11 @@
                 "ORNL DAAC",
                 "OSTI",
                 "PanoramaPublic",
-                "PedtideAtlas",
+                "PeptideAtlas",
                 "PRIDE",
                 "Princeton Data Commons",
                 "Protein Data Bank",
+                "Protocols.io",
                 "The Cambridge Crystallographic Data Centre",
                 "Zenodo"
             ],
@@ -749,5 +751,5 @@
     },
     "title": "brc_schema",
     "type": "object",
-    "version": "0.1.10"
+    "version": "0.1.12"
 }
