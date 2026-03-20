@@ -11,7 +11,7 @@ const schemaRoutes = require('./app/routes/schema.routes');
 const app = express();
 
 var corsOptions = {
-  origin: [process.env.BIOENERGY_ORG_CLIENT_URI, "https://api.bioenergy.org", "http://localhost:3000", "http://localhost:8081", "http://localhost:8080", "https://bioenergy.org", "https://www.bioenergy.org"]
+  origin: [process.env.BIOENERGY_ORG_CLIENT_URI, "https://api.bioenergy.org", "https://bioenergy.org", "https://www.bioenergy.org"]
 };
 
 // Apply global middleware for all routes first
