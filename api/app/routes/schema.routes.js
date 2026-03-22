@@ -1,3 +1,80 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Schema
+ *   description: JSON schema retrieval API
+ *
+ * /api/schema:
+ *   get:
+ *     summary: Returns the list of supported schema versions
+ *     tags: [Schema]
+ *     responses:
+ *       200:
+ *         description: A list of supported schema versions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 supported:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *               example:
+ *                 supported:
+ *                   - "0.1.7"
+ *                   - "0.1.10"
+ *
+ * /api/schema/{version}:
+ *   get:
+ *     summary: Returns the JSON schema document for a specific version
+ *     tags: [Schema]
+ *     parameters:
+ *       - in: path
+ *         name: version
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Schema version identifier
+ *         example: "0.1.10"
+ *     responses:
+ *       200:
+ *         description: The JSON schema document for the requested version
+ *         content:
+ *           application/schema+json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Invalid schema path
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *               example:
+ *                 error: Invalid schema path.
+ *       404:
+ *         description: Schema version not found or schema file missing on server
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *               examples:
+ *                 schemaVersionNotFound:
+ *                   summary: Requested schema version is not supported
+ *                   value:
+ *                     error: Schema version not found.
+ *                 schemaFileMissing:
+ *                   summary: Schema file is missing on the server
+ *                   value:
+ *                     error: Schema file missing on server.
+ */
+
 // api/app/routes/schema.routes.js
 
 const path = require("path");
