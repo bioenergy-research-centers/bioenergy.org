@@ -48,3 +48,23 @@ jobs:
 
             - name: Run API tests with coverage
               run: npx vitest run --coverage
+
+    client-tests:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: client
+
+        steps:
+            - uses: actions/checkout@v3.0.2
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v2
+              with:
+                node-version: 22
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Run client tests with coverage
+              run: npx vitest run --coverage
