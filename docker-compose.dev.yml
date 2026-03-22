@@ -33,7 +33,7 @@ services:
       context: ./client
       dockerfile: Dockerfile.dev
     ports:
-      - ${BIOENERGY_ORG_CLIENT_LOCAL_PORT}:3000
+      - ${BIOENERGY_ORG_CLIENT_LOCAL_PORT}:${BIOENERGY_ORG_CLIENT_LOCAL_PORT}
     environment:
       - BIOENERGY_ORG_CLIENT_LOCAL_PORT
     develop:

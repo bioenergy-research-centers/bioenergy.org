@@ -28,3 +28,23 @@ jobs:
 
             - name: Run ESLint
               run: npx eslint .
+
+    api-tests:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: api
+
+        steps:
+            - uses: actions/checkout@v3.0.2
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v2
+              with:
+                node-version: 22
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Run API tests with coverage
+              run: npx vitest run --coverage

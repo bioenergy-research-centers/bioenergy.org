@@ -70,6 +70,59 @@ The following command will run a postgres container with the password `mysecretp
   - You can run `docker-compose down` to stop the application and destroy the containers and volumes.
   - Running `docker-compose up --build` will rebuild the containers and restart the application.
 
+### Testing
+
+API tests use [Vitest](https://vitest.dev/) and [Supertest](https://github.com/ladislav-zezula/supertest). Tests run inside the api container and do not require a database connection.
+
+```bash
+# Run all tests
+docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run
+
+# Run a single test file
+docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run tests/services/githubService.test.js
+
+# Watch mode (re-runs on file changes)
+docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest
+```
+
+Some `stderr` output (e.g. "Error during search", "Turnstile error") is expected — these are `console.error` calls from the application code exercised by error-path tests.
+
+Tests are organized under `api/tests/` mirroring the source structure:
+
+```text
+api/tests/
+├── helpers/          # Shared test utilities (Express app factory)
+├── models/           # Dataset model tests
+├── routes/           # Route integration tests (dataset, message, schema)
+├── services/         # Service unit tests (github, ICE, strategy manager)
+├── utils/            # Utility unit tests (categories, markdown, turnstile)
+└── setup.js          # Test environment variables
+```
+
+#### Writing tests
+
+- All tests are CommonJS (matching the API codebase).
+- Vitest globals (`describe`, `it`, `expect`, `vi`, `beforeEach`) are available without imports.
+- `vi.mock()` does not reliably intercept CJS `require()` calls. To mock a dependency, mutate the shared module object instead:
+  ```js
+  const myService = require("../../app/services/myService");
+  myService.someMethod = vi.fn();
+  ```
+
+  This works because `require()` returns the same cached object to all consumers. For this reason, source modules should avoid destructuring at import time (use `mod.fn()` instead of `const { fn } = require(mod)`).
+- Route tests use Supertest with a lightweight Express app from `tests/helpers/createApp.js` (no Sequelize sync or Swagger setup).
+- Database calls are mocked by mutating `db.datasets.scope` and `db.sequelize.query` on the shared `require("../models")` object.
+
+#### Coverage
+
+Run tests with a coverage report:
+
+```bash
+docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run --coverage
+```
+
+Coverage is enforced at 80% for statements, branches, functions, and lines (configured in `api/vitest.config.js`). The CI workflow runs coverage on every pull request and will fail if thresholds are not met.
+
 ### Import BRC Data Feeds
 
 - run `docker compose run api node scripts/import_datafeeds.js` from the root folder of the project.
