@@ -44,6 +44,95 @@
  *                 $ref: '#/components/schemas/Dataset'
  *      500:
  *        description: Some server error
+ * /api/datasets/lookup/{uid}:
+ *   get:
+ *     summary: Lookup related datasets using a source dataset uid
+ *     tags: [Datasets]
+ *     parameters:
+ *       - in: path
+ *         name: uid
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Dataset uid used to find related records by identifier and/or dataset URL
+ *         example: GLBRC_GSE218642
+ *     responses:
+ *       200:
+ *         description: Matching datasets and count
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 uid:
+ *                   type: string
+ *                   description: Source dataset uid used for the lookup
+ *                 identifier:
+ *                   type: string
+ *                   nullable: true
+ *                   description: Identifier extracted from the source dataset
+ *                 dataset_url:
+ *                   type: string
+ *                   nullable: true
+ *                   description: Dataset URL extracted from the source dataset
+ *                 count:
+ *                   type: integer
+ *                   description: Number of matching datasets
+ *                 datasets:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       uid:
+ *                         type: string
+ *                       brc:
+ *                         type: string
+ *                         nullable: true
+ *                       identifier:
+ *                         type: string
+ *                         nullable: true
+ *                       dataset_url:
+ *                         type: string
+ *                         nullable: true
+ *                       is_source:
+ *                          type: boolean
+ *                          description: Indicates whether this record is the source dataset used for the lookup
+ *               example:
+ *                 uid: GLBRC_GSE218642
+ *                 identifier: GSE218642
+ *                 dataset_url: null
+ *                 count: 2
+ *                 datasets:
+ *                   - uid: CABBI_GSE218642
+ *                     brc: CABBI
+ *                     identifier: GSE218642
+ *                     dataset_url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE218642
+ *                   - uid: GLBRC_GSE218642
+ *                     brc: GLBRC
+ *                     identifier: GSE218642
+ *                     dataset_url: null
+ *       400:
+ *         description: Dataset uid is missing or the source dataset has neither identifier nor dataset URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Dataset not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *               example:
+ *                 message: Dataset not found.
+ *       500:
+ *         description: Some server error
  * /api/datasets/{id}:
  *  get:
  *    summary: Get the dataset by id
@@ -62,7 +151,7 @@
  *          application/json:
  *            schema:
  *              $ref: '#/components/schemas/Dataset'
-* /api/datasets/metrics:
+ * /api/datasets/metrics:
  *  get:
  *    summary: Get dataset metrics
  *    responses:
@@ -97,6 +186,9 @@ router.get("/", datasets.findAll);
 
 // Retrieve aggregated metrics on Dataasets
 router.get("/metrics", datasets.getMetrics);
+
+// Lookup datasets by uid using the source dataset's identifier and/or dataset_url
+router.get("/lookup/:uid", datasets.lookupByUid);
 
 // POST /api/datasets -> search
 router.post("/", search);
