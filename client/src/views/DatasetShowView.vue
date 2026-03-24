@@ -59,7 +59,7 @@ watchEffect( async () => {
 <template>
   <HeaderView />
   <div class="container">
-    <div v-if="dataset && !loading">
+    <div v-if="dataset && !datasetLoading">
       <div class="card mt-4">
         <div class="card-body">
           <div v-if="relatedDatasets.length > 0" class="mb-3 small">
