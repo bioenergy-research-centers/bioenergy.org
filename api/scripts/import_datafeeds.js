@@ -31,10 +31,6 @@ async function processDatafeeds() {
   const feed_summary = {};
   const invalid_feeds = {};
 
-  // Track dataset identifiers and URLs seen during this import run (across all feeds)
-  const processedIdentifiers = new Set();
-  const processedUrls = new Set();
-
   // query each URL expecting well-formed JSON matching the project schema structure
   for (const datafeed of datasources.urls) {
     // Initialize summary counts
@@ -42,6 +38,10 @@ async function processDatafeeds() {
     // Initialize invalid record tracking
     const invalid_records = [];
     const duplicate_records = [];
+
+    // Track dataset identifiers and URLs seen within current feed only.
+    const processedIdentifiers = new Set();
+    const processedUrls = new Set();
 
     if (datafeed.url === null) {
       console.error(datafeed.name + " [" + datafeed.url + "]: DATA FEED REJECTED (reason: missing URL)");
@@ -148,7 +148,10 @@ async function processDatafeeds() {
 
       if (duplicate) {
         datafeed_counts.duplicate += 1;
-        duplicate_records.push([dataset.identifier+" ("+(dataset_index+1)+")", JSON.stringify("identifier: " + dataset.identifier + ", dataset_url:" + dataset.dataset_url)]);
+        duplicate_records.push([
+          dataset.identifier + " (" + (dataset_index + 1) + ")",
+          "identifier: " + dataset.identifier + ", dataset_url: " + dataset.dataset_url
+        ]);
         continue; // skip adding the record
       }
 
