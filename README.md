@@ -151,6 +151,17 @@ docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest ru
 
 Coverage is enforced at 80% for statements, branches, functions, and lines (configured in `api/vitest.config.js` and `client/vitest.config.js`). The CI workflow runs coverage on every pull request and will fail if thresholds are not met.
 
+#### Troubleshooting: stale Docker images
+
+If you see errors like `npx: not found` or unexpected behavior when running tests, you may have a stale Docker image cached from a previous build. This can happen when switching between dev and production Dockerfiles, since Docker Compose reuses an existing image if the tag already matches.
+
+To fix this, remove the old image and rebuild:
+
+```bash
+docker image rm bioenergyorg-client   # or bioenergyorg-api
+docker compose -f docker-compose.dev.yml build --no-cache client
+```
+
 ### Import BRC Data Feeds
 
 - run `docker compose run api node scripts/import_datafeeds.js` from the root folder of the project.

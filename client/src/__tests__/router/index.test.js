@@ -28,7 +28,7 @@ describe('router', () => {
   it('maps /datasets/:id to datasetShow with props', () => {
     const show = routes.find((r) => r.name === 'datasetShow');
     expect(show.path).toBe('/datasets/:id');
-    expect(show.props[0]?.default).not.toBeUndefined;
+    expect(show.props.default).toBe(true);
   });
 
   it('lazy loads contact route', () => {
