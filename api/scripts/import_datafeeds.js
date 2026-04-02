@@ -125,7 +125,7 @@ async function processDatafeeds() {
       var duplicate = false;
 
       // check for duplicate dataset identifiers
-      if (dataset.identifier !== null) {
+      if (dataset.identifier && dataset.identifier !== null) {
         const dedupeIdKey = (dataset.identifier).toString().trim().toLowerCase();
         if (processedIdentifiers.has(dedupeIdKey)) {
           console.warn("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " DUPLICATE - identifier: " + dataset.identifier);
