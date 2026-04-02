@@ -15,6 +15,10 @@ class DatasetDataService {
     return http.get(`/datasets/${encodeURIComponent(id)}`);
   }
 
+  lookup(uid) {
+    return http.get(`/datasets/lookup/${encodeURIComponent(uid)}`);
+  }
+
   runAdvancedSearch(filter, sequence) {
     const payload = { query: filter, sequence: sequence };
     return http.post('/datasets/', payload);
