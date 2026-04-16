@@ -1,0 +1,15 @@
+{
+  "name": "bioenergy-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "axios": "^1.8.0",
+    "express": "^4.21.0",
+    "zod": "^3.25.0"
+  }
+}
