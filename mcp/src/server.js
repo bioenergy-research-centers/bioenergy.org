@@ -137,6 +137,11 @@ app.post("/mcp", async (req, res) => {
   await transport.handleRequest(req, res, req.body);
 });
 
+// Explicitly reject GET (SSE probe) with 405 instead of 404
+app.get("/mcp", (req, res) => {
+  res.status(405).send("Method Not Allowed");
+});
+
 app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
