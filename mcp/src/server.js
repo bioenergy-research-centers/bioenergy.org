@@ -12,7 +12,6 @@ if (!API_BASE_URL) {
   throw new Error("API_BASE_URL is required");
 }
 
-// Shared HTTP client is fine because it is stateless
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
@@ -38,26 +37,42 @@ function formatError(prefix, err) {
 }
 
 function createServer() {
-  const server = new McpServer({
-    name: "bioenergy-datasets",
-    version: "0.1.0"
-  });
+  const server = new McpServer(
+    {
+      name: "bioenergy-datasets",
+      version: "0.1.0"
+    },
+    {
+      instructions:
+        "Use list_datasets to browse datasets when no search term is provided. " +
+        "Use search_datasets for free-text lookup by keyword. " +
+        "Use get_dataset only when you already know the dataset UID. " +
+        "Page numbers are 1-based. Rows controls page size."
+    }
+  );
 
   server.tool(
     "get_dataset",
+    "Fetch a single dataset by its exact dataset UID. Use this only when you already know the UID.",
     {
-      uid: z.string().describe("Dataset UID")
+      uid: z
+        .string()
+        .min(1)
+        .describe("Exact dataset UID, for example a known dataset identifier from a previous result.")
     },
     async ({ uid }) => {
       try {
         const response = await api.get(`/api/datasets/${encodeURIComponent(uid)}`);
+        const data = response.data;
+
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(response.data, null, 2)
+              text: JSON.stringify(data, null, 2)
             }
-          ]
+          ],
+          structuredContent: data
         };
       } catch (err) {
         return formatError(`Error fetching dataset ${uid}`, err);
@@ -67,23 +82,37 @@ function createServer() {
 
   server.tool(
     "list_datasets",
+    "List datasets without a search query. Use this to browse the catalog page by page.",
     {
-      page: z.number().int().min(1).default(1).describe("Page number"),
-      rows: z.number().int().min(1).max(100).default(50).describe("Rows per page")
+      page: z
+        .number()
+        .int()
+        .min(1)
+        .default(1)
+        .describe("1-based page number. Use page 1 for the first page."),
+      rows: z
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .default(50)
+        .describe("Number of datasets to return per page, between 1 and 100.")
     },
     async ({ page, rows }) => {
       try {
         const response = await api.get("/api/datasets", {
           params: { page, rows }
         });
+        const data = response.data;
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(response.data, null, 2)
+              text: JSON.stringify(data, null, 2)
             }
-          ]
+          ],
+          structuredContent: data
         };
       } catch (err) {
         return formatError("Error listing datasets", err);
@@ -93,24 +122,41 @@ function createServer() {
 
   server.tool(
     "search_datasets",
+    "Search datasets by free-text keyword. Use this when the user provides a topic, term, or phrase such as 'protein' or 'switchgrass'.",
     {
-      q: z.string().min(1).describe("Free-text search query"),
-      page: z.number().int().min(1).default(1).describe("Page number"),
-      rows: z.number().int().min(1).max(100).default(50).describe("Rows per page")
+      q: z
+        .string()
+        .min(1)
+        .describe("Free-text search query. Example values: 'protein', 'biomass', 'switchgrass'."),
+      page: z
+        .number()
+        .int()
+        .min(1)
+        .default(1)
+        .describe("1-based page number for paginated search results."),
+      rows: z
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .default(50)
+        .describe("Number of search results to return per page, between 1 and 100.")
     },
     async ({ q, page, rows }) => {
       try {
         const response = await api.get("/api/datasets", {
           params: { q, page, rows }
         });
+        const data = response.data;
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(response.data, null, 2)
+              text: JSON.stringify(data, null, 2)
             }
-          ]
+          ],
+          structuredContent: data
         };
       } catch (err) {
         return formatError("Error searching datasets", err);
@@ -170,7 +216,6 @@ app.post("/mcp", async (req, res) => {
   }
 });
 
-// Explicitly reject GET (legacy SSE probe) with 405
 app.get("/mcp", (req, res) => {
   res.status(405).send("Method Not Allowed");
 });
