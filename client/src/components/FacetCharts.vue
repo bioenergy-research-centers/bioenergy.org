@@ -7,13 +7,17 @@ const props = defineProps({
   facets: {
     type: Object,
     required: true
+  },
+  defaultChartType: {
+    type: String,
+    default: 'resources'
   }
 });
 
 const emit = defineEmits(['legendClick', 'barClick', 'onClick']);
 
 const chartContainer = ref(null);
-const activeTab = ref('resources');
+const activeTab = ref(props.defaultChartType);
 
 const tabs = [
   { key: 'resources', label: 'Repositories' },
@@ -22,6 +26,16 @@ const tabs = [
   { key: 'topics', label: 'Topics' },
   { key: 'year', label: 'Publication Year' }
 ];
+
+watch(
+  () => props.defaultChartType,
+  (newChartType) => {
+    if (newChartType && newChartType !== activeTab.value) {
+      activeTab.value = newChartType;
+    }
+  },
+  { immediate: true }
+);
 
 watch(() => props.facets, () => {
   drawChart();
