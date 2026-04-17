@@ -7,19 +7,32 @@
     return props.creators.filter(item => item.primaryContact === true);
   });
   const contactTooltip = (creator) => {
-    return `Corresponding Contact: ${creator.email || 'email not provided'}`
-  }
+    return `Corresponding Contact: ${creator.email || 'No e-mail address provided.'}`
+  };
 </script>
 
 <template>
   <div>
     <template v-for="(creator, index) in creators">
       <div class="d-inline-flex align-items-baseline me-2">
+
         <span class="me-1">{{ creator.name }}</span>
-        <span v-if="creator.primaryContact===true" class="me-1">
-          <i class="bi bi-envelope text-muted affiliation-icon" :title="contactTooltip(creator)"></i>
+
+        <!-- Always show for primary contact -->
+        <span v-if="creator.primaryContact === true" class="me-1">
+          <i
+            class="bi bi-envelope text-muted affiliation-icon"
+            :title="contactTooltip(creator)"
+          ></i>
         </span>
-        <i class="bi bi-info-circle text-muted affiliation-icon" :title="creator.affiliation"></i>
+
+        <!-- Only show if affiliation exists -->
+        <i
+          v-if="creator.affiliation && creator.affiliation.trim() !== ''"
+          class="bi bi-info-circle text-muted affiliation-icon"
+          :title="creator.affiliation"
+        ></i>
+
         <span v-if="index !== creators.length - 1" class="">; </span>
       </div>
       
