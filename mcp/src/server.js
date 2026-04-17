@@ -12,132 +12,165 @@ if (!API_BASE_URL) {
   throw new Error("API_BASE_URL is required");
 }
 
+// Shared HTTP client is fine because it is stateless
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
   headers: API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {}
 });
 
-const mcpServer = new McpServer({
-  name: "bioenergy-datasets",
-  version: "0.1.0"
-});
+function formatError(prefix, err) {
+  const message =
+    err?.response?.data?.message ||
+    err?.response?.data?.error ||
+    err?.message ||
+    "Unknown error";
 
-mcpServer.tool(
-  "get_dataset",
-  {
-    uid: z.string().describe("Dataset UID")
-  },
-  async ({ uid }) => {
-    try {
-      const response = await api.get(`/api/datasets/${encodeURIComponent(uid)}`);
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(response.data, null, 2)
-          }
-        ]
-      };
-    } catch (err) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error fetching dataset ${uid}: ${err.message}`
-          }
-        ],
-        isError: true
-      };
+  return {
+    content: [
+      {
+        type: "text",
+        text: `${prefix}: ${message}`
+      }
+    ],
+    isError: true
+  };
+}
+
+function createServer() {
+  const server = new McpServer({
+    name: "bioenergy-datasets",
+    version: "0.1.0"
+  });
+
+  server.tool(
+    "get_dataset",
+    {
+      uid: z.string().describe("Dataset UID")
+    },
+    async ({ uid }) => {
+      try {
+        const response = await api.get(`/api/datasets/${encodeURIComponent(uid)}`);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(response.data, null, 2)
+            }
+          ]
+        };
+      } catch (err) {
+        return formatError(`Error fetching dataset ${uid}`, err);
+      }
     }
-  }
-);
+  );
 
-mcpServer.tool(
-  "list_datasets",
-  {
-    limit: z.number().int().min(1).max(100).default(25),
-    offset: z.number().int().min(0).default(0)
-  },
-  async ({ limit, offset }) => {
-    try {
-      const response = await api.get("/api/datasets", {
-        params: { limit, offset }
-      });
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(response.data, null, 2)
-          }
-        ]
-      };
-    } catch (err) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error listing datasets: ${err.message}`
-          }
-        ],
-        isError: true
-      };
+  server.tool(
+    "list_datasets",
+    {
+      page: z.number().int().min(1).default(1).describe("Page number"),
+      rows: z.number().int().min(1).max(100).default(50).describe("Rows per page")
+    },
+    async ({ page, rows }) => {
+      try {
+        const response = await api.get("/api/datasets", {
+          params: { page, rows }
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(response.data, null, 2)
+            }
+          ]
+        };
+      } catch (err) {
+        return formatError("Error listing datasets", err);
+      }
     }
-  }
-);
+  );
 
-mcpServer.tool(
-  "search_datasets",
-  {
-    q: z.string().min(1).describe("Free-text search query"),
-    page: z.number().int().min(1).default(1).describe("Page number"),
-    rows: z.number().int().min(1).max(100).default(50).describe("Rows per page")
-  },
-  async ({ q, page, rows }) => {
-    try {
-      const response = await api.get("/api/datasets", {
-        params: { q, page, rows }
-      });
+  server.tool(
+    "search_datasets",
+    {
+      q: z.string().min(1).describe("Free-text search query"),
+      page: z.number().int().min(1).default(1).describe("Page number"),
+      rows: z.number().int().min(1).max(100).default(50).describe("Rows per page")
+    },
+    async ({ q, page, rows }) => {
+      try {
+        const response = await api.get("/api/datasets", {
+          params: { q, page, rows }
+        });
 
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(response.data, null, 2)
-          }
-        ]
-      };
-    } catch (err) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error searching datasets: ${err.message}`
-          }
-        ],
-        isError: true
-      };
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(response.data, null, 2)
+            }
+          ]
+        };
+      } catch (err) {
+        return formatError("Error searching datasets", err);
+      }
     }
-  }
-);
+  );
+
+  return server;
+}
 
 const app = express();
 app.use(express.json());
 
 app.post("/mcp", async (req, res) => {
+  const server = createServer();
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined
   });
 
+  let cleanedUp = false;
+
+  const cleanup = async () => {
+    if (cleanedUp) return;
+    cleanedUp = true;
+
+    try {
+      await transport.close();
+    } catch {}
+
+    try {
+      await server.close();
+    } catch {}
+  };
+
   res.on("close", () => {
-    transport.close();
+    void cleanup();
   });
 
-  await mcpServer.connect(transport);
-  await transport.handleRequest(req, res, req.body);
+  try {
+    await server.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+  } catch (err) {
+    console.error("MCP request failed:", err);
+
+    if (!res.headersSent) {
+      res.status(500).json({
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: "Internal server error"
+        },
+        id: req.body?.id ?? null
+      });
+    }
+  } finally {
+    void cleanup();
+  }
 });
 
-// Explicitly reject GET (SSE probe) with 405 instead of 404
+// Explicitly reject GET (legacy SSE probe) with 405
 app.get("/mcp", (req, res) => {
   res.status(405).send("Method Not Allowed");
 });
