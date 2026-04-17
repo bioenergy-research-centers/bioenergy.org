@@ -41,8 +41,8 @@ services:
     env_file:
       - .env
     environment:
-      PORT: 8081
-      API_BASE_URL: http://api:8080
+      PORT: ${BIOENERGY_ORG_MCP_LOCAL_PORT}
+      API_BASE_URL: ${BIOENERGY_ORG_MCP_API_BASE_URL}
       API_TOKEN: ${BIOENERGY_ORG_MCP_API_TOKEN}
     ports:
       - ${BIOENERGY_ORG_MCP_LOCAL_PORT}:8081
