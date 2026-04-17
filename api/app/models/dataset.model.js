@@ -18,7 +18,7 @@ module.exports = (sequelize, Sequelize) => {
   Dataset.init(
     {
       uid: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false,
         primaryKey: true
       },
