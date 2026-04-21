@@ -55,7 +55,10 @@ a {
 .bg-brc-light-blue {
   background-color: #C5DBE8;
 }
-
+/* offset for sticky header */
+.scroll-offset {
+  scroll-margin-top: 10em;
+}
 .doe-logo {
   width: 260px;
 }

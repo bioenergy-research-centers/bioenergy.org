@@ -13,67 +13,69 @@ import doeLogo from "@/assets/doe-logo.png"
 
 <template>
   <HeaderView />
-  <div class="container">
-    <div class="row">
-      <div class="col-12">
-         <h2 class="page-heading">What is Bioenergy.org</h2>
-      </div>
-      <div class="col-md-12 col-lg-8">
-        <p class="lead">
-          The InterBRC Data Products Portal is a collaborative information platform brought to you by the four US Department of Energy funded <a href="https://www.genomicscience.energy.gov/bioenergy-research-centers/" class="" target="_blank" rel="noopener noreferrer">Bioenergy Research Centers</a>
-        </p>
-
-        <p class="lead">
-          The Bioenergy Research Centers (BRCs) are driving major 
-          advancements in biotechnology underpinning the production of fuels and chemicals from
-          dedicated bioenergy crops such as switchgrass, poplar, and energy sorghum. This research
-          can enhance energy security; create domestic supply chains for a range of fuels,
-          chemicals, and materials; generate jobs in rural areas, and ensure U.S. leadership in 
-          a globally competitive bioeconomy.
-        </p>
-        
-        <p class="lead">
-          <a href="https://cabbi.bio/wp-content/uploads/2026/03/BRC-Overview_20260127.pdf" target="_blank" rel="noopener noreferrer">Download our brochure</a> to learn more about the BRCs. Or visit us individually: 
-        </p>
-
-        <img :src="mapImage" alt="" width=100% class="mb-3">
-      </div>
-      <div class="col-md-12 col-lg-4">
-        <div class="text-center">
-          <a href="https://cabbi.bio/" target="_blank" rel="noopener noreferrer">
-            <img :src="cabbiLogo" width=65% alt="Visit CABBI Center for Advanced Bioenergy and Bioproducts Innovation homepage">
-          </a>
+  <main id="main-content" class="scroll-offset">
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h2 class="page-heading">What is Bioenergy.org</h2>
         </div>
-        <hr/>
+        <div class="col-md-12 col-lg-8">
+          <p class="lead">
+            The InterBRC Data Products Portal is a collaborative information platform brought to you by the four US Department of Energy funded <a href="https://www.genomicscience.energy.gov/bioenergy-research-centers/" class="" target="_blank" rel="noopener noreferrer">Bioenergy Research Centers</a>
+          </p>
 
-        <div class="text-center">
-          <a href="https://cbi.ornl.gov/" target="_blank" rel="noopener noreferrer">
-            <img :src="cbiLogo" width=80% alt="Visit CBI Center for Bioenergy Innovation homepage">
-          </a>
+          <p class="lead">
+            The Bioenergy Research Centers (BRCs) are driving major 
+            advancements in biotechnology underpinning the production of fuels and chemicals from
+            dedicated bioenergy crops such as switchgrass, poplar, and energy sorghum. This research
+            can enhance energy security; create domestic supply chains for a range of fuels,
+            chemicals, and materials; generate jobs in rural areas, and ensure U.S. leadership in 
+            a globally competitive bioeconomy.
+          </p>
+          
+          <p class="lead">
+            <a href="https://cabbi.bio/wp-content/uploads/2026/03/BRC-Overview_20260127.pdf" target="_blank" rel="noopener noreferrer">Download our brochure</a> to learn more about the BRCs. Or visit us individually: 
+          </p>
+
+          <img :src="mapImage" alt="" width=100% class="mb-3">
         </div>
-        <hr/>
+        <div class="col-md-12 col-lg-4">
+          <div class="text-center">
+            <a href="https://cabbi.bio/" target="_blank" rel="noopener noreferrer">
+              <img :src="cabbiLogo" width=65% alt="Visit CABBI Center for Advanced Bioenergy and Bioproducts Innovation homepage">
+            </a>
+          </div>
+          <hr/>
 
-        <div class="text-center">
-          <a href="https://www.glbrc.org/" target="_blank" rel="noopener noreferrer">
-            <img :src="glbrcLogo" width=80%% alt="Visit GLBRC Great Lakes Bioenergy Research Center homepage">
-          </a>
+          <div class="text-center">
+            <a href="https://cbi.ornl.gov/" target="_blank" rel="noopener noreferrer">
+              <img :src="cbiLogo" width=80% alt="Visit CBI Center for Bioenergy Innovation homepage">
+            </a>
+          </div>
+          <hr/>
+
+          <div class="text-center">
+            <a href="https://www.glbrc.org/" target="_blank" rel="noopener noreferrer">
+              <img :src="glbrcLogo" width=80%% alt="Visit GLBRC Great Lakes Bioenergy Research Center homepage">
+            </a>
+          </div>
+          <hr/>
+
+          <div class="text-center">
+            <a href="https://www.jbei.org/" target="_blank" rel="noopener noreferrer">
+              <img :src="jbeiLogo" width=70% alt="Visit JBEI Joint BioEnergy Institute homepage">
+            </a>
+          </div>
+          <hr/>
+
+          <div class="text-center mt-5">
+            <p><!-- placeholder if descriptive text is needed. --></p>
+          </div>
+
         </div>
-        <hr/>
-
-        <div class="text-center">
-          <a href="https://www.jbei.org/" target="_blank" rel="noopener noreferrer">
-            <img :src="jbeiLogo" width=70% alt="Visit JBEI Joint BioEnergy Institute homepage">
-          </a>
-        </div>
-        <hr/>
-
-        <div class="text-center mt-5">
-          <p><!-- placeholder if descriptive text is needed. --></p>
-        </div>
-
       </div>
     </div>
-  </div>
+  </main>
 
 
 </template>

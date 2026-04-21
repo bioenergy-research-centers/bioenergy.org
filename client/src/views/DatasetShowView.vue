@@ -58,31 +58,33 @@ watchEffect( async () => {
 
 <template>
   <HeaderView />
-  <div class="container">
-    <div v-if="dataset && !datasetLoading">
-      <div class="card mt-4">
-        <div class="card-body">
-          <div v-if="relatedDatasets.length > 0" class="mb-3 small">
-            <span class="text-muted">This dataset is also catalogued as:</span>
-            <span v-for="(item, index) in relatedDatasets" :key="item.uid">
-              <span v-if="index > 0">, </span>
-              <router-link :to="`/datasets/${item.uid}`">
-                {{ item.uid }}
-              </router-link>
-            </span>
-          </div>
+  <main id="main-content" class="scroll-offset">
+    <div class="container">
+      <div v-if="dataset && !datasetLoading">
+        <div class="card mt-4">
+          <div class="card-body">
+            <div v-if="relatedDatasets.length > 0" class="mb-3 small">
+              <span class="text-muted">This dataset is also catalogued as:</span>
+              <span v-for="(item, index) in relatedDatasets" :key="item.uid">
+                <span v-if="index > 0">, </span>
+                <router-link :to="`/datasets/${item.uid}`">
+                  {{ item.uid }}
+                </router-link>
+              </span>
+            </div>
 
-          <component :is="resolveComponentVersion(dataset)"  :selectedResult="dataset"></component>
-          <router-link
-            :to="{ name: 'datasetSearch', query: searchStore.lastSearchQuery }"
-            class="card-link btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5 mt-2"
-          >
-            <i class="bi bi-arrow-left pe-3" aria-hidden="true"></i> Return
-          </router-link>
+            <component :is="resolveComponentVersion(dataset)"  :selectedResult="dataset"></component>
+            <router-link
+              :to="{ name: 'datasetSearch', query: searchStore.lastSearchQuery }"
+              class="card-link btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5 mt-2"
+            >
+              <i class="bi bi-arrow-left pe-3" aria-hidden="true"></i> Return
+            </router-link>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>

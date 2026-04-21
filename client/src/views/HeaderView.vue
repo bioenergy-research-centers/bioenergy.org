@@ -10,6 +10,10 @@ const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
 
 <template>
   <header class="sticky-sm-top p-3 shadow-sm bg-white">
+    <a href="#main-content"
+      class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-white text-dark z-3">
+      Skip to main content
+    </a>
     <div class="container">
       <div class="row align-items-center">
         <div class="col-md-12 col-lg-6">

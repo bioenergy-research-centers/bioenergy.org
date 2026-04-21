@@ -46,75 +46,77 @@
 
 <template>
   <HeaderView />
-  <div class="container">
+  <main id="main-content" class="scroll-offset">
+    <div class="container">
 
-    <div class="row">
-      <h2 class="page-heading">Contact Us</h2>
-      <hr/>
-      <p class="lead">
-        This site is dedicated to creating FAIR datasets to share across Bioenergy Research Centers (BRCs) and to the global research community.
-      </p>
-      <p class="lead">
-        Please contact us with any questions or suggestions for additional data using the form below.
-      </p>
-    </div>
-    
-    <div v-if="message" :class="messageClass">
-      {{ message }}
-    </div>
-
-    <form ref="form" @submit.prevent="handleSubmit" class="col-md-8 mt-3" action="/contact" method="POST">
+      <div class="row">
+        <h2 class="page-heading">Contact Us</h2>
+        <hr/>
+        <p class="lead">
+          This site is dedicated to creating FAIR datasets to share across Bioenergy Research Centers (BRCs) and to the global research community.
+        </p>
+        <p class="lead">
+          Please contact us with any questions or suggestions for additional data using the form below.
+        </p>
+      </div>
       
-      <div class="mb-3">
-        <label for="contact_email" class="form-label">Email</label>
-        <input type="email" id="contact_email" class="form-control" placeholder="" name="contact_email" required/>
+      <div v-if="message" :class="messageClass">
+        {{ message }}
       </div>
 
-      <div class="mb-3">
-        <label for="contact_name" class="form-label">Name</label>
-        <input type="text" id="contact_name" class="form-control" placeholder="" name="contact_name" required/>
-      </div>
+      <form ref="form" @submit.prevent="handleSubmit" class="col-md-8 mt-3" action="/contact" method="POST">
+        
+        <div class="mb-3">
+          <label for="contact_email" class="form-label">Email</label>
+          <input type="email" id="contact_email" class="form-control" placeholder="" name="contact_email" required/>
+        </div>
 
-      <div class="mb-3">
-        <label for="contact_affiliation" class="form-label">Company, Institution, or other Affiliation</label>
-        <input type="text" id="contact_affiliation" class="form-control" placeholder="" name="contact_affiliation"/>
-      </div>
+        <div class="mb-3">
+          <label for="contact_name" class="form-label">Name</label>
+          <input type="text" id="contact_name" class="form-control" placeholder="" name="contact_name" required/>
+        </div>
 
-      <div class="mb-3">
-        <label for="contact_reason" class="form-label">Why are you contacting us?</label>
-        <select id="contact_reason" class="form-select" name="contact_reason" required>
-            <option disabled selected defaultValue="" value=""> -- select an option --</option>
-            <option v-for="reason in contactReasons">
-              {{ reason }}
-            </option>
-        </select>
-      </div>
+        <div class="mb-3">
+          <label for="contact_affiliation" class="form-label">Company, Institution, or other Affiliation</label>
+          <input type="text" id="contact_affiliation" class="form-control" placeholder="" name="contact_affiliation"/>
+        </div>
 
-      <div class="mb-3">
-        <label for="contact_feedback" class="form-label">Description</label>
-        <textarea rows="5" cols="50" id="contact_feedback" class="form-control" placeholder="" name="contact_comment" maxlength="10000" required/>
-      </div>
+        <div class="mb-3">
+          <label for="contact_reason" class="form-label">Why are you contacting us?</label>
+          <select id="contact_reason" class="form-select" name="contact_reason" required>
+              <option disabled selected defaultValue="" value=""> -- select an option --</option>
+              <option v-for="reason in contactReasons">
+                {{ reason }}
+              </option>
+          </select>
+        </div>
 
-      <br/>
-      <div class="cf-turnstile" id='cf-turnstile-container'></div>
-      <br/>
+        <div class="mb-3">
+          <label for="contact_feedback" class="form-label">Description</label>
+          <textarea rows="5" cols="50" id="contact_feedback" class="form-control" placeholder="" name="contact_comment" maxlength="10000" required/>
+        </div>
 
-      <div id="userSubmitAcknowledgementHelpBlock" class="form-text">
-        <b>By submitting this form, you agree to share your information with all bioenergy.org project members and permit bioenergy.org to communicate with you.</b>
-      </div>
-      <br/>
-      <div class="form-check">
-        <input class="form-check-input" type="checkbox" value="" v-model="contactAgree" id="contactAgreeCheck">
-        <label class="form-check-label" for="contactAgreeCheck">
-          <b>I Agree</b>
-        </label>
-      </div>
-      <br/>
-      <button type="submit" class="btn btn-primary btn-sm" :disabled="!contactAgree">Send Feedback</button>
-      <br/>
-      <br/>
-    </form>
+        <br/>
+        <div class="cf-turnstile" id='cf-turnstile-container'></div>
+        <br/>
 
-  </div>
+        <div id="userSubmitAcknowledgementHelpBlock" class="form-text">
+          <b>By submitting this form, you agree to share your information with all bioenergy.org project members and permit bioenergy.org to communicate with you.</b>
+        </div>
+        <br/>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="" v-model="contactAgree" id="contactAgreeCheck">
+          <label class="form-check-label" for="contactAgreeCheck">
+            <b>I Agree</b>
+          </label>
+        </div>
+        <br/>
+        <button type="submit" class="btn btn-primary btn-sm" :disabled="!contactAgree">Send Feedback</button>
+        <br/>
+        <br/>
+      </form>
+
+    </div>
+  </main>
 
 </template>
