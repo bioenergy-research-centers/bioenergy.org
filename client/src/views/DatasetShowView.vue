@@ -54,6 +54,16 @@ watchEffect( async () => {
   }
 });
 
+// Dynamically update document.title when dataset loads
+watch(dataset, (newDataset) => {
+  if (newDataset && newDataset.title) {
+    document.title = `${newDataset.title} - Bioenergy.org`
+  } else {
+    document.title = 'Bioenergy.org'
+  }
+})
+
+
 </script>
 
 <template>

@@ -13,29 +13,34 @@ const router = createRouter({
         {
             path: '/',
             name: 'home',
-            component: DataHomeView
+            component: DataHomeView, 
+            meta: { title: 'Home - Bioenergy.org' }
         },
         {
             path: '/search',
             name: 'datasetSearch',
-            component: DatasetView
+            component: DatasetView,
+            meta: { title: 'Search Datasets - Bioenergy.org' }
         },
         {
             path: '/datasets/:id',
             name: 'datasetShow',
             props: true,
-            component: DatasetShowView
+            component: DatasetShowView,
+            meta: { title: 'Dataset Details - Bioenergy.org' }
         },
         {
             path: "/schema",
             name: "schema-index",
-            component: SchemaIndexView
+            component: SchemaIndexView,
+            meta: { title: 'Schema - Bioenergy.org' }
         },
         {
             path: '/schema/:version',
             name: 'schemaShow',
             props: true,
-            component: SchemaShowView
+            component: SchemaShowView,
+            meta: { title: 'Schema - Bioenergy.org' }
         },
         {
             path: '/contact',
@@ -43,14 +48,22 @@ const router = createRouter({
             // route level code-splitting
             // this generates a separate chunk (Contact.[hash].js) for this route
             // which is lazy-loaded when the route is visited.
-            component: () => import('../views/ContactView.vue')
+            component: () => import('../views/ContactView.vue'),
+            meta: { title: 'Contact - Bioenergy.org' }            
         },
         {
             path: '/about',
             name: 'about',
-            component: AboutView
+            component: AboutView,
+            meta: { title: 'About Us - Bioenergy.org' }
         },
     ]
 });
+
+// Update page title on route change
+router.afterEach((to) => {
+  document.title = to.meta.title || 'Bioenergy.org';
+});
+
 
 export default router;
