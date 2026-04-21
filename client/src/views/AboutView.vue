@@ -41,28 +41,28 @@ import doeLogo from "@/assets/doe-logo.png"
       <div class="col-md-12 col-lg-4">
         <div class="text-center">
           <a href="https://cabbi.bio/" target="_blank" rel="noopener noreferrer">
-            <img :src="cabbiLogo" width=65%>
+            <img :src="cabbiLogo" width=65% alt="Visit CABBI Center for Advanced Bioenergy and Bioproducts Innovation homepage">
           </a>
         </div>
         <hr/>
 
         <div class="text-center">
           <a href="https://cbi.ornl.gov/" target="_blank" rel="noopener noreferrer">
-            <img :src="cbiLogo" width=80%>
+            <img :src="cbiLogo" width=80% alt="Visit CBI Center for Bioenergy Innovation homepage">
           </a>
         </div>
         <hr/>
 
         <div class="text-center">
           <a href="https://www.glbrc.org/" target="_blank" rel="noopener noreferrer">
-            <img :src="glbrcLogo" width=80%%>
+            <img :src="glbrcLogo" width=80%% alt="Visit GLBRC Great Lakes Bioenergy Research Center homepage">
           </a>
         </div>
         <hr/>
 
         <div class="text-center">
           <a href="https://www.jbei.org/" target="_blank" rel="noopener noreferrer">
-            <img :src="jbeiLogo" width=70%>
+            <img :src="jbeiLogo" width=70% alt="Visit JBEI Joint BioEnergy Institute homepage">
           </a>
         </div>
         <hr/>

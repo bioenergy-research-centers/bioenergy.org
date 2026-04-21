@@ -14,7 +14,7 @@ const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
       <div class="row align-items-center">
         <div class="col-md-12 col-lg-6">
           <router-link to="/" class="navbar-brand">
-            <img :src="headerIcon" alt="" width="66" height="72" class="d-inline-block align-text-bottom">
+            <img :src="headerIcon" alt="Bioenergy.org logo" width="66" height="72" class="d-inline-block align-text-bottom">
             Bioenergy.org
           </router-link>
         </div>        
