@@ -363,6 +363,7 @@ const createPieChart = (chartKey, data, title, enableClickableLabels = true) => 
     
     // Add class for webkit styling
     legendDiv.classed('legend-scrollable', true);
+    legendDiv.attr('tabindex', '0');
   }
 
   // Create legend items
