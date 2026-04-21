@@ -67,22 +67,22 @@
       
       <div class="mb-3">
         <label for="contact_email" class="form-label">Email</label>
-        <input type="email" class="form-control" placeholder="" name="contact_email" required/>
+        <input type="email" id="contact_email" class="form-control" placeholder="" name="contact_email" required/>
       </div>
 
       <div class="mb-3">
         <label for="contact_name" class="form-label">Name</label>
-        <input type="text" class="form-control" placeholder="" name="contact_name" required/>
+        <input type="text" id="contact_name" class="form-control" placeholder="" name="contact_name" required/>
       </div>
 
       <div class="mb-3">
-        <label for="contact_email" class="form-label">Company, Institution, or other Affiliation</label>
-        <input type="text" class="form-control" placeholder="" name="contact_affiliation"/>
+        <label for="contact_affiliation" class="form-label">Company, Institution, or other Affiliation</label>
+        <input type="text" id="contact_affiliation" class="form-control" placeholder="" name="contact_affiliation"/>
       </div>
 
       <div class="mb-3">
         <label for="contact_reason" class="form-label">Why are you contacting us?</label>
-        <select class="form-select" name="contact_reason" required>
+        <select id="contact_reason" class="form-select" name="contact_reason" required>
             <option disabled selected defaultValue="" value=""> -- select an option --</option>
             <option v-for="reason in contactReasons">
               {{ reason }}
@@ -92,7 +92,7 @@
 
       <div class="mb-3">
         <label for="contact_feedback" class="form-label">Description</label>
-        <textarea rows="5" cols="50" class="form-control" placeholder="" name="contact_comment" maxlength="10000" required/>
+        <textarea rows="5" cols="50" id="contact_feedback" class="form-control" placeholder="" name="contact_comment" maxlength="10000" required/>
       </div>
 
       <br/>
