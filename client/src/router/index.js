@@ -62,7 +62,11 @@ const router = createRouter({
 
 // Update page title on route change
 router.afterEach((to) => {
-  document.title = to.meta.title || 'Bioenergy.org';
+    if (to.meta.title) {
+        document.title = to.meta.title;
+    } else {
+        document.title = 'Bioenergy.org';      
+    }
 });
 
 
