@@ -10,7 +10,8 @@ a:hover {
   color: #4C8D87;
 }
 a {
-  color: #0d6efd;
+  /* based off boostrap's primary blue */ 
+  color: #0558d0;
 }
 
 .form-control:focus {
@@ -54,7 +55,10 @@ a {
 .bg-brc-light-blue {
   background-color: #C5DBE8;
 }
-
+/* offset for sticky header */
+.scroll-offset {
+  scroll-margin-top: 10em;
+}
 .doe-logo {
   width: 260px;
 }

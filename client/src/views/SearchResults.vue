@@ -88,7 +88,7 @@ const onPageChange = (newPage) => {
         <div class="d-inline-block w-75 me-2">
           <Search />
         </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary p-2" @click="clearAll">
+        <button type="button" class="btn btn-sm btn-outline-secondary btn-clear text-dark p-2" @click="clearAll">
           Clear
         </button>
       </div>
@@ -277,6 +277,10 @@ const onPageChange = (newPage) => {
   display: flex;
   width: 100%;
   position: relative;
+}
+
+.btn-clear:hover {
+  color: #fff !important;
 }
 
 /* Chart-specific styles */
