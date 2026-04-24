@@ -184,44 +184,24 @@ docker compose -f docker-compose.dev.yml build --no-cache client
 - GLBRC: <https://fair-data.glbrc.org/glbrc.json>
 - JBEI: <https://bioenergy.org/JBEI/jbei.json>
 
-## Validating Data
+## Validating Data Feeds
 
-Validating data against the BRC schema can be done with the LinkML framework.
-- LinkML has a docker image available here: https://hub.docker.com/r/linkml/linkml
+A local data feed file can be validated against the schema currently supported by the API by posting the file to the validation endpoint (or `http://localhost:8080/api/validate` if testing against your dev environment). Alternatively, you can paste your data feed into the [Swagger API documentation](https://api.bioenergy.org/api-docs/#/Validation/post_api_validate), which will pretty-print the validation results.
 
-Note for Windows users: To run the validator script on Windows:
-- First install WSL: wsl --install
-- Then run the Ubuntu terminal: wsl -d Ubuntu
-- Then follow the Unix instructions below.
-- Note that WSL does not (by default) route traffic through VPNs. If you encounter connection timeouts when running this script under WSL,
-  either disconnect from your VPN or follow these instructions: https://learn.microsoft.com/en-us/windows/wsl/troubleshooting#wsl-has-no-network-connectivity-once-connected-to-a-vpn
+### Under Unix, macOS, Git Bash, or WSL (for Windows PowerShell use `curl.exe` instead of `curl`):
 
-This process, including installing LinkML, can be done with the validation script in this repo:
+`curl -X POST -H "Content-Type: application/json" --data-binary "@jbei.json" https://api.bioenergy.org/api/validate > validation-results.json` 
 
-```bash
-./validate.sh
-```
+The endpoint uses the schema version declared in the posted feed. A schema version can also be forced with the `schema_version` query parameter:
 
-Alternatively, the process may be done manually:
+`curl -X POST -H "Content-Type: application/json" --data-binary "@jbei.json" "https://api.bioenergy.org/api/validate?schema_version=0.1.13"`
 
-- Install the [LinkML Python package as detailed here](https://linkml.io/linkml/intro/install.html).
-- Retrieve a local copy of the data collection in JSON format. For example, run `wget https://bioenergy.org/JBEI/jbei.json`
-- Retrieve the most recent version of the schema in YAML format. The schema is here: <https://github.com/bioenergy-research-centers/brc-schema/blob/main/src/brc_schema/schema/brc_schema.yaml>
-- Run the following `linkml` command: `linkml validate --schema brc_schema.yaml -C Dataset <datafile>`, replacing `<datafile>` with the path to your data in JSON.
-  - For example, a fully valid `jbei.json` will yield the following result:
-    ```
-    $ linkml validate --schema brc_schema.yaml -C Dataset jbei.json
-    No issues found
-    ```
-  - Places where the data does not comply with the schema will be indicated like below:
-    ```
-    $ linkml validate --schema src/brc_schema/schema/brc_schema.yaml -C Dataset jbei-bad.json 
-    [ERROR] [jbei-bad.json/0] Additional properties are not allowed ('DATE' was unexpected) in /
-    [ERROR] [jbei-bad.json/0] 'date' is a required property in /
-    [ERROR] [jbei-bad.json/1] 'yes' is not of type 'boolean', 'null' in /creator/0/primaryContact
-    [ERROR] [jbei-bad.json/8] Additional properties are not allowed ('BRC' was unexpected) in /
-    [ERROR] [jbei-bad.json/8] 'brc' is a required property in /
-    ```
+The response is JSON and includes:
+
+- the schema version used for validation
+- counts of valid, invalid, and duplicate records
+- detailed validation errors for invalid records
+- duplicate record details
 
 ## Copyright Notice
 InterBRC Data Products Portal Copyright (c) 2025, The Regents of the University of California, through Lawrence Berkeley National Laboratory, and UT-Battelle LLC,  through Oak Ridge National Laboratory (both subject to receipt of any required approvals from the U.S. Dept. of Energy), University of Wisconsin - Madison, University of Illinois Urbana - Champaign, and Michigan State University. All rights reserved.
