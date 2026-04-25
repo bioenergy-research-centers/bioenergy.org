@@ -33,3 +33,16 @@ services:
       - ./nginx_config:/etc/nginx/conf.d
     stdin_open: true
     tty: true
+  mcp:
+    depends_on:
+      - api
+    build: ./mcp
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: ${BIOENERGY_ORG_MCP_LOCAL_PORT}
+      API_BASE_URL: ${BIOENERGY_ORG_MCP_API_BASE_URL}
+      API_TOKEN: ${BIOENERGY_ORG_MCP_API_TOKEN}
+    ports:
+      - ${BIOENERGY_ORG_MCP_LOCAL_PORT}:8081
