@@ -231,7 +231,7 @@ const onPageChange = (newPage) => {
                       <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }"
                         class="pe-4">
                         <span
-                          v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
+                          v-html="sanitizeHtml(truncateMiddle(result.title || 'Untitled data set', 75, 50), ALLOWED_HTML)"></span>
                       </router-link>
                     </div>
                   </div>
@@ -245,14 +245,14 @@ const onPageChange = (newPage) => {
                   <div class="row">
                     <div class="mt-2">
                       <p><small
-                          v-html="sanitizeHtml(truncateMiddle(result.description || 'No Description Provided', 150, 75), ALLOWED_HTML)"></small>
+                          v-html="sanitizeHtml(truncateMiddle(result.description || 'No description of this data set is available.', 150, 75), ALLOWED_HTML)"></small>
                       </p>
                     </div>
                   </div>
 
                   <div class="row mt-1 fs-6">
                     <div class="col-12 col-md">
-                      <span class="text-muted fw-lighter">{{ result.analysisType }}</span>
+                      <span v-if="result.analysisType && result.analysisType.toLowerCase() !== 'not specified'" class="text-muted fw-lighter">{{ result.analysisType }}</span>
                     </div>
                     <div class="col-12 col-md-auto text-md-end ps-md-3">
                       <div
