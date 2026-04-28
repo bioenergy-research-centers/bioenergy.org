@@ -184,6 +184,16 @@ docker compose -f docker-compose.dev.yml build --no-cache client
 - GLBRC: <https://fair-data.glbrc.org/glbrc.json>
 - JBEI: <https://bioenergy.org/JBEI/jbei.json>
 
+## Using Claude Code with the bioenergy.org MCP server.
+
+This project repo automatically registers the MCP server in Claude Code via the `.mcp.json` file at the root of this repo.
+
+Alternatively, to tell Claude where the MCP server is:
+
+`claude mcp add --transport http bioenergy-datasets --scope project https://mcp.bioenergy.org`
+
+Then, in Claude Code, run `/mcp` and approve the server if prompted. You can check to confirm that Claude has registered the MCP with `claude mcp list`.
+
 ## Validating Data
 
 Validating data against the BRC schema can be done with the LinkML framework.

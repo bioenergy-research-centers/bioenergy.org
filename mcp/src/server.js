@@ -53,12 +53,12 @@ function createServer() {
 
   server.tool(
     "get_dataset",
-    "Fetch a single dataset by its exact dataset UID. Use this only when you already know the UID.",
+    "Fetch a single dataset by its exact uid field. Do not use the id field from search results.",
     {
       uid: z
         .string()
         .min(1)
-        .describe("Exact dataset UID, for example a known dataset identifier from a previous result.")
+        .describe("Exact dataset uid field from a dataset record, not the search result id field. Example: JBEI_https://doi.org/10.1016/j.jil.2025.100184")
     },
     async ({ uid }) => {
       try {
@@ -122,31 +122,53 @@ function createServer() {
 
   server.tool(
     "search_datasets",
-    "Search datasets by free-text keyword. Use this when the user provides a topic, term, or phrase such as 'protein' or 'switchgrass'.",
+    "Search datasets by free-text query and optional metadata filters. Use this to find datasets by keyword, analysis type, BRC, and other supported filter fields.",
     {
       q: z
         .string()
-        .min(1)
-        .describe("Free-text search query. Example values: 'protein', 'biomass', 'switchgrass'."),
+        .default("")
+        .describe("Optional free-text search query. Use an empty string to search only by filters."),
       page: z
         .number()
         .int()
         .min(1)
         .default(1)
-        .describe("1-based page number for paginated search results."),
+        .describe("1-based page number."),
       rows: z
         .number()
         .int()
         .min(1)
         .max(100)
         .default(50)
-        .describe("Number of search results to return per page, between 1 and 100.")
+        .describe("Number of results per page, between 1 and 100."),
+      analysisType: z
+        .string()
+        .optional()
+        .describe('Optional analysisType filter, for example "not specified" or "shotgun_proteomics".'),
+      brc: z
+        .array(z.string())
+        .optional()
+        .describe('Optional list of BRC filters, for example ["JBEI"] or ["JBEI", "CABBI"]. The complete set of BRCs are: ["JBEI", "CABBI", "CBI", "GLBRC"].')
     },
-    async ({ q, page, rows }) => {
+    async ({ q, page, rows, analysisType, brc }) => {
       try {
-        const response = await api.get("/api/datasets", {
-          params: { q, page, rows }
-        });
+        const params = {
+          q,
+          page,
+          rows
+        };
+
+        if (analysisType) {
+          params["filters[analysisType]"] = analysisType;
+        }
+
+        if (brc?.length) {
+          brc.forEach((value, index) => {
+            params[`filters[brc][${index}]`] = value;
+          });
+        }
+
+        const response = await api.get("/api/datasets", { params });
         const data = response.data;
 
         return {
