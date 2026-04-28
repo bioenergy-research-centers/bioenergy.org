@@ -77,7 +77,7 @@ watch(dataset, (newDataset) => {
               <span class="text-muted">This dataset is also catalogued as:</span>
               <span v-for="(item, index) in relatedDatasets" :key="item.uid">
                 <span v-if="index > 0">, </span>
-                <router-link :to="`/datasets/${item.uid}`">
+                <router-link :to="{ name: 'datasetShow', params: { id: item.uid } }">
                   {{ item.uid }}
                 </router-link>
               </span>
