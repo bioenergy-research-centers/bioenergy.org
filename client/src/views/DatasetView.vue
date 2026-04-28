@@ -6,9 +6,11 @@ import {ref, onMounted, watch, computed} from "vue";
 
 <template>
   <HeaderView/>
-  <div class="container">
-    <SearchResults />
-  </div>
+  <main id="main-content" class="scroll-offset">
+    <div class="container">
+      <SearchResults />
+    </div>
+  </main>
 </template>
 
 <style scoped>
