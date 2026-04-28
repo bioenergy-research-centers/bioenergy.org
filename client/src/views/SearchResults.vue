@@ -25,6 +25,13 @@ const{searchResults, searchResultsLoading, searchResultsError, currentPage, tota
 const results = searchResults;
 const loading = searchResultsLoading;
 const error = searchResultsError;
+
+const defaultChartType = computed(() => {
+  if (searchStore.topic?.length) return 'topics';
+  if (searchStore.theme?.length) return 'themes';
+  return 'resources';
+});
+
 // Add refs for D3 containers and chart state
 const showChart = ref(true);
 
@@ -88,7 +95,7 @@ const onPageChange = (newPage) => {
         <div class="d-inline-block w-75 me-2">
           <Search />
         </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary p-2" @click="clearAll">
+        <button type="button" class="btn btn-sm btn-outline-secondary btn-clear text-dark p-2" @click="clearAll">
           Clear
         </button>
       </div>
@@ -172,6 +179,7 @@ const onPageChange = (newPage) => {
                 <FacetCharts
                   title="Dataset Analytics"
                   :facets="facets"
+                  :default-chart-type="defaultChartType"
                   @legendClick="handleChartClick"
                   @barClick="handleChartClick"
                   @onClick="handleChartClick"
@@ -277,6 +285,10 @@ const onPageChange = (newPage) => {
   display: flex;
   width: 100%;
   position: relative;
+}
+
+.btn-clear:hover {
+  color: #fff !important;
 }
 
 /* Chart-specific styles */
