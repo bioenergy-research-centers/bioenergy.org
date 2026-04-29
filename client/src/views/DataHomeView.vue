@@ -32,28 +32,19 @@ const dataMetrics = ref(null)
 const metricsLoading = ref(false)
 
 async function loadRecentData() {
-  recentDataLoading.value = true
-  error.value = null
+  recentDataLoading.value = true;
+  error.value = null;
+
   try {
-    // Todo replace with query for distinct values
-    ['CABBI','CBI','GLBRC','JBEI'].forEach(async function(brc){
-      const res = await DatasetDataService.getAll( { rows: 1, filters: {brc: brc}, nofacets: true} );
-      recentDatasets.value.push(...res.data.items)
-    })
+    const response = await DatasetDataService.getLatestByBrc();
+    recentDatasets.value = response.data.items || [];
   } catch (e) {
-    if (e.name !== 'AbortError') error.value = e.message || String(e)
+    console.error("Error loading recent data:", e);
+    error.value = e.message || String(e);
   } finally {
-    recentDataLoading.value = false
+    recentDataLoading.value = false;
   }
 }
-
-const orderedRecentData = computed(() => {
-  return [...recentDatasets.value].sort((a, b) => {
-    const aDate = new Date(a.date)
-    const bDate = new Date(b.date)
-    return bDate - aDate
-  })
-})
 
 async function loadDataMetrics() {
   metricsLoading.value = true
@@ -411,27 +402,27 @@ const applySuggestedQuery = () => {
           <div class="container">
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
 
-              <div class="col" v-for="result in orderedRecentData" :key="result.uid">
+              <div class="col" v-for="result in recentDatasets" :key="result.uid || result.identifier || result.title">
                 <div class="card research-card h-100 shadow-sm border-0 p-3">
                   <div class="logo-placeholder">
-                    <img :src="imgUrls[`../assets/${result.brc?.toLowerCase()}-logo.png`]" style="max-width:125px;" :alt="`${result.brc.toLowerCase()} logo`"></img>
+                    <img v-if="result.brc" :src="imgUrls[`../assets/${result.brc.toLowerCase()}-logo.png`]" style="max-width:125px;" :alt="`${result.brc.toLowerCase()} logo`" />
                   </div>
-                  <div style="width: 70%;height:2px;border-top:1px solid #ddd;margin:10px auto;"></div>
+
+                  <div style="width: 70%; height: 2px; border-top: 1px solid #ddd; margin: 10px auto;"></div>
+
                   <h5 class="h6 my-3 text-start">
-                    <span class="fw-bold"
-                      v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
+                    <span class="fw-bold" v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
                   </h5>
+
                   <div class="card-author mb-3 text-start">
                     <AuthorList :creators="result.creator" />
                   </div>
+
                   <p class="card-text text-start fst-italic">
-                    <span
-                      v-html="sanitizeHtml(truncateMiddle(result.description || '', 150, 75), ALLOWED_HTML)"></span>
+                    <span v-html="sanitizeHtml(truncateMiddle(result.description || '', 150, 75), ALLOWED_HTML)"></span>
                   </p>
-                  <!-- <p class="text-start">
-                    <span class="text-muted">{{ result.date }}</span>
-                  </p> -->
-                  <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }" class="stretched-link">
+
+                  <router-link v-if="result.uid" :to="{ name: 'datasetShow', params: { id: result.uid } }" class="stretched-link">
                     <span class="visually-hidden" v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
                   </router-link>
                 </div>

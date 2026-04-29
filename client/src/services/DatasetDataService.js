@@ -24,11 +24,13 @@ class DatasetDataService {
     return http.post('/datasets/', payload);
   }
 
-
   getMetrics(payload) {
     return http.get('/datasets/metrics', payload);
   }
 
+  getLatestByBrc() {
+    return http.get("/datasets/latest");
+  }
 }
 
 export default new DatasetDataService();
