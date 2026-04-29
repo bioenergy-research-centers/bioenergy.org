@@ -4,7 +4,6 @@ const Op = db.Sequelize.Op;
 const where = db.Sequelize.where;
 const json = db.Sequelize.json;
 const fn = db.Sequelize.fn;
-const keywordCategories = require("../utils/categories");
 
 const MAXROWLIMIT = 500;
 
@@ -152,10 +151,7 @@ exports.findAll = async (req, res) => {
   }
 
   if (categoryQueryTerm) {
-    const categoryCondition = buildCategoryWhere(categoryQueryTerm);
-    if (categoryCondition) {
-      conditions.push(categoryCondition);
-    }
+    conditions.push(buildStoredTopicWhere(categoryQueryTerm));
   }
 
   if (yearQueryTerm) {
@@ -304,38 +300,16 @@ exports.getMetrics = async (req, res) => {
 
 async function runFacetQuery({ Dataset, mergedWhereConditions }) {
   try {
-    // Create a minimal SELECT to get the Sequelize generated SQL from QueryGenerator
-    // This is a workaround that may break with changes to the sql conditions
-    // https://github.com/sequelize/sequelize/issues/2325
     const scoped = Dataset.scope("supportedOnly");
     const baseSelectSql = db.sequelize.dialect.queryGenerator.selectQuery(scoped.getTableName(), {
       model: scoped,
       where: mergedWhereConditions,
-      attributes: ["uid"], 
-    }).slice(0, -1); // remove trailing ';'
+      attributes: ["uid"],
+    }).slice(0, -1);
 
-    // Build static SQL values and bind variables for CTE table of categories (name, queryBind)
-    const categoryNames = Object.keys(keywordCategories);
-    const categoryReplacements = {};
-    const categoryValuesSql = categoryNames
-      .map((name, i) => {
-        const bindKey = `cat_query_${i}`;
-        const categoryTsquery = buildCategoryTsquery(name) || "";
-        categoryReplacements[bindKey] = categoryTsquery;
-        return `(${db.sequelize.escape(name)}, :${bindKey})`;
-      })
-      .join(",\n        ");
-
-    // Use the scoped filtered rows in CTE to filter counted rows for facets
     const facetSql = `
       WITH filtered_datasets AS (
         ${baseSelectSql}
-      ),
-      categories AS (
-        SELECT * FROM (VALUES
-          ${categoryValuesSql}
-        ) AS c(name, qtext)
-        WHERE NULLIF(BTRIM(qtext), '') IS NOT NULL
       ),
       personNames AS (
         SELECT d.uid, COALESCE(NULLIF(BTRIM(c.elem->>'name'), ''), 'NA') AS name
@@ -394,14 +368,14 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
 
         SELECT 'personName' AS facet,
               name AS value,
-              COUNT(distinct uid )::int AS count
+              COUNT(DISTINCT uid)::int AS count
         FROM personNames
         GROUP BY value
 
         UNION ALL
 
         SELECT 'species' AS facet,
-              COALESCE (NULLIF(BTRIM(s.elem->>'scientificName'), ''), 'NA') AS value,
+              COALESCE(NULLIF(BTRIM(s.elem->>'scientificName'), ''), 'NA') AS value,
               COUNT(*)::int AS count
         FROM datasets d
         JOIN filtered_datasets f ON f.uid = d.uid
@@ -413,13 +387,13 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
         UNION ALL
 
         SELECT 'topic' AS facet,
-              c.name AS value,
+              jsonb_array_elements_text(d."json"->'topic') AS value,
               COUNT(*)::int AS count
         FROM datasets d
         JOIN filtered_datasets f ON f.uid = d.uid
-        JOIN categories c
-        ON to_tsvector('simple', d."json"::text) @@ to_tsquery('simple', c.qtext)
-        GROUP BY c.name
+        WHERE jsonb_typeof(d."json"->'topic') = 'array'
+          AND jsonb_array_length(d."json"->'topic') > 0
+        GROUP BY value
 
         UNION ALL
 
@@ -434,44 +408,19 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
       ) x
       ORDER BY count DESC;
     `;
-    const rows = await db.sequelize.query(facetSql, { type: db.sequelize.QueryTypes.SELECT, replacements: categoryReplacements});
+
+    const rows = await db.sequelize.query(facetSql, {
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
     const facets = { year: [], brc: [], repository: [], species: [], analysisType: [], personName: [], topic: [], theme: [] };
     for (const r of rows) facets[r.facet].push({ value: r.value, count: r.count });
     return facets;
-  }catch(e){
+  } catch (e) {
     console.error('Error in faceted search:', e);
-    return { year: {}, brc: {}, repository: {}, species: {} };
+    return { year: {}, brc: {}, repository: {}, species: {}, topic: {}, theme: {} };
   }
 }
-
-// Convert category keyword into a tsquery fragment
-function keywordToTsqueryFragment(keyword) {
-  const tokens = String(keyword)
-    .toLowerCase()
-    .split(/[\s\-_]+/g);
-  if (tokens.length === 0) return null;
-
-  if (tokens.length === 1) return tokens[0];
-  // '<->' is postgres "followed by" operator for phrase style keywords
-  // https://www.postgresql.org/docs/current/textsearch-controls.html#TEXTSEARCH-PARSING-QUERIES
-  return `(${tokens.join(" <-> ")})`;
-}
-
-// Build a tsquery string for one category
-function buildCategoryTsquery(categoryName) {
-  const keywords = keywordCategories[categoryName];
-  if (!Array.isArray(keywords) || keywords.length === 0) return null;
-
-  const frags = keywords
-    .map(keywordToTsqueryFragment)
-    .filter(Boolean);
-
-  if (frags.length === 0) return null;
-
-  // OR across keywords within a category.
-  return frags.join(" | ");
-}
-
 
 // Create a Sequelize where() condition for a category.
 function buildCategoryWhere(categoryName) {
@@ -496,6 +445,20 @@ function buildCategoryWhere(categoryName) {
     {
       [Op.match]: db.Sequelize.fn("to_tsquery", "simple", q),
     }
+  );
+}
+
+function buildStoredTopicWhere(topicName) {
+  const topics = Array.isArray(topicName) ? topicName : [topicName];
+  const escapedTopics = topics.map(t => db.sequelize.escape(t)).join(", ");
+
+  return where(
+    db.Sequelize.literal(`EXISTS (
+      SELECT 1
+      FROM jsonb_array_elements_text("dataset"."json"->'topic') AS t(value)
+      WHERE t.value IN (${escapedTopics})
+    )`),
+    true
   );
 }
 
