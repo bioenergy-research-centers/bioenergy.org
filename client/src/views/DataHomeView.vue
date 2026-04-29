@@ -402,31 +402,31 @@ const applySuggestedQuery = () => {
           <div class="container">
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
 
-            <div class="col" v-for="result in recentDatasets" :key="result.uid || result.identifier || result.title">
-              <div class="card research-card h-100 shadow-sm border-0 p-3">
-                <div class="logo-placeholder">
-                  <img v-if="result.brc" :src="imgUrls[`../assets/${result.brc.toLowerCase()}-logo.png`]" style="max-width:125px;" :alt="`${result.brc.toLowerCase()} logo`" />
+              <div class="col" v-for="result in recentDatasets" :key="result.uid || result.identifier || result.title">
+                <div class="card research-card h-100 shadow-sm border-0 p-3">
+                  <div class="logo-placeholder">
+                    <img v-if="result.brc" :src="imgUrls[`../assets/${result.brc.toLowerCase()}-logo.png`]" style="max-width:125px;" :alt="`${result.brc.toLowerCase()} logo`" />
+                  </div>
+
+                  <div style="width: 70%; height: 2px; border-top: 1px solid #ddd; margin: 10px auto;"></div>
+
+                  <h5 class="h6 my-3 text-start">
+                    <span class="fw-bold" v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
+                  </h5>
+
+                  <div class="card-author mb-3 text-start">
+                    <AuthorList :creators="result.creator" />
+                  </div>
+
+                  <p class="card-text text-start fst-italic">
+                    <span v-html="sanitizeHtml(truncateMiddle(result.description || '', 150, 75), ALLOWED_HTML)"></span>
+                  </p>
+
+                  <router-link v-if="result.uid" :to="{ name: 'datasetShow', params: { id: result.uid } }" class="stretched-link">
+                    <span class="visually-hidden" v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
+                  </router-link>
                 </div>
-
-                <div style="width: 70%; height: 2px; border-top: 1px solid #ddd; margin: 10px auto;"></div>
-
-                <h5 class="h6 my-3 text-start">
-                  <span class="fw-bold" v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
-                </h5>
-
-                <div class="card-author mb-3 text-start">
-                  <AuthorList :creators="result.creator" />
-                </div>
-
-                <p class="card-text text-start fst-italic">
-                  <span v-html="sanitizeHtml(truncateMiddle(result.description || '', 150, 75), ALLOWED_HTML)"></span>
-                </p>
-
-                <router-link v-if="result.uid" :to="{ name: 'datasetShow', params: { id: result.uid } }" class="stretched-link">
-                  <span class="visually-hidden" v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
-                </router-link>
               </div>
-            </div>
             
             </div>
           </div>
