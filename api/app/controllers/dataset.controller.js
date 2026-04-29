@@ -1,4 +1,5 @@
 const db = require("../models");
+const datafeeds = require("../config/datafeeds.json");
 const Dataset = db.datasets;
 const Op = db.Sequelize.Op;
 const where = db.Sequelize.where;
@@ -290,11 +291,42 @@ exports.getMetrics = async (req, res) => {
     metrics['repositoryCounts'] = repositoryCounts[0].count;
 
     res.send(metrics);
-  }catch (e) {
+  } catch (e) {
     console.error(e);
     res.status(500).send({
       message: `Error retrieving Dataset metrics`
     });
+  }
+};
+
+exports.getLatestByBrc = async (req, res) => {
+  try {
+    const rows = await db.sequelize.query(`
+      SELECT DISTINCT ON (json->>'brc')
+        uid,
+        schema_version,
+        json,
+        "createdAt",
+        "updatedAt"
+      FROM datasets
+      WHERE NULLIF(BTRIM(json->>'brc'), '') IS NOT NULL
+      ORDER BY json->>'brc', json->>'date' DESC
+    `, {
+      type: db.Sequelize.QueryTypes.SELECT
+    });
+
+    const items = rows.map(row => ({
+      ...row.json,
+      uid: row.uid,
+      schema_version: row.schema_version,
+      created_at: row.createdAt,
+      updated_at: row.updatedAt
+    }));
+
+    res.json({ items });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Error retrieving latest datasets by BRC." });
   }
 };
 
