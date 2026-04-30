@@ -41,7 +41,19 @@ module.exports = (sequelize, Sequelize) => {
     },
     { 
       sequelize,
-      modelName: 'dataset'
+      modelName: 'dataset',
+      indexes: [
+        {
+          name: 'dataset_json_full_ts_gin_idx',
+          using: 'GIN',
+          fields: [
+            Sequelize.literal(
+              `to_tsvector('simple', "json"::text)`
+            )
+          ]
+
+        }
+      ]
     }
   );
 
