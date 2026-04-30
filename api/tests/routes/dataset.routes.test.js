@@ -65,6 +65,17 @@ describe("dataset routes", () => {
       expect(res.body.query.rows).toBe(50);
     });
 
+    it("filters by title", async () => {
+      mockFindAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+      mockQuery.mockResolvedValue([]);
+
+      const res = await supertest(app)
+        .get("/api/datasets?filters[title]=switchgrass&nofacets=true");
+
+      expect(res.status).toBe(200);
+      expect(mockFindAndCountAll).toHaveBeenCalledOnce();
+    });
+
     it("respects page and rows parameters", async () => {
       mockFindAndCountAll.mockResolvedValue({ count: 100, rows: [] });
       mockQuery.mockResolvedValue([]);
@@ -88,6 +99,28 @@ describe("dataset routes", () => {
       const res = await supertest(app).get("/api/datasets?nofacets=true");
       expect(res.status).toBe(200);
       expect(res.body.facets).toBeNull();
+    });
+
+    it("returns fallback facets when facet query fails", async () => {
+      mockFindAndCountAll.mockResolvedValue({
+        count: 1,
+        rows: [{ toClientJSON: () => ({ uid: "1", title: "Dataset A" }) }],
+      });
+
+      mockQuery.mockRejectedValue(new Error("facet query failed"));
+
+      const res = await supertest(app).get("/api/datasets");
+
+      expect(res.status).toBe(200);
+      expect(res.body.items).toEqual([{ uid: "1", title: "Dataset A" }]);
+      expect(res.body.facets).toEqual({
+        year: {},
+        brc: {},
+        repository: {},
+        species: {},
+        topic: {},
+        theme: {},
+      });
     });
 
     it("calculates totalPages correctly", async () => {
@@ -292,6 +325,70 @@ describe("dataset routes", () => {
     });
   });
 
+  describe("GET /api/datasets/latest", () => {
+    it("returns flattened latest datasets by BRC", async () => {
+      mockQuery.mockResolvedValue([
+        {
+          uid: "CABBI_1",
+          schema_version: "0.1.12",
+          json: {
+            brc: "CABBI",
+            title: "CABBI dataset",
+            identifier: "cabbi-1",
+          },
+          createdAt: "2026-04-29T14:49:16.200Z",
+          updatedAt: "2026-04-29T14:49:16.200Z",
+        },
+        {
+          uid: "JBEI_1",
+          schema_version: "0.1.12",
+          json: {
+            brc: "JBEI",
+            title: "JBEI dataset",
+            identifier: "jbei-1",
+          },
+          createdAt: "2026-04-29T14:49:08.382Z",
+          updatedAt: "2026-04-29T14:49:08.382Z",
+        },
+      ]);
+
+      const res = await supertest(app).get("/api/datasets/latest");
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({
+        items: [
+          {
+            brc: "CABBI",
+            title: "CABBI dataset",
+            identifier: "cabbi-1",
+            uid: "CABBI_1",
+            schema_version: "0.1.12",
+            created_at: "2026-04-29T14:49:16.200Z",
+            updated_at: "2026-04-29T14:49:16.200Z",
+          },
+          {
+            brc: "JBEI",
+            title: "JBEI dataset",
+            identifier: "jbei-1",
+            uid: "JBEI_1",
+            schema_version: "0.1.12",
+            created_at: "2026-04-29T14:49:08.382Z",
+            updated_at: "2026-04-29T14:49:08.382Z",
+          },
+        ],
+      });
+    });
+
+    it("returns 500 when latest-by-brc query fails", async () => {
+      mockQuery.mockRejectedValue(new Error("db error"));
+
+      const res = await supertest(app).get("/api/datasets/latest");
+
+      expect(res.status).toBe(500);
+      expect(res.body.message).toContain("Error retrieving latest datasets by BRC");
+    });
+  });
+
   describe("GET /api/datasets/:id", () => {
     it("returns a dataset by id", async () => {
       mockFindByPk.mockResolvedValue({
@@ -457,5 +554,169 @@ describe("dataset routes", () => {
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("db error");
     });
+
+    it("looks up related datasets by identifier when dataset_url is missing", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "GLBRC_GSE218642",
+        json: {
+          identifier: "GSE218642",
+          dataset_url: ""
+        }
+      });
+
+      mockFindAll.mockResolvedValue([
+        {
+          uid: "GLBRC_GSE218642",
+          json: {
+            brc: "GLBRC",
+            identifier: "GSE218642",
+            dataset_url: null
+          }
+        }
+      ]);
+
+      const res = await supertest(app).get("/api/datasets/lookup/GLBRC_GSE218642");
+
+      expect(res.status).toBe(200);
+      expect(mockFindAll).toHaveBeenCalledOnce();
+      expect(res.body).toEqual({
+        uid: "GLBRC_GSE218642",
+        identifier: "GSE218642",
+        dataset_url: null,
+        count: 1,
+        datasets: [
+          {
+            uid: "GLBRC_GSE218642",
+            brc: "GLBRC",
+            identifier: "GSE218642",
+            dataset_url: null,
+            is_source: true
+          }
+        ]
+      });
+    });
+
+    it("returns null brc when related dataset json.brc is missing", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "SOURCE_1",
+        json: {
+          identifier: "ABC123",
+          dataset_url: ""
+        }
+      });
+
+      mockFindAll.mockResolvedValue([
+        {
+          uid: "SOURCE_1",
+          json: {
+            identifier: "ABC123",
+            dataset_url: null
+          }
+        },
+        {
+          uid: "MATCH_1",
+          json: {
+            identifier: "ABC123",
+            dataset_url: null
+          }
+        }
+      ]);
+
+      const res = await supertest(app).get("/api/datasets/lookup/SOURCE_1");
+
+      expect(res.status).toBe(200);
+      expect(res.body.datasets).toEqual([
+        {
+          uid: "SOURCE_1",
+          brc: null,
+          identifier: "ABC123",
+          dataset_url: null,
+          is_source: true
+        },
+        {
+          uid: "MATCH_1",
+          brc: null,
+          identifier: "ABC123",
+          dataset_url: null,
+          is_source: false
+        }
+      ]);
+    });
+    
+    it("looks up related datasets by dataset_url when identifier is missing", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "JBEI_SOURCE",
+        json: {
+          identifier: "",
+          dataset_url: "https://doi.org/example"
+        }
+      });
+
+      mockFindAll.mockResolvedValue([
+        {
+          uid: "JBEI_SOURCE",
+          json: {
+            brc: "JBEI",
+            identifier: null,
+            dataset_url: "https://doi.org/example"
+          }
+        },
+        {
+          uid: "CABBI_MATCH",
+          json: {
+            brc: "CABBI",
+            identifier: null,
+            dataset_url: "https://doi.org/example"
+          }
+        }
+      ]);
+
+      const res = await supertest(app).get("/api/datasets/lookup/JBEI_SOURCE");
+
+      expect(res.status).toBe(200);
+      expect(mockFindAll).toHaveBeenCalledOnce();
+      expect(res.body).toEqual({
+        uid: "JBEI_SOURCE",
+        identifier: null,
+        dataset_url: "https://doi.org/example",
+        count: 2,
+        datasets: [
+          {
+            uid: "JBEI_SOURCE",
+            brc: "JBEI",
+            identifier: null,
+            dataset_url: "https://doi.org/example",
+            is_source: true
+          },
+          {
+            uid: "CABBI_MATCH",
+            brc: "CABBI",
+            identifier: null,
+            dataset_url: "https://doi.org/example",
+            is_source: false
+          }
+        ]
+      });
+    });
+
+    it("returns 400 when lookup uid is blank", async () => {
+      const res = await supertest(app).get("/api/datasets/lookup/%20");
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({
+        message: "Dataset uid is required."
+      });
+    });
+
+    // Note: This ends up falling through to "/api/datasets/:uid" and we get 500 "Error retrieving Dataset with identifier: lookup"
+    // Is this expected behavior?
+    // it("returns 400 when uid is empty", async () => {
+    //   const res = await supertest(app).get("/api/datasets/lookup/");
+
+    //   expect(res.status).toBe(400);
+    //   expect(res.body).toEqual({
+    //     message: "Dataset uid is required."
+    //   });
+    // });
   });
 });
