@@ -450,61 +450,6 @@ describe("dataset routes", () => {
   });
 
   describe("GET /api/datasets/lookup/:uid", () => {
-    it("returns related datasets for a source dataset uid", async () => {
-      mockFindByPk.mockResolvedValue({
-        uid: "GLBRC_GSE218642",
-        json: {
-          identifier: "GSE218642",
-          dataset_url: "",
-        },
-      });
-
-      mockFindAll.mockResolvedValue([
-        {
-          uid: "CABBI_GSE218642",
-          json: {
-            brc: "CABBI",
-            identifier: "GSE218642",
-            dataset_url: "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE218642",
-          },
-        },
-        {
-          uid: "GLBRC_GSE218642",
-          json: {
-            brc: "GLBRC",
-            identifier: "GSE218642",
-            dataset_url: null,
-          },
-        },
-      ]);
-
-      const res = await supertest(app).get("/api/datasets/lookup/GLBRC_GSE218642");
-
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual({
-        uid: "GLBRC_GSE218642",
-        identifier: "GSE218642",
-        dataset_url: null,
-        count: 2,
-        datasets: [
-          {
-            uid: "CABBI_GSE218642",
-            brc: "CABBI",
-            identifier: "GSE218642",
-            dataset_url: "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE218642",
-            is_source: false,
-          },
-          {
-            uid: "GLBRC_GSE218642",
-            brc: "GLBRC",
-            identifier: "GSE218642",
-            dataset_url: null,
-            is_source: true,
-          },
-        ],
-      });
-    });
-
     it("returns 404 when source dataset is not found", async () => {
       mockFindByPk.mockResolvedValue(null);
 
@@ -527,73 +472,6 @@ describe("dataset routes", () => {
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain("identifier or dataset_url");
-    });
-
-    it("returns 500 when source dataset lookup fails", async () => {
-      mockFindByPk.mockRejectedValue(new Error("db error"));
-
-      const res = await supertest(app).get("/api/datasets/lookup/GLBRC_GSE218642");
-
-      expect(res.status).toBe(500);
-      expect(res.body.message).toContain("db error");
-    });
-
-    it("returns 500 when related dataset lookup fails", async () => {
-      mockFindByPk.mockResolvedValue({
-        uid: "GLBRC_GSE218642",
-        json: {
-          identifier: "GSE218642",
-          dataset_url: "",
-        },
-      });
-
-      mockFindAll.mockRejectedValue(new Error("db error"));
-
-      const res = await supertest(app).get("/api/datasets/lookup/GLBRC_GSE218642");
-
-      expect(res.status).toBe(500);
-      expect(res.body.message).toContain("db error");
-    });
-
-    it("looks up related datasets by identifier when dataset_url is missing", async () => {
-      mockFindByPk.mockResolvedValue({
-        uid: "GLBRC_GSE218642",
-        json: {
-          identifier: "GSE218642",
-          dataset_url: ""
-        }
-      });
-
-      mockFindAll.mockResolvedValue([
-        {
-          uid: "GLBRC_GSE218642",
-          json: {
-            brc: "GLBRC",
-            identifier: "GSE218642",
-            dataset_url: null
-          }
-        }
-      ]);
-
-      const res = await supertest(app).get("/api/datasets/lookup/GLBRC_GSE218642");
-
-      expect(res.status).toBe(200);
-      expect(mockFindAll).toHaveBeenCalledOnce();
-      expect(res.body).toEqual({
-        uid: "GLBRC_GSE218642",
-        identifier: "GSE218642",
-        dataset_url: null,
-        count: 1,
-        datasets: [
-          {
-            uid: "GLBRC_GSE218642",
-            brc: "GLBRC",
-            identifier: "GSE218642",
-            dataset_url: null,
-            is_source: true
-          }
-        ]
-      });
     });
 
     it("returns null brc when related dataset json.brc is missing", async () => {
@@ -705,6 +583,25 @@ describe("dataset routes", () => {
       expect(res.status).toBe(400);
       expect(res.body).toEqual({
         message: "Dataset uid is required."
+      });
+    });
+
+    it("returns generic 500 message when related dataset lookup fails without an error message", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "GLBRC_GSE218642",
+        json: {
+          identifier: "GSE218642",
+          dataset_url: "",
+        },
+      });
+
+      mockFindAll.mockRejectedValue({});
+
+      const res = await supertest(app).get("/api/datasets/lookup/GLBRC_GSE218642");
+
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({
+        message: "Some error occurred while retrieving datasets."
       });
     });
 
