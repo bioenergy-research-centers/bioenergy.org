@@ -82,7 +82,7 @@ exports.findAll = async (req, res) => {
   
   if (titleQueryTerm) {
     conditions.push(
-      where(json("json.title"), { [Op.iLike]: `%${titleSearchQuery}%` })
+      where(json("json.title"), { [Op.iLike]: `%${titleQueryTerm}%` })
     );
   }
   
