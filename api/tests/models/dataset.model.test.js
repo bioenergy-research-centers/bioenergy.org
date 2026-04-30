@@ -1,75 +1,109 @@
-const sanitizeHtml = require("sanitize-html");
-
-const ALLOWED_HTML = { allowedTags: ["b", "i", "sub", "sup"], allowedAttributes: {} };
+const { Sequelize } = require("sequelize");
+const defineDataset = require("../../app/models/dataset.model");
 
 describe("Dataset model", () => {
+  let sequelize;
+  let Dataset;
+
+  beforeAll(() => {
+    sequelize = new Sequelize("postgres://postgres:postgres@localhost:5432/testdb", {
+      dialect: "postgres",
+      logging: false,
+    });
+
+    Dataset = defineDataset(sequelize, Sequelize);
+  });
+
+  afterAll(async () => {
+    await sequelize.close();
+  });
+
   describe("toClientJSON", () => {
     it("merges schema_version, uid, and timestamps into the json object", () => {
-      // Simulate what toClientJSON does without needing Sequelize
-      const instance = {
-        json: { title: "Test Dataset", brc: "GLBRC" },
-        schema_version: "0.1.7",
+      const createdAt = new Date("2025-01-01T00:00:00Z");
+      const updatedAt = new Date("2025-06-01T00:00:00Z");
+
+      const instance = Dataset.build({
         uid: "abc-123",
-        createdAt: new Date("2025-01-01"),
-        updatedAt: new Date("2025-06-01"),
-        toClientJSON() {
-          const jsonData = this.json;
-          jsonData.schema_version = this.schema_version;
-          jsonData.uid = this.uid;
-          jsonData.created_at = this.createdAt;
-          jsonData.updated_at = this.updatedAt;
-          return jsonData;
-        },
-      };
+        schema_version: "0.1.7",
+        json: { title: "Test Dataset", brc: "GLBRC" },
+      });
+
+      instance.createdAt = createdAt;
+      instance.updatedAt = updatedAt;
 
       const result = instance.toClientJSON();
+
       expect(result.title).toBe("Test Dataset");
       expect(result.brc).toBe("GLBRC");
       expect(result.schema_version).toBe("0.1.7");
       expect(result.uid).toBe("abc-123");
-      expect(result.created_at).toEqual(new Date("2025-01-01"));
-      expect(result.updated_at).toEqual(new Date("2025-06-01"));
+      expect(result.created_at).toEqual(createdAt);
+      expect(result.updated_at).toEqual(updatedAt);
+    });
+
+    it("uses the default schema_version when one is not provided", () => {
+      const instance = Dataset.build({
+        uid: "default-version",
+        json: { title: "Dataset" },
+      });
+
+      const result = instance.toClientJSON();
+
+      expect(result.schema_version).toBe("0.0.8");
+      expect(result.uid).toBe("default-version");
     });
   });
 
   describe("json field sanitization", () => {
-    // Directly test the sanitization logic used by the model setter
-    function sanitizeJSON(rawJSON) {
-      return JSON.parse(
-        JSON.stringify(rawJSON, (_key, value) =>
-          typeof value === "string" ? sanitizeHtml(value, ALLOWED_HTML) : value
-        )
-      );
-    }
-
     it("strips disallowed HTML tags from string values", () => {
-      const result = sanitizeJSON({ title: "<script>alert(1)</script>Hello" });
-      expect(result.title).toBe("Hello");
-      expect(result.title).not.toContain("<script>");
+      const instance = Dataset.build({
+        uid: "sanitize-script",
+        json: { title: "<script>alert(1)</script>Hello" },
+      });
+
+      expect(instance.json.title).toBe("Hello");
+      expect(instance.json.title).not.toContain("<script>");
     });
 
     it("allows permitted tags (b, i, sub, sup)", () => {
-      const result = sanitizeJSON({ title: "H<sub>2</sub>O is <b>water</b>" });
-      expect(result.title).toBe("H<sub>2</sub>O is <b>water</b>");
+      const instance = Dataset.build({
+        uid: "sanitize-allowed",
+        json: { title: "H<sub>2</sub>O is <b>water</b>" },
+      });
+
+      expect(instance.json.title).toBe("H<sub>2</sub>O is <b>water</b>");
     });
 
     it("does not modify non-string values", () => {
-      const result = sanitizeJSON({ count: 42, active: true, tags: ["a", "b"] });
-      expect(result.count).toBe(42);
-      expect(result.active).toBe(true);
-      expect(result.tags).toEqual(["a", "b"]);
+      const instance = Dataset.build({
+        uid: "sanitize-non-string",
+        json: { count: 42, active: true, tags: ["a", "b"] },
+      });
+
+      expect(instance.json.count).toBe(42);
+      expect(instance.json.active).toBe(true);
+      expect(instance.json.tags).toEqual(["a", "b"]);
     });
 
     it("sanitizes nested string values", () => {
-      const result = sanitizeJSON({
-        creator: [{ name: "<img onerror=alert(1)>Dr. Smith" }],
+      const instance = Dataset.build({
+        uid: "sanitize-nested",
+        json: {
+          creator: [{ name: "<img onerror=alert(1)>Dr. Smith" }],
+        },
       });
-      expect(result.creator[0].name).toBe("Dr. Smith");
+
+      expect(instance.json.creator[0].name).toBe("Dr. Smith");
     });
 
     it("strips div and span tags but keeps text", () => {
-      const result = sanitizeJSON({ desc: "<div>Some <span>text</span></div>" });
-      expect(result.desc).toBe("Some text");
+      const instance = Dataset.build({
+        uid: "sanitize-div-span",
+        json: { desc: "<div>Some <span>text</span></div>" },
+      });
+
+      expect(instance.json.desc).toBe("Some text");
     });
   });
 });
