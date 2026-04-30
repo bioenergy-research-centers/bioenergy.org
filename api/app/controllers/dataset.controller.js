@@ -8,8 +8,6 @@ const json = db.Sequelize.json;
 const fn = db.Sequelize.fn;
 const keywordCategories = require("../utils/categories");
 
-const MAXROWLIMIT = 500;
-
 // Retrieve all Datasets from the database.
 exports.findAll = async (req, res) => {
   const textQueryTerm = req.query.q;
@@ -249,7 +247,6 @@ exports.findOne = (req, res) => {
     .then(data => {
       if (data) {
         res.send(data.toClientJSON());
-//        res.send(data);
       } else {
         res.status(404).send({
           message: `Cannot find Dataset with identifier: ${id}`
@@ -435,7 +432,7 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
     const facets = { year: [], brc: [], repository: [], species: [], analysisType: [], personName: [], topic: [], theme: [] };
     for (const r of rows) facets[r.facet].push({ value: r.value, count: r.count });
     return facets;
-  }catch(e){
+  } catch(e) {
     console.error('Error in faceted search:', e);
     return { year: {}, brc: {}, repository: {}, species: {} };
   }
@@ -468,7 +465,6 @@ function buildCategoryTsquery(categoryName) {
   // OR across keywords within a category.
   return frags.join(" | ");
 }
-
 
 // Create a Sequelize where() condition for a category.
 function buildCategoryWhere(categoryName) {
