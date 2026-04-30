@@ -1,4 +1,6 @@
 const db = require("../models");
+const { getPaginationParams } = require("../utils/pagination");
+
 const Dataset = db.datasets;
 const Op = db.Sequelize.Op;
 const where = db.Sequelize.where;
@@ -21,12 +23,7 @@ exports.findAll = async (req, res) => {
   const analysisTypeQueryTerm = req.query.filters?.analysisType;
   const themeQueryTerm = req.query.filters?.theme;
   const includeFacets = !req.query.nofacets;
-
-  // Pagination parameters.  Default page index is 1 and default size is 10.
-  const page = parseInt(req.query.page) > 0 ? parseInt(req.query.page) : 1;
-  const size = parseInt(req.query.rows) > 0 ? parseInt(req.query.rows) : (req.query.limit ? parseInt(req.query.limit) : 50);
-  const limit = Math.min(size || 50, MAXROWLIMIT);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = getPaginationParams(req.query);
 
   // Initialize an empty array for search conditions
   const conditions = [];
