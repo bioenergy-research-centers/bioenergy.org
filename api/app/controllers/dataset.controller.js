@@ -1,12 +1,10 @@
 const db = require("../models");
+const { getPaginationParams } = require("../utils/pagination");
 const Dataset = db.datasets;
 const Op = db.Sequelize.Op;
 const where = db.Sequelize.where;
 const json = db.Sequelize.json;
 const fn = db.Sequelize.fn;
-const keywordCategories = require("../utils/categories");
-
-const MAXROWLIMIT = 500;
 
 // Retrieve all Datasets from the database.
 exports.findAll = async (req, res) => {
@@ -21,12 +19,7 @@ exports.findAll = async (req, res) => {
   const analysisTypeQueryTerm = req.query.filters?.analysisType;
   const themeQueryTerm = req.query.filters?.theme;
   const includeFacets = !req.query.nofacets;
-
-  // Pagination parameters.  Default page index is 1 and default size is 10.
-  const page = parseInt(req.query.page) > 0 ? parseInt(req.query.page) : 1;
-  const size = parseInt(req.query.rows) > 0 ? parseInt(req.query.rows) : (req.query.limit ? parseInt(req.query.limit) : 50);
-  const limit = Math.min(size || 50, MAXROWLIMIT);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = getPaginationParams(req.query);
 
   // Initialize an empty array for search conditions
   const conditions = [];
@@ -85,7 +78,7 @@ exports.findAll = async (req, res) => {
   
   if (titleQueryTerm) {
     conditions.push(
-      where(json("json.title"), { [Op.iLike]: `%${titleSearchQuery}%` })
+      where(json("json.title"), { [Op.iLike]: `%${titleQueryTerm}%` })
     );
   }
   
@@ -152,10 +145,7 @@ exports.findAll = async (req, res) => {
   }
 
   if (categoryQueryTerm) {
-    const categoryCondition = buildCategoryWhere(categoryQueryTerm);
-    if (categoryCondition) {
-      conditions.push(categoryCondition);
-    }
+    conditions.push(buildStoredTopicWhere(categoryQueryTerm));
   }
 
   if (yearQueryTerm) {
@@ -179,7 +169,6 @@ exports.findAll = async (req, res) => {
         ]
       });
     }
-
   }
   
   if(personNameQueryTerm) {
@@ -205,7 +194,7 @@ exports.findAll = async (req, res) => {
   const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
 
   const dataQuery = Dataset.scope('supportedOnly').findAndCountAll({
-    order: [['json.date', 'DESC']],
+    order: [['json.date', 'DESC'], ['uid', 'ASC']],
     where: mergedWhereConditions,
     limit,
     offset
@@ -252,7 +241,6 @@ exports.findOne = (req, res) => {
     .then(data => {
       if (data) {
         res.send(data.toClientJSON());
-//        res.send(data);
       } else {
         res.status(404).send({
           message: `Cannot find Dataset with identifier: ${id}`
@@ -294,7 +282,7 @@ exports.getMetrics = async (req, res) => {
     metrics['repositoryCounts'] = repositoryCounts[0].count;
 
     res.send(metrics);
-  }catch (e) {
+  } catch (e) {
     console.error(e);
     res.status(500).send({
       message: `Error retrieving Dataset metrics`
@@ -302,40 +290,49 @@ exports.getMetrics = async (req, res) => {
   }
 };
 
+exports.getLatestByBrc = async (req, res) => {
+  try {
+    const rows = await db.sequelize.query(`
+      SELECT DISTINCT ON (json->>'brc')
+        uid,
+        schema_version,
+        json,
+        "createdAt",
+        "updatedAt"
+      FROM datasets
+      WHERE NULLIF(BTRIM(json->>'brc'), '') IS NOT NULL
+      ORDER BY json->>'brc', json->>'date' DESC
+    `, {
+      type: db.Sequelize.QueryTypes.SELECT
+    });
+
+    const items = rows.map(row => ({
+      ...row.json,
+      uid: row.uid,
+      schema_version: row.schema_version,
+      created_at: row.createdAt,
+      updated_at: row.updatedAt
+    }));
+
+    res.json({ items });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: "Error retrieving latest datasets by BRC." });
+  }
+};
+
 async function runFacetQuery({ Dataset, mergedWhereConditions }) {
   try {
-    // Create a minimal SELECT to get the Sequelize generated SQL from QueryGenerator
-    // This is a workaround that may break with changes to the sql conditions
-    // https://github.com/sequelize/sequelize/issues/2325
     const scoped = Dataset.scope("supportedOnly");
     const baseSelectSql = db.sequelize.dialect.queryGenerator.selectQuery(scoped.getTableName(), {
       model: scoped,
       where: mergedWhereConditions,
-      attributes: ["uid"], 
-    }).slice(0, -1); // remove trailing ';'
+      attributes: ["uid"],
+    }).slice(0, -1);
 
-    // Build static SQL values and bind variables for CTE table of categories (name, queryBind)
-    const categoryNames = Object.keys(keywordCategories);
-    const categoryReplacements = {};
-    const categoryValuesSql = categoryNames
-      .map((name, i) => {
-        const bindKey = `cat_query_${i}`;
-        const categoryTsquery = buildCategoryTsquery(name) || "";
-        categoryReplacements[bindKey] = categoryTsquery;
-        return `(${db.sequelize.escape(name)}, :${bindKey})`;
-      })
-      .join(",\n        ");
-
-    // Use the scoped filtered rows in CTE to filter counted rows for facets
     const facetSql = `
       WITH filtered_datasets AS (
         ${baseSelectSql}
-      ),
-      categories AS (
-        SELECT * FROM (VALUES
-          ${categoryValuesSql}
-        ) AS c(name, qtext)
-        WHERE NULLIF(BTRIM(qtext), '') IS NOT NULL
       ),
       personNames AS (
         SELECT d.uid, COALESCE(NULLIF(BTRIM(c.elem->>'name'), ''), 'NA') AS name
@@ -394,14 +391,14 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
 
         SELECT 'personName' AS facet,
               name AS value,
-              COUNT(distinct uid )::int AS count
+              COUNT(DISTINCT uid)::int AS count
         FROM personNames
         GROUP BY value
 
         UNION ALL
 
         SELECT 'species' AS facet,
-              COALESCE (NULLIF(BTRIM(s.elem->>'scientificName'), ''), 'NA') AS value,
+              COALESCE(NULLIF(BTRIM(s.elem->>'scientificName'), ''), 'NA') AS value,
               COUNT(*)::int AS count
         FROM datasets d
         JOIN filtered_datasets f ON f.uid = d.uid
@@ -413,13 +410,13 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
         UNION ALL
 
         SELECT 'topic' AS facet,
-              c.name AS value,
+              jsonb_array_elements_text(d."json"->'topic') AS value,
               COUNT(*)::int AS count
         FROM datasets d
         JOIN filtered_datasets f ON f.uid = d.uid
-        JOIN categories c
-        ON to_tsvector('simple', d."json"::text) @@ to_tsquery('simple', c.qtext)
-        GROUP BY c.name
+        WHERE jsonb_typeof(d."json"->'topic') = 'array'
+          AND jsonb_array_length(d."json"->'topic') > 0
+        GROUP BY value
 
         UNION ALL
 
@@ -434,79 +431,44 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
       ) x
       ORDER BY count DESC;
     `;
-    const rows = await db.sequelize.query(facetSql, { type: db.sequelize.QueryTypes.SELECT, replacements: categoryReplacements});
+
+    const rows = await db.sequelize.query(facetSql, {
+      type: db.sequelize.QueryTypes.SELECT
+    });
+
     const facets = { year: [], brc: [], repository: [], species: [], analysisType: [], personName: [], topic: [], theme: [] };
     for (const r of rows) facets[r.facet].push({ value: r.value, count: r.count });
     return facets;
-  }catch(e){
+  } catch (e) {
     console.error('Error in faceted search:', e);
-    return { year: {}, brc: {}, repository: {}, species: {} };
+    return { year: {}, brc: {}, repository: {}, species: {}, topic: {}, theme: {} };
   }
 }
 
-// Convert category keyword into a tsquery fragment
-function keywordToTsqueryFragment(keyword) {
-  const tokens = String(keyword)
-    .toLowerCase()
-    .split(/[\s\-_]+/g);
-  if (tokens.length === 0) return null;
-
-  if (tokens.length === 1) return tokens[0];
-  // '<->' is postgres "followed by" operator for phrase style keywords
-  // https://www.postgresql.org/docs/current/textsearch-controls.html#TEXTSEARCH-PARSING-QUERIES
-  return `(${tokens.join(" <-> ")})`;
-}
-
-// Build a tsquery string for one category
-function buildCategoryTsquery(categoryName) {
-  const keywords = keywordCategories[categoryName];
-  if (!Array.isArray(keywords) || keywords.length === 0) return null;
-
-  const frags = keywords
-    .map(keywordToTsqueryFragment)
-    .filter(Boolean);
-
-  if (frags.length === 0) return null;
-
-  // OR across keywords within a category.
-  return frags.join(" | ");
-}
-
-
-// Create a Sequelize where() condition for a category.
-function buildCategoryWhere(categoryName) {
-  let q = null;
-  if(Array.isArray(categoryName)) {
-    // OR across all keywords for multiple selected categories
-    q = categoryName.map(cat => { return buildCategoryTsquery(cat); })
-                    .filter(c => {return (c && c.length>0);})
-                    .join(" | ");
-  } else {
-    q = buildCategoryTsquery(categoryName);
-  }
-    
-  if (!q) return null;
+function buildStoredTopicWhere(topicName) {
+  const topics = Array.isArray(topicName) ? topicName : [topicName];
+  const escapedTopics = topics.map(t => db.sequelize.escape(t)).join(", ");
 
   return where(
-    db.Sequelize.fn(
-      "to_tsvector",
-      "simple",
-      db.Sequelize.cast(db.Sequelize.col("json"), "text")
-    ),
-    {
-      [Op.match]: db.Sequelize.fn("to_tsquery", "simple", q),
-    }
+    db.Sequelize.literal(`EXISTS (
+      SELECT 1
+      FROM jsonb_array_elements_text("dataset"."json"->'topic') AS t(value)
+      WHERE t.value IN (${escapedTopics})
+    )`),
+    true
   );
 }
 
 exports.lookupByUid = async (req, res) => {
   try {
-    const uid = String(req.params.uid || "").trim();
+    const uid = (req.params.uid ?? "").trim();
 
     if (!uid) {
       return res.status(400).send({
         message: "Dataset uid is required."
       });
+    } else {
+      // intentionally blank for branch coverage test
     }
 
     const sourceDataset = await Dataset.findByPk(uid);
@@ -517,16 +479,9 @@ exports.lookupByUid = async (req, res) => {
       });
     }
 
-    const identifier = String(sourceDataset.json?.identifier || "").trim();
-    const dataset_url = String(sourceDataset.json?.dataset_url || "").trim();
-
-    if (!identifier && !dataset_url) {
-      return res.status(400).send({
-        message: "Source dataset does not contain an identifier or dataset_url."
-      });
-    }
-
     const conditions = [];
+
+    const identifier = (sourceDataset.json?.identifier ?? "").trim();
 
     if (identifier) {
       conditions.push(
@@ -535,7 +490,11 @@ exports.lookupByUid = async (req, res) => {
           identifier
         )
       );
+    } else {
+      // intentionally blank for branch coverage test
     }
+
+    const dataset_url = (sourceDataset.json?.dataset_url ?? "").trim();
 
     if (dataset_url) {
       conditions.push(
@@ -544,6 +503,14 @@ exports.lookupByUid = async (req, res) => {
           dataset_url
         )
       );
+    } else {
+      // intentionally blank for branch coverage test
+    }
+
+    if (conditions.length === 0) {
+      return res.status(400).send({
+        message: "Source dataset does not contain an identifier or dataset_url."
+      });
     }
 
     const datasets = await Dataset.findAll({

@@ -75,6 +75,7 @@ async function searchLocalDatasets(filters) {
         };
         conditions.push(titleSearchQuery);
     }
+
     if (brcQueryTerm) {
         const brcSearchQuery = {
             'json.brc': {[Op.iLike]: `${brcQueryTerm}`}

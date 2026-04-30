@@ -193,6 +193,9 @@ router.get("/lookup/:uid", datasets.lookupByUid);
 // POST /api/datasets -> search
 router.post("/", search);
 
+// Get the latest dataset for each BRC.
+router.get("/latest", datasets.getLatestByBrc);
+
 // Must be last - catches all /:id patterns
 router.get("/:id", datasets.findOne);
 
