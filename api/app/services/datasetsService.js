@@ -70,9 +70,10 @@ async function searchLocalDatasets(filters) {
     }
 
     if (titleQueryTerm) {
-        conditions.push(
-          where(json("json.title"), { [Op.iLike]: `%${titleQueryTerm}%` })
-        );
+        const titleSearchQuery = {
+            'json.title': {[Op.iLike]: `%${titleQueryTerm}%`}
+        };
+        conditions.push(titleSearchQuery);
     }
 
     if (brcQueryTerm) {
