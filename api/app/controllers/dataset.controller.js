@@ -1,6 +1,5 @@
 const db = require("../models");
 const { getPaginationParams } = require("../utils/pagination");
-
 const Dataset = db.datasets;
 const Op = db.Sequelize.Op;
 const where = db.Sequelize.where;
