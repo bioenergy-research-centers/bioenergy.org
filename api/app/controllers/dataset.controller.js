@@ -446,32 +446,6 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
   }
 }
 
-// Create a Sequelize where() condition for a category.
-function buildCategoryWhere(categoryName) {
-  let q = null;
-  if(Array.isArray(categoryName)) {
-    // OR across all keywords for multiple selected categories
-    q = categoryName.map(cat => { return buildCategoryTsquery(cat); })
-                    .filter(c => {return (c && c.length>0);})
-                    .join(" | ");
-  } else {
-    q = buildCategoryTsquery(categoryName);
-  }
-    
-  if (!q) return null;
-
-  return where(
-    db.Sequelize.fn(
-      "to_tsvector",
-      "simple",
-      db.Sequelize.cast(db.Sequelize.col("json"), "text")
-    ),
-    {
-      [Op.match]: db.Sequelize.fn("to_tsquery", "simple", q),
-    }
-  );
-}
-
 function buildStoredTopicWhere(topicName) {
   const topics = Array.isArray(topicName) ? topicName : [topicName];
   const escapedTopics = topics.map(t => db.sequelize.escape(t)).join(", ");
