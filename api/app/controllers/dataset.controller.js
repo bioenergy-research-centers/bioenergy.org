@@ -202,7 +202,7 @@ exports.findAll = async (req, res) => {
   const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
 
   const dataQuery = Dataset.scope('supportedOnly').findAndCountAll({
-    order: [['json.date', 'DESC']],
+    order: [['json.date', 'DESC'], ['uid', 'ASC']],
     where: mergedWhereConditions,
     limit,
     offset
