@@ -2,7 +2,7 @@ const dbConfig = require("../config/db.config.js");
 
 const Sequelize = require("sequelize");
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
-    logging: console.log, // set to false to disable logging; default: console.log
+    logging: false, // set to false to disable logging; default: console.log
     host: dbConfig.HOST,
     port: dbConfig.PORT,
     dialect: dbConfig.dialect,
