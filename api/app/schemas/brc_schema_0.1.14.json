@@ -1,0 +1,1175 @@
+{
+    "$defs": {
+        "AnalysisType": {
+            "description": "Type of analysis performed on the dataset.",
+            "enum": [
+                "affinity_purification",
+                "cross_linking",
+                "Expression profiling",
+                "Genomic - SNP calling",
+                "image_analysis",
+                "Ms_imaging",
+                "shotgun_proteomics",
+                "srm_mrm",
+                "swath_ms",
+                "Targeted Locus (Loci)"
+            ],
+            "title": "AnalysisType",
+            "type": "string"
+        },
+        "BRCEnum": {
+            "description": "Bioenergy Research Center affiliation.",
+            "enum": [
+                "CABBI",
+                "CBI",
+                "GLBRC",
+                "JBEI"
+            ],
+            "title": "BRCEnum",
+            "type": "string"
+        },
+        "BRCOrganization": {
+            "additionalProperties": false,
+            "description": "An organization involved in the dataset. The name denotes this is the BRC-specific model of an organization, rather than that defined by OSTI, though the classes are similar.",
+            "properties": {
+                "organizationName": {
+                    "description": "Name of the organization.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "parentOrganization": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/BRCOrganization"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Higher-level parent of this organization."
+                },
+                "ror_id": {
+                    "description": "ROR identifier for the organization.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "wikidata_id": {
+                    "description": "Wikidata identifier for the organization.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "BRCOrganization",
+            "type": "object"
+        },
+        "CitedItemType": {
+            "description": "Type of cited item, e.g., journal article.",
+            "enum": [
+                "JournalArticle",
+                "Book",
+                "Dataset",
+                "Software",
+                "Thesis",
+                "Patent",
+                "Preprint",
+                "Presentation",
+                "Report",
+                "Webpage",
+                "WebApplication"
+            ],
+            "title": "CitedItemType",
+            "type": "string"
+        },
+        "Contributor": {
+            "additionalProperties": false,
+            "description": "An individual who contributed to the dataset in some manner, not necessarily as an author.",
+            "properties": {
+                "affiliation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/BRCOrganization"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Affiliation of the individual.",
+                    "type": "string"
+                },
+                "contributorType": {
+                    "$ref": "#/$defs/ContributorTypeCodes",
+                    "description": "The contribution type."
+                },
+                "email": {
+                    "description": "Email address of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "name": {
+                    "description": "Name of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "orcid": {
+                    "description": "ORCID for the individual. This should include the full URI with prefix, e.g., https://orcid.org/0000-0002-1825-0097.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "primaryContact": {
+                    "description": "Indicates if the individual is a primary contact.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Contributor",
+            "type": "object"
+        },
+        "ContributorTypeCodes": {
+            "description": "The type of contribution. These values are based on the OSTI schema (ELINK 241.6).",
+            "enum": [
+                "ContactPerson",
+                "DataCollector",
+                "DataCurator",
+                "DataManager",
+                "Distributor",
+                "Editor",
+                "HostingInstitution",
+                "Producer",
+                "ProjectLeader",
+                "ProjectManager",
+                "ProjectMember",
+                "RegistrationAgency",
+                "RegistrationAuthority",
+                "RelatedPerson",
+                "Researcher",
+                "ResearchGroup",
+                "RightsHolder",
+                "Sponsor",
+                "Supervisor",
+                "WorkPackageLeader",
+                "Other"
+            ],
+            "title": "ContributorTypeCodes",
+            "type": "string"
+        },
+        "Dataset": {
+            "additionalProperties": false,
+            "description": "A body of structured information describing some topic or topics of interest. This includes metadata about the dataset.",
+            "properties": {
+                "abstract": {
+                    "description": "\"A brief abstract summarizing the dataset. This will generally be longer and more detailed than the description but should not exceed a single paragraph.\"",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "active": {
+                    "description": "Indicates whether the dataset is active or inactive. This is a boolean field - true indicates active, false indicates inactive.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "additional_brcs": {
+                    "description": "Additional Bioenergy Research Center affiliations. This is a list of one or more additional BRC names, for instances in which the dataset is associated with multiple centers.",
+                    "items": {
+                        "$ref": "#/$defs/BRCEnum"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "alert": {
+                    "description": "Indicates whether availability of the dataset has encountered some inconsistency. This is a boolean field - true indicates alert, false indicates no alert. For example, if we have a Dataset object but the Dataset is missing from its source feed, this should be set to true.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "analysisType": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/AnalysisType"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "The type of analysis performed on the dataset.",
+                    "type": "string"
+                },
+                "bibliographicCitation": {
+                    "description": "Citation for the dataset.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "brc": {
+                    "$ref": "#/$defs/BRCEnum",
+                    "description": "The primary Bioenergy Research Center affiliation. This is a single BRC name."
+                },
+                "category": {
+                    "description": "Category of the dataset. This is specific to the BRCs and is not intended to be an exhaustive list of categories.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "conference_date": {
+                    "description": "Date or date range for the conference.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "conference_information": {
+                    "description": "General conference information related to the dataset.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "conference_location": {
+                    "description": "Location of the conference.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "conference_title": {
+                    "description": "Title of the conference.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "conference_type": {
+                    "description": "Code representing the type of conference-related work.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "contributors": {
+                    "description": "Contributors to the dataset who are not necessarily authors.",
+                    "items": {
+                        "$ref": "#/$defs/Contributor"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "country_publication": {
+                    "description": "Human-readable country of publication, if available.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "country_publication_code": {
+                    "description": "Country code for the publication venue, if applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "creator": {
+                    "description": "List of creators involved in the dataset, where one must be the primary contact.",
+                    "items": {
+                        "$ref": "#/$defs/Individual"
+                    },
+                    "type": "array"
+                },
+                "datasetName": {
+                    "description": "\"Name of a overall dataset to which this data entry belongs.\"",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "datasetType": {
+                    "$ref": "#/$defs/DatasetTypeCodes",
+                    "description": "High-level type of the main content of the dataset."
+                },
+                "dataset_url": {
+                    "description": "URL for the dataset landing page.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date": {
+                    "description": "The date the dataset was created or published.",
+                    "format": "date",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "A detailed description of the dataset.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "funding": {
+                    "description": "Funding source(s) for the dataset.",
+                    "items": {
+                        "$ref": "#/$defs/Funding"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "has_related_ids": {
+                    "description": "\"Related identifiers for the dataset. These should be identifiers to records in other repositories, and these records may be the same data or components of the dataset.\"",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Unique identifier for the dataset, assigned prior to inclusion in bioenergy.org.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "identifier": {
+                    "description": "Unique identifier for the dataset.",
+                    "type": "string"
+                },
+                "issue": {
+                    "description": "Issue number for a journal or other venue, if applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "journal_issn": {
+                    "description": "International Standard Serial Number for the journal, if known.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "journal_license_url": {
+                    "description": "URL for information regarding the journal license.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "journal_name": {
+                    "description": "Name of the journal publishing this information.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "journal_open_access_flag": {
+                    "description": "Indicates whether the journal is open access.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "journal_type": {
+                    "description": "Specific sub-type of the journal article.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "keywords": {
+                    "description": "Keywords associated with the dataset.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "media": {
+                    "description": "Media bundles and file-package metadata associated with the dataset.",
+                    "items": {
+                        "$ref": "#/$defs/MediaSet"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "ontology_annotations": {
+                    "description": "Structured ontology term annotations that align this dataset with controlled vocabulary or ontology classes.",
+                    "items": {
+                        "$ref": "#/$defs/OntologyAnnotation"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "plasmid_features": {
+                    "description": "Description of plasmid features, if applicable. This is a multivalued field.",
+                    "items": {
+                        "$ref": "#/$defs/Plasmid"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "publication_date_text": {
+                    "description": "Textual representation of the publication date, if used.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "publisher_information": {
+                    "description": "Publisher-specific information, if applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "relatedItem": {
+                    "description": "Related publications or items.",
+                    "items": {
+                        "$ref": "#/$defs/RelatedItem"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "repository": {
+                    "$ref": "#/$defs/RepositoryEnum",
+                    "description": "The repository where the dataset is stored."
+                },
+                "species": {
+                    "description": "Species information for the organism(s) studied.",
+                    "items": {
+                        "$ref": "#/$defs/Organism"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "theme": {
+                    "description": "High-level theme areas for the dataset. This is specific to the research themes of the BRCs.",
+                    "items": {
+                        "$ref": "#/$defs/DatasetThemeEnum"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "title": {
+                    "description": "The title of the dataset.",
+                    "type": "string"
+                },
+                "topic": {
+                    "description": "High-level topic area for the dataset. This is specific to the BRCs and is not intended to be an exhaustive list of topics.",
+                    "items": {
+                        "$ref": "#/$defs/DatasetTopicEnum"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "volume": {
+                    "description": "Volume number for a journal or book, if applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "title",
+                "date",
+                "creator",
+                "brc",
+                "identifier"
+            ],
+            "title": "Dataset",
+            "type": "object"
+        },
+        "DatasetCollection": {
+            "additionalProperties": false,
+            "description": "Container class for defining a collection of datasets.",
+            "properties": {
+                "datasets": {
+                    "description": "List of datasets in the collection.",
+                    "items": {
+                        "$ref": "#/$defs/Dataset"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "schema_version": {
+                    "description": "Version of the schema used for the collection.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "DatasetCollection",
+            "type": "object"
+        },
+        "DatasetThemeEnum": {
+            "description": "High-level theme area for the dataset. This is specific to the research themes of the BRCs.",
+            "enum": [
+                "Feedstock Development",
+                "Deconstruction and Separation",
+                "Conversion",
+                "Sustainability"
+            ],
+            "title": "DatasetThemeEnum",
+            "type": "string"
+        },
+        "DatasetTopicEnum": {
+            "description": "High-level topic area for the dataset. This is specific to the BRCs and is not intended to be an exhaustive list of topics.",
+            "enum": [
+                "Genetic Engineering",
+                "Plant Biology",
+                "Microbiology",
+                "Analytics & Methods",
+                "Enzymes & Proteins",
+                "Biomass & Feedstock",
+                "Bioenergy Production",
+                "Process Engineering"
+            ],
+            "title": "DatasetTopicEnum",
+            "type": "string"
+        },
+        "DatasetTypeCodes": {
+            "description": "High-level type of the main content of the dataset, following OSTI categories. See https://www.osti.gov/elink/F2416instruct.jsp",
+            "enum": [
+                "AS",
+                "GD",
+                "IM",
+                "ND",
+                "IP",
+                "FP",
+                "SM",
+                "MM",
+                "I"
+            ],
+            "title": "DatasetTypeCodes",
+            "type": "string"
+        },
+        "Funding": {
+            "additionalProperties": false,
+            "description": "Funding source for the dataset. Each item corresponds to a single award or grant.",
+            "properties": {
+                "awardNumber": {
+                    "description": "Award number from the funding entity.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "awardTitle": {
+                    "description": "Title of the award.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "awardURI": {
+                    "description": "URI for the award. This may be a DOI. Include prefix.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "fundingOrganization": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/BRCOrganization"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Details of the funding entity."
+                }
+            },
+            "title": "Funding",
+            "type": "object"
+        },
+        "Individual": {
+            "additionalProperties": false,
+            "description": "An individual involved in the dataset.",
+            "properties": {
+                "affiliation": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/BRCOrganization"
+                        },
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Affiliation of the individual.",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "Email address of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "name": {
+                    "description": "Name of the individual.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "orcid": {
+                    "description": "ORCID for the individual. This should include the full URI with prefix, e.g., https://orcid.org/0000-0002-1825-0097.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "primaryContact": {
+                    "description": "Indicates if the individual is a primary contact.",
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Individual",
+            "type": "object"
+        },
+        "MediaFile": {
+            "additionalProperties": false,
+            "description": "Metadata about a particular file or off-site resource associated with a dataset. This mirrors the OSTI media-file structure to preserve file-level details.",
+            "properties": {
+                "checksum": {
+                    "description": "Checksum value for the file, if known.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_file_added": {
+                    "description": "Date this media file was created.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_file_updated": {
+                    "description": "Date this media file was last modified.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "document_page_count": {
+                    "description": "Page count for document-based media, if applicable.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "duration_seconds": {
+                    "description": "Duration in seconds for audio-visual media.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "file_size_bytes": {
+                    "description": "File size in bytes, if applicable.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "media_file_id": {
+                    "description": "Unique identifier for this media file.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "media_id": {
+                    "description": "Identifier of the parent media set.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "media_source": {
+                    "description": "Method of file production or association.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "media_type": {
+                    "description": "Type code for this media file.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "mime_type": {
+                    "description": "MIME type describing this media file.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "parent_media_file_id": {
+                    "description": "Identifier of the parent media file, if this file is derived.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "pdf_version": {
+                    "description": "PDF version, if this file is a PDF.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pdfa_conformance": {
+                    "description": "PDF/A conformance level, if applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pdfa_part": {
+                    "description": "PDF/A part number, if applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "pdfua_part": {
+                    "description": "PDF/UA part number, if applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "revision": {
+                    "description": "Revision number of this media file.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "subtitle_tracks": {
+                    "description": "Number of subtitle tracks for audio-visual media.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "url": {
+                    "description": "Local file name or off-site URL.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "video_tracks": {
+                    "description": "Number of video tracks for audio-visual media.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                }
+            },
+            "title": "MediaFile",
+            "type": "object"
+        },
+        "MediaSet": {
+            "additionalProperties": false,
+            "description": "Metadata about a group of files associated with this dataset. This mirrors the OSTI media-set structure to preserve package-level details.",
+            "properties": {
+                "access_limitations": {
+                    "description": "Access limitation codes associated with this media set.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "date_added": {
+                    "description": "Date the media set was first created.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_updated": {
+                    "description": "Date the media set was most recently modified.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "date_valid_end": {
+                    "description": "Date when the media association ended, if applicable.",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "document_page_count": {
+                    "description": "Number of pages detected in the media set, if applicable.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "files": {
+                    "description": "Files associated with this media set.",
+                    "items": {
+                        "$ref": "#/$defs/MediaFile"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "media_id": {
+                    "description": "Unique identifier for this media set.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "media_source": {
+                    "description": "Primary source of the media set.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "media_title": {
+                    "description": "Optional title for the media set.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "mime_type": {
+                    "description": "MIME type description for the primary media content.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "osti_id": {
+                    "description": "OSTI record identifier linked to this media set, if any.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "revision": {
+                    "description": "Revision number of this media set.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                }
+            },
+            "title": "MediaSet",
+            "type": "object"
+        },
+        "OntologyAnnotation": {
+            "additionalProperties": false,
+            "description": "A structured reference to an ontology term used to annotate a dataset. This captures both the local display name used in BRC metadata and the canonical label used by the source ontology.",
+            "properties": {
+                "canonical_name": {
+                    "description": "Canonical label used for this term in its source ontology.",
+                    "type": "string"
+                },
+                "preferred_name": {
+                    "description": "Preferred display name for this ontology annotation in BRC metadata.",
+                    "type": "string"
+                },
+                "term_id": {
+                    "description": "Ontology term identifier in CURIE format, such as BERVO:8000232.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "term_id",
+                "preferred_name",
+                "canonical_name"
+            ],
+            "title": "OntologyAnnotation",
+            "type": "object"
+        },
+        "Organism": {
+            "additionalProperties": false,
+            "description": "An organism studied in the dataset.",
+            "properties": {
+                "NCBITaxID": {
+                    "description": "NCBI taxonomy ID for the organism.",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "scientificName": {
+                    "description": "Scientific name of the organism.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "strains": {
+                    "description": "Name of one or more strains of the organism.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Organism",
+            "type": "object"
+        },
+        "Plasmid": {
+            "additionalProperties": false,
+            "description": "Description of plasmid or other molecular vector features.",
+            "properties": {
+                "backbone": {
+                    "description": "Name of the backbone of the plasmid, e.g., pUC19.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "description": "Description of the plasmid, including any relevant features not captured in other fields.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "host": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Organism"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Host organism for the plasmid, e.g., E. coli. Includes both the scientific name and NCBI Taxonomy ID."
+                },
+                "id": {
+                    "description": "Unique identifier for the plasmid. This must be unique within the dataset.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "ori": {
+                    "description": "Origin of replication for the plasmid, e.g., ColE1.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "promoters": {
+                    "description": "Promoters for the plasmid, e.g., T7.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "replicates_in": {
+                    "description": "Organism(s) in which the plasmid replicates. Includes both the scientific name and NCBI Taxonomy ID.",
+                    "items": {
+                        "$ref": "#/$defs/Organism"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "selection_markers": {
+                    "description": "Selection markers for the plasmid, e.g, kan.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "title": "Plasmid",
+            "type": "object"
+        },
+        "RelatedItem": {
+            "additionalProperties": false,
+            "description": "A related publication or item, including cited publications.",
+            "properties": {
+                "relatedItemIdentifier": {
+                    "description": "Identifier or URL for the related item.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "relatedItemType": {
+                    "$ref": "#/$defs/CitedItemType",
+                    "description": "Type of the related item, e.g., JournalArticle."
+                },
+                "title": {
+                    "description": "Title of the related item.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "RelatedItem",
+            "type": "object"
+        },
+        "RepositoryEnum": {
+            "description": "Repository where the dataset is stored.",
+            "enum": [
+                "AmeriFlux",
+                "Bio-Protocol",
+                "Dryad",
+                "EDI Data Portal",
+                "European Nucleotide Archive",
+                "FigShare",
+                "GenBank",
+                "GEO",
+                "GitHub",
+                "GLBRC Land Atlas",
+                "GLBRC Sustainability",
+                "Iowa State University FigShare",
+                "ICE",
+                "Illinois Data Bank",
+                "iProX",
+                "JGI Data Portal",
+                "JGI Gold",
+                "JGI Genome Portal",
+                "JGI MycoCosm",
+                "JGI Phytozome",
+                "jPOST",
+                "MassIVE",
+                "Mendeley Data",
+                "MetaboLights",
+                "Metabolomics Workbench",
+                "National Microbiome Data Collaborative",
+                "NCBI BioProject",
+                "NCBI SRA",
+                "Open Science Framework",
+                "ORNL DAAC",
+                "OSTI",
+                "PanoramaPublic",
+                "PeptideAtlas",
+                "PRIDE",
+                "Princeton Data Commons",
+                "Protein Data Bank",
+                "Protocols.io",
+                "The Cambridge Crystallographic Data Centre",
+                "Zenodo"
+            ],
+            "title": "RepositoryEnum",
+            "type": "string"
+        }
+    },
+    "$id": "https://w3id.org/brc/brc_schema",
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "additionalProperties": true,
+    "description": "Container class for defining a collection of datasets.",
+    "metamodel_version": "1.7.0",
+    "properties": {
+        "datasets": {
+            "description": "List of datasets in the collection.",
+            "items": {
+                "$ref": "#/$defs/Dataset"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "schema_version": {
+            "description": "Version of the schema used for the collection.",
+            "type": [
+                "string",
+                "null"
+            ]
+        }
+    },
+    "title": "brc_schema",
+    "type": "object",
+    "version": "0.1.14"
+}
