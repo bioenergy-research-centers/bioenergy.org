@@ -1,4 +1,4 @@
-# Copilot instructions for `bioenergy.org`
+# AI agent instructions for `bioenergy.org`
 
 ## Build, test, and lint commands
 
