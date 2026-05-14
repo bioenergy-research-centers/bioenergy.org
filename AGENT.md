@@ -63,7 +63,7 @@
   - `client/`: Vue 3 + Vite + Pinia
   - `mcp/`: a thin remote MCP server that exposes dataset API calls as MCP tools
 - Docker Compose is the normal way to run the stack. In production mode the client is served through nginx; in development mode the client and API use their dev Dockerfiles with file watching.
-- The API stores datasets as JSONB records keyed by `uid` and `schema_version`. Most search, filtering, and metrics logic operates directly on the JSON payload in Postgres rather than on a large normalized schema.
+- The API stores datasets as JSONB records with `uid` as the primary key and `schema_version` as a column used for schema-aware behavior. Most search, filtering, and metrics logic operates directly on the JSON payload in Postgres rather than on a large normalized schema.
 - API route responsibilities are split into:
   - `GET /api/datasets`: paginated local dataset search plus facet aggregation
   - `POST /api/datasets`: advanced/federated search path for sequence-based lookups via `strategyManager`
