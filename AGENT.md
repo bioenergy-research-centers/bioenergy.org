@@ -10,6 +10,33 @@
 - The system is schema-driven. Dataset feeds declare a `schema_version`, the API exposes supported schemas at `/api/schema`, and validation happens through the `/api/validate` endpoint.
 - The application is usually run through Docker Compose. In development, the client and API use hot-reload dev containers; in production mode the client is served through nginx.
 
+## Workflow expectations
+
+- Keep changes small and focused. Split unrelated fixes into separate PRs when possible.
+- Treat GitHub issues as the source of planned work. If a task maps to an existing issue, reference it and avoid overlapping work.
+- Keep the `main` branch deployable. Avoid broad speculative refactors unless they are required for the task.
+- Expect review through CODEOWNERS in `.github/CODEOWNERS`, and keep user-facing or workflow changes documented when behavior changes.
+- External contributors are expected to be listed in `contributors/contributors.txt` per `CONTRIBUTING.md`.
+
+## Where to edit first
+
+- Search and filter behavior usually spans both tiers:
+  - API query handling under `api/app/routes/` and related services/controllers.
+  - Client state and URL sync in `client/src/store/searchStore.js` and `client/src/router/`.
+- Dataset schema support typically requires coordinated updates to both:
+  - API schema allowlist and snapshots under `api/app/schemas/`.
+  - Client dataset-version mapping in `client/src/views/datasets/versionComponentMap.js`.
+- Dataset persistence and response shaping belong in the API model layer, especially `api/app/models/dataset.model.js`.
+- Contact form and issue-sync behavior spans `client/src/views/ContactView.vue` plus the `/api/messages` route and its supporting services.
+- MCP changes should usually be thin API-adapter changes in `mcp/src/`; business logic should stay in the API.
+
+## Safe change boundaries
+
+- Do not reimplement API business rules in the MCP server.
+- Do not bypass dataset model sanitization or change dataset response shape casually; downstream client rendering depends on `toClientJSON()` output.
+- Treat schema snapshots under `api/app/schemas/` as pinned runtime assets. Update them deliberately and keep supported-version metadata aligned with client rendering support.
+- Imported BRC feeds come from external JSON endpoints and may contain inconsistent data. Prefer defensive handling over assuming stable source formatting.
+
 ## Build, test, and lint commands
 
 - Prefer working from the relevant package directory instead of the repo root:
@@ -54,6 +81,14 @@
   - `docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest run`
 - Coverage thresholds are enforced at 80% for statements, branches, functions, and lines in both API and client Vitest configs.
 
+## Post-edit validation expectations
+
+- Prefer the narrowest package-local validation that covers the changed behavior before running broader checks.
+- For API-only changes, start with the affected Vitest file or API suite from `api/`.
+- For client-only changes, start with the affected Vitest file or client suite from `client/`.
+- Use Docker-based commands when the change depends on container behavior, Compose wiring, or the documented team workflow.
+- When changing schema support, import behavior, or validation workflow, also update the relevant documentation in `README.md` or adjacent docs if user-facing guidance changed.
+
 ### Data operations
 
 - Import BRC data feeds from the repo root: `docker compose run api node scripts/import_datafeeds.js`
@@ -87,8 +122,8 @@
 - The client talks to the API through small service wrappers in `client/src/services/`. Search UI state lives in the Pinia `searchStore`, which also mirrors state into the router query string so search URLs are shareable and back/forward navigation restores filters.
 - Dataset detail rendering is schema-version-aware. The API exposes `schema_version`, and the client resolves that to a Vue component through `client/src/views/datasets/versionComponentMap.js`.
 - The MCP service is intentionally just an HTTP adapter over the API. It should stay stateless and should not reimplement API business logic.
-- Imported BRC feed data comes from external JSON endpoints and is brought into the local catalog through `api/scripts/import_datafeeds.js`; schema validation is handled separately via LinkML and `validate.sh`.
-- `bioenergy.org` depends on the separate `bioenergy-research-centers/brc-schema` repository as the authoritative source for BRC schema definitions. This repo keeps pinned JSON schema files under `api/app/schemas/` for runtime/API use, while `validate.sh` fetches the current YAML schema from GitHub for validation.
+- Imported BRC feed data comes from external JSON endpoints and is brought into the local catalog through `api/scripts/import_datafeeds.js`.
+- Runtime schema support is driven by the committed JSON schema files under `api/app/schemas/`, and feed validation is performed through the API validation endpoint.
 
 ## Key conventions
 
@@ -100,7 +135,7 @@
 - Dataset JSON is sanitized at the model layer in `api/app/models/dataset.model.js`; do not bypass that path when changing dataset persistence.
 - The API exposes datasets with `toClientJSON()`, which injects `uid`, `schema_version`, and timestamps into the stored JSON payload. Preserve that shape when changing dataset responses.
 - Only schema versions marked as supported in `api/app/schemas/schema_list.json` are included in the API's `supportedOnly` scope. When adding or changing dataset schema support, keep the API allowlist and the client's `versionComponentMap.js` in sync.
-- Treat `../brc-schema` as an optional local checkout for reference only unless the workflow is explicitly changed; current scripts use the committed schema snapshots in this repo or fetch from the upstream GitHub repository.
+- Treat `../brc-schema` as an optional local checkout for reference only unless the workflow is explicitly changed; runtime behavior in this repo should continue to rely on the committed schema assets and API endpoints.
 - Search behavior spans both tiers:
   - API `GET /api/datasets` expects pagination plus optional `filters` and computes facets.
   - Client `searchStore` serializes filters into the URL query string and restores them from the route.
