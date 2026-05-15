@@ -1,5 +1,15 @@
 # AI agent instructions for `bioenergy.org`
 
+## Repository context
+
+- `bioenergy.org` is the Bioenergy Research Centers data portal. It aggregates FAIR dataset feeds from participating BRCs and exposes them through a public web UI and API.
+- The repo is a monorepo with three main runtime pieces:
+  - `api/`: an Express + Sequelize service that serves dataset search, schema, validation, and messaging endpoints.
+  - `client/`: a Vue 3 + Vite frontend for browsing datasets, filtering search results, and rendering schema-version-aware dataset detail pages.
+  - `mcp/`: a thin remote MCP server that forwards dataset operations to the API rather than reimplementing business logic.
+- The system is schema-driven. Dataset feeds declare a `schema_version`, the API exposes supported schemas at `/api/schema`, and validation happens through the `/api/validate` endpoint.
+- The application is usually run through Docker Compose. In development, the client and API use hot-reload dev containers; in production mode the client is served through nginx.
+
 ## Build, test, and lint commands
 
 - Prefer working from the relevant package directory instead of the repo root:
