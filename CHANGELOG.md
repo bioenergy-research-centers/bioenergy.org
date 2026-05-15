@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions QC workflow
 - Initial ESLint config file (eslint.config.js)
 - Initial top-level package metadata files (package.json, package-lock.json)
+- API endpoint for data feed validation.
+- API endpoints for schema listing and retrieval.
 
 [unreleased]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.2...HEAD
 [0.0.2]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.1...v0.0.2

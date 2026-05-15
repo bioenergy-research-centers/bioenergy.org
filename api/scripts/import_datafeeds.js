@@ -1,203 +1,102 @@
-require("dotenv").config( {path: ['.env','../.env'] } );
+require("dotenv").config({ path: [".env", "../.env"] });
 
 const { syncIssueComment } = require("../app/services/githubService");
 const { formatListWithSublistBlocks } = require("../app/utils/markdownFormatter");
+const { validateDatafeedJson } = require("../app/services/validateService");
 
 const db = require("../app/models");
 const Dataset = db.datasets;
 
-// Begin data import.
-
-// read a set of hard-coded URLs from a file
-const datasources = require("../app/config/datafeeds.json"); // hard-coded data feed URLs
-
-const fs = require('node:fs');
-const fetch = require('sync-fetch'); // synchronous fetch is easier for development and testing (can switch to async later if needed)
-const Ajv = require('ajv/dist/2019'); // this specific path is required to support the BRC schemas (rather than simply 'ajv');
-const addFormats = require('ajv-formats');
-
-// Configure Ajv parameters.
-// strictSchema should be set to false in order to accomodate LinkML keywords "metamodel_version" and "version"
-// strictTypes should be set to false in order to handle these warnings:
-// type "null" not allowed by context "string" at "https://w3id.org/brc/brc_schema#/properties/analysisType/anyOf/2" (strictTypes)
-// type "null" not allowed by context "string" at "https://w3id.org/brc/brc_schema#/properties/affiliation/anyOf/2" (strictTypes)
-const ajvParams = { allErrors: true, verbose: true, strictSchema: false, strictNumbers: true, strictTypes: false, strictTuples : true, strictRequired: true };
-
-// initialize the JSON schema validator
-
-const schemas = require("../app/schemas");
+const datasources = require("../app/config/datafeeds.json");
+const fetch = require("sync-fetch");
 
 async function processDatafeeds() {
   const feed_summary = {};
   const invalid_feeds = {};
 
-  // query each URL expecting well-formed JSON matching the project schema structure
   for (const datafeed of datasources.urls) {
-    // Initialize summary counts
-    const datafeed_counts = {valid:0,invalid:0,duplicate:0};
-    // Initialize invalid record tracking
-    const invalid_records = [];
-    const duplicate_records = [];
-
-    // Track dataset identifiers and URLs seen within current feed only.
-    const processedIdentifiers = new Set();
-    const processedUrls = new Set();
-
     if (datafeed.url === null) {
-      console.error(datafeed.name + " [" + datafeed.url + "]: DATA FEED REJECTED (reason: missing URL)");
-      continue; // skip entire data feed
+      console.error(`${datafeed.name} [${datafeed.url}]: DATA FEED REJECTED (reason: missing URL)`);
+      continue;
     }
 
-    var datafeed_text;
+    let datafeedText;
     try {
-      datafeed_text = fetch(datafeed.url).text();
+      datafeedText = fetch(datafeed.url).text();
     } catch (err) {
-      console.error(datafeed.name + " [" + datafeed.url + "]: DATA FEED REJECTED (reason: retrieval failed)");
+      console.error(`${datafeed.name} [${datafeed.url}]: DATA FEED REJECTED (reason: retrieval failed)`);
       console.error(err.message);
-      continue; // skip entire data feed
+      continue;
     }
 
-    // expect well-formed JSON
-    var datafeed_json;
+    let datafeedJson;
     try {
-      datafeed_json = JSON.parse(datafeed_text);
+      datafeedJson = JSON.parse(datafeedText);
     } catch (err) {
-      console.error(datafeed.name + " [" + datafeed.url + "]: DATA FEED REJECTED (reason: malformed JSON)");
+      console.error(`${datafeed.name} [${datafeed.url}]: DATA FEED REJECTED (reason: malformed JSON)`);
       console.error(err.message);
-      continue; // skip entire data feed
+      continue;
     }
 
-    // Each feed might conform to a different schema version.
-    // Look for a schema version at the top level of the JSON feed.
-    var schema_version = datafeed_json.schema_version;
-    if(process.env.FORCE_SCHEMA_VERSION){
-      console.warn('FORCE_SCHEMA_VERSION provided:', process.env.FORCE_SCHEMA_VERSION, 'overriding versions from datafeed');
-      schema_version = process.env.FORCE_SCHEMA_VERSION;
-    }
-    // TODO: This workaround for older feeds is no longer necessary, as all feeds are now in the new format. This extra check can be refactored out at any time.
-    // Adding the schema_version field at the top level moves the dataset array into a top-level field named 'datasets'.
-    // But if this field is not found, assume this is an older feed where the dataset array is at the top level.
-    var datasets = (datafeed_json.datasets === undefined) ? datafeed_json : datafeed_json.datasets;
-
-    // Look up the LinkML JSON schema.
-    const schema_filename = schemas.index[schema_version];
-
-    if (schema_filename === undefined)
-    {
-      console.error('Unsupported schema version: ' + schema_version + ' - skipping ' + datafeed.name + ' feed.');
-      continue; // skip to next feed
-    }
-
-    var validate; // the validator for this feed
-
+    let validationResult;
     try {
-      const schema = require('../app/schemas/' + schema_filename);
-      const ajv = new Ajv(ajvParams);
-      addFormats(ajv); // required for supporting format: date in JSON schema
-      validate = ajv.compile(schema);
+      validationResult = validateDatafeedJson(datafeedJson, {
+        feedName: datafeed.name,
+        feedSource: datafeed.url,
+        forceSchemaVersion: process.env.FORCE_SCHEMA_VERSION || null
+      });
     } catch (err) {
-      console.error('Unable to load ' + schema_filename + ' - skipping ' + datafeed.name + ' feed.');
+      console.error(`${datafeed.name} [${datafeed.url}]: DATA FEED REJECTED (${err.code || "VALIDATION_SETUP_ERROR"})`);
       console.error(err.message);
-      continue; // skip to next feed
+      continue;
     }
 
-    console.log('Validating ' + datafeed.name + ' against ' + schema_filename);
+    const { report, validDatasets } = validationResult;
 
-    // validate the entire feed
-    try {
-      if (validate({ "datasets": [ datasets ] })) {
-        console.log(datafeed.name + "DATA FEED PASSED VALIDATION");
-      }
-    } catch (err) {
-      console.error(datafeed.name + "DATA FEED FAILED VALIDATION:", validate.errors);
-      // this is a non-fatal error, so continue processing records
+    console.log(`Validating ${datafeed.name} against ${report.schema_filename}`);
+
+    if (report.feed_validation.valid) {
+      console.log(`${datafeed.name} DATA FEED PASSED VALIDATION`);
+    } else {
+      console.error(`${datafeed.name} DATA FEED FAILED VALIDATION:`, report.feed_validation.errors);
     }
 
-    // process each dataset in the data feed
-    for (const [dataset_index, dataset] of datasets.entries())
-    {
-      // Force error on empty string identifier
-      if (typeof dataset.identifier === 'string' && dataset.identifier.trim() == '') {
-        dataset.identifier = null;
-      }
-
-      // Duplicate detection (within this import run)
-      var duplicate = false;
-
-      // check for duplicate dataset identifiers
-      if (dataset.identifier && dataset.identifier !== null) {
-        const dedupeIdKey = (dataset.identifier).toString().trim().toLowerCase();
-        if (processedIdentifiers.has(dedupeIdKey)) {
-          console.warn("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " DUPLICATE - identifier: " + dataset.identifier);
-          duplicate = true;
-        } else {
-          processedIdentifiers.add(dedupeIdKey);
-        }
-      }
-
-      // check for duplicate dataset URLs
-      if (typeof dataset.dataset_url === 'string' && dataset.dataset_url.trim() !== '') {
-        const dedupeUrlKey = (dataset.dataset_url).toString().trim().toLowerCase();
-        if (processedUrls.has(dedupeUrlKey)) {
-          console.warn("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " DUPLICATE - dataset_url: " + dataset.dataset_url); 
-          duplicate = true;
-        } else {
-          processedUrls.add(dedupeUrlKey);
-        }
-      }
-
-      if (duplicate) {
-        datafeed_counts.duplicate += 1;
-        duplicate_records.push([
-          dataset.identifier + " (" + (dataset_index + 1) + ")",
-          "identifier: " + dataset.identifier + ", dataset_url: " + dataset.dataset_url
-        ]);
-        continue; // skip adding the record
-      }
-
-      // handle malformed data gracefully (only reject individual datasets that fail validation, not entire data feeds)
-      if (validate({ "datasets": [ dataset ] })) {
-        datafeed_counts.valid += 1;
-      } else {
-        datafeed_counts.invalid += 1;
-        console.error("[" + datafeed.url + "]: DATA SET " + (dataset_index + 1) + " FAILED VALIDATION - identifier: " + dataset.identifier);
-        const dataset_errors = validate.errors.map(function(error){ return { msg: error.instancePath + ": " + error.message, provided: error.data, required: error.schema}; });
-        console.error(dataset_errors);
-        invalid_records.push([dataset.identifier+" ("+(dataset_index+1)+")", JSON.stringify(dataset_errors)]);
-        continue; // only reject data sets that fail validation
-      }
-
-      const uid = dataset.brc + '_' + dataset.identifier;
-
+    for (const dataset of validDatasets) {
+      const uid = `${dataset.brc}_${dataset.identifier}`;
       const new_record = {
-        uid: uid,
-        schema_version: schema_version,
+        uid,
+        schema_version: report.schema_version,
         json: dataset
       };
 
-      await Dataset.scope('defaultScope').upsert(new_record);
-    };
+      await Dataset.scope("defaultScope").upsert(new_record);
+    }
 
-    feed_summary[datafeed.url]=datafeed_counts;
+    feed_summary[datafeed.url] = report.summary;
 
-    if (invalid_records.length > 0) {
-      invalid_feeds["Invalid Records - "+datafeed.name]=invalid_records;
-    };
+    if (report.invalid_records.length > 0) {
+      invalid_feeds[`Invalid Records - ${datafeed.name}`] = report.invalid_records.map((record) => [
+        `${record.identifier} (${record.dataset_index})`,
+        JSON.stringify(record.errors)
+      ]);
+    }
 
-    if (duplicate_records.length > 0) {
-      invalid_feeds["Duplicate Records - "+datafeed.name]=duplicate_records;
-    };
+    if (report.duplicate_records.length > 0) {
+      invalid_feeds[`Duplicate Records - ${datafeed.name}`] = report.duplicate_records.map((record) => [
+        `${record.identifier} (${record.dataset_index})`,
+        record.details
+      ]);
+    }
   }
+
   console.log("Data Import Summary:", feed_summary);
   return invalid_feeds;
 }
 
-
 async function processInvalidRecords(invalid_feeds) {
-  // Sync invalid data to Github issues
-  Object.keys(invalid_feeds).forEach( title => {
-    const issueBody = formatListWithSublistBlocks(invalid_feeds[title], 'json');
-    syncIssueComment(title, issueBody, {labels: 'data-import'});
+  Object.keys(invalid_feeds).forEach((title) => {
+    const issueBody = formatListWithSublistBlocks(invalid_feeds[title], "json");
+    syncIssueComment(title, issueBody, { labels: "data-import" });
   });
 }
 
@@ -213,4 +112,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-
