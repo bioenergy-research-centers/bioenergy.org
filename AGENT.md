@@ -48,7 +48,11 @@
 
 - Import BRC data feeds from the repo root: `docker compose run api node scripts/import_datafeeds.js`
 - Redirect import validation output to a file if needed: `docker compose run api node scripts/import_datafeeds.js 2>&1 > import_datafeeds.txt`
-- Validate dataset JSON against the schema with the repository helper: `./validate.sh`
+- Validate a local JSON feed (for example `jbei.json`) using the API endpoint and either the schema declared in the dataset itself or a specific schema version:
+  - `curl -X POST -H "Content-Type: application/json" --data-binary @jbei.json https://api.bioenergy.org/api/validate > validation-results.json`
+  - `curl -X POST -H "Content-Type: application/json" --data-binary @jbei.json "https://api.bioenergy.org/api/validate?schema_version=0.1.13"`
+- List currently supported JSON schemas: `https://api.bioenergy.org/api/schema`
+- Retrieve a specific schema version (for example `0.1.12`): `https://api.bioenergy.org/api/schema/0.1.12`
 
 ### Troubleshooting
 
