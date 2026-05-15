@@ -107,11 +107,6 @@
 
 ## High-level architecture
 
-- This repo is a monorepo with three runtime pieces:
-  - `api/`: Express + Sequelize + Postgres
-  - `client/`: Vue 3 + Vite + Pinia
-  - `mcp/`: a thin remote MCP server that exposes dataset API calls as MCP tools
-- Docker Compose is the normal way to run the stack. In production mode the client is served through nginx; in development mode the client and API use their dev Dockerfiles with file watching.
 - The API stores datasets as JSONB records with `uid` as the primary key and `schema_version` as a column used for schema-aware behavior. Most search, filtering, and metrics logic operates directly on the JSON payload in Postgres rather than on a large normalized schema.
 - API route responsibilities are split into:
   - `GET /api/datasets`: paginated local dataset search plus facet aggregation
@@ -121,7 +116,6 @@
   - `/api-docs`: Swagger generated from route annotations
 - The client talks to the API through small service wrappers in `client/src/services/`. Search UI state lives in the Pinia `searchStore`, which also mirrors state into the router query string so search URLs are shareable and back/forward navigation restores filters.
 - Dataset detail rendering is schema-version-aware. The API exposes `schema_version`, and the client resolves that to a Vue component through `client/src/views/datasets/versionComponentMap.js`.
-- The MCP service is intentionally just an HTTP adapter over the API. It should stay stateless and should not reimplement API business logic.
 - Imported BRC feed data comes from external JSON endpoints and is brought into the local catalog through `api/scripts/import_datafeeds.js`.
 - Runtime schema support is driven by the committed JSON schema files under `api/app/schemas/`, and feed validation is performed through the API validation endpoint.
 
@@ -136,9 +130,6 @@
 - The API exposes datasets with `toClientJSON()`, which injects `uid`, `schema_version`, and timestamps into the stored JSON payload. Preserve that shape when changing dataset responses.
 - Only schema versions marked as supported in `api/app/schemas/schema_list.json` are included in the API's `supportedOnly` scope. When adding or changing dataset schema support, keep the API allowlist and the client's `versionComponentMap.js` in sync.
 - Treat `../brc-schema` as an optional local checkout for reference only unless the workflow is explicitly changed; runtime behavior in this repo should continue to rely on the committed schema assets and API endpoints.
-- Search behavior spans both tiers:
-  - API `GET /api/datasets` expects pagination plus optional `filters` and computes facets.
-  - Client `searchStore` serializes filters into the URL query string and restores them from the route.
-  - If search parameters change, update both the API query handling and the client store/router serialization together.
-- Contact form submissions are not just emails: the client posts form data to `/api/messages`, the API validates Cloudflare Turnstile, formats markdown, and creates or updates a GitHub issue through `githubService`.
+- When search parameters change, update both the API query handling and the client store/router serialization together.
+- Contact form submissions flow through `/api/messages`, including Cloudflare Turnstile validation, markdown formatting, and GitHub issue synchronization.
 - There is expected error-path logging in tests (`console.error` output for search and Turnstile failures); that noise is documented in the README and does not automatically indicate a broken test run.
