@@ -1,0 +1,219 @@
+{
+  "schema_version": "0.1.12",
+  "datasets": [
+    {
+      "title": "TMTPro Complementary Ion Quantification Increase Plexing and Sensitivity for Accurate Multiplexed Proteomics at the MS2 level",
+      "date": "2021-05-11",
+      "creator": [
+        {
+          "name": "Martin Wuhr",
+          "primaryContact": true,
+          "email": "wuhr@princeton.edu",
+          "affiliation": "Princeton University"
+        }
+      ],
+      "contributors": [],
+      "brc": "CABBI",
+      "active": true,
+      "alert": false,
+      "repository": "PRIDE",
+      "bibliographicCitation": "https://dx.doi.org/10.6019/PXD021661",
+      "identifier": "PXD021661",
+      "species": [
+        {
+          "NCBITaxID": 9606,
+          "scientificName": "Homo sapiens"
+        },
+        {
+          "NCBITaxID": 4932,
+          "scientificName": "Saccharomyces cerevisiae"
+        }
+      ],
+      "description": "The ability of the TMTPro isobaric labeling reagents to form complementary ions for accurate multiplexed proteomics at the MS2 level was investigated. Human and yeast peptides were labeled in distinct ratios to analyze the effect of interference on the quantification accuracy. A method, TMTProC, was developed and optimized for accurate, sensitive MS2-level quantification of up to 8 conditions in one MS-run.",
+      "keywords": [
+        "complementary ion quantification",
+        "interference-free quantification",
+        "multiplexing",
+        "TMTpro"
+      ],
+      "analysisType": "shotgun_proteomics",
+      "relatedItem": [
+        {
+          "title": "TMTpro Complementary Ion Quantification Increases Plexing and Sensitivity for Accurate Multiplexed Proteomics at the MS2 Level.",
+          "relatedItemType": "JournalArticle",
+          "relatedItemIdentifier": "https://dx.doi.org/10.1021/ACS.JPROTEOME.0C00813"
+        }
+      ],
+      "theme": [
+        "Conversion"
+      ],
+      "dataset_url": "https://dx.doi.org/10.6019/PXD021661",
+      "id": "cabbi:dataset-tmtpro-complementary-ion-quantification-increase-plexing-and-2021"
+    },
+    {
+      "title": "CABBI Oilcane 16S rRNA and ITS (greenhouse)",
+      "date": "2022-10-19",
+      "creator": [
+        {
+          "name": "Adina Howe",
+          "primaryContact": true,
+          "email": "adina@iastate.edu",
+          "affiliation": "Iowa State University"
+        },
+        {
+          "name": "Angela Kent",
+          "primaryContact": false,
+          "email": "akent@illinois.edu",
+          "affiliation": "University of Illinois Urbana-Champaign"
+        },
+        {
+          "name": "Freddy Altpeter",
+          "primaryContact": false
+        },
+        {
+          "name": "John Shanklin",
+          "primaryContact": false,
+          "email": "shanklin@bnl.gov",
+          "affiliation": "Brookhaven National Laboratory"
+        }
+      ],
+      "contributors": [],
+      "brc": "CABBI",
+      "active": true,
+      "alert": false,
+      "repository": "GEO",
+      "bibliographicCitation": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA892137",
+      "identifier": "PRJNA892137",
+      "species": [
+        {
+          "NCBITaxID": 4546,
+          "scientificName": "Saccharum spp. hybrid"
+        }
+      ],
+      "description": "This project aims to study the microbial structure and potential functions of bacterial and fungal microbiomes in leaves, stems, roots, rhizospheres, and bulk soils of energy crops (oilcane) grown in greenhouses.",
+      "keywords": [
+        "Biomass Analytics",
+        "Metabolomics"
+      ],
+      "relatedItem": [
+        {
+          "title": "Microbiome differences in sugarcane and metabolically engineered oilcane accessions and their implications for bioenergy production",
+          "relatedItemType": "JournalArticle",
+          "relatedItemIdentifier": "http://doi.org/10.1186/s13068-023-02302-6"
+        }
+      ],
+      "theme": [
+        "Feedstock Development",
+        "Sustainability"
+      ],
+      "dataset_url": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA892137",
+      "id": "cabbi:dataset-cabbi-oilcane-16s-rrna-and-its-greenhouse-2022"
+    },
+    {
+      "title": "Microbiome Differences in Sugarcane and Metabolically Engineered Oilcane Accessions and Their Implications for Bioenergy Production",
+      "date": "2022-10-01",
+      "creator": [
+        {
+          "name": "Adina Howe",
+          "primaryContact": true,
+          "email": "adina@iastate.edu",
+          "affiliation": "Iowa State University"
+        },
+        {
+          "name": "Fredy Altpeter",
+          "primaryContact": false,
+          "email": "altpeter@ufl.edu",
+          "affiliation": "University of Florida"
+        },
+        {
+          "name": "John Shanklin",
+          "primaryContact": false,
+          "email": "shanklin@bnl.gov",
+          "affiliation": "Brookhaven National Laboratory"
+        },
+        {
+          "name": "Angela Kent",
+          "primaryContact": false,
+          "email": "akent@illinois.edu",
+          "affiliation": "University of Illinois Urbana-Champaign"
+        }
+      ],
+      "contributors": [],
+      "brc": "CABBI",
+      "active": true,
+      "alert": false,
+      "repository": "NCBI BioProject",
+      "bibliographicCitation": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA892137",
+      "identifier": "PRJNA892137",
+      "species": [
+        {
+          "NCBITaxID": 4932,
+          "scientificName": "Saccharomyces cerevisiae"
+        }
+      ],
+      "description": "This project aims to study the microbial structure and potential functions of bacterial and fungal microbiomes in leaves, stems, roots, rhizospheres, and bulk soils of energy crops (oilcane) grown in greenhouses.",
+      "keywords": [
+        "Microbiome",
+        "Oilcane"
+      ],
+      "analysisType": "Genomics",
+      "relatedItem": [
+        {
+          "title": "Microbiome differences in sugarcane and metabolically engineered oilcane accessions and their implications for bioenergy production",
+          "relatedItemType": "JournalArticle",
+          "relatedItemIdentifier": "http://doi.org/10.1186/s13068-023-02302-6"
+        }
+      ],
+      "theme": [
+        "Feedstock Development",
+        "Sustainability"
+      ],
+      "dataset_url": "https://www.ncbi.nlm.nih.gov/bioproject/PRJNA892137",
+      "id": "cabbi:dataset-microbiome-differences-in-sugarcane-and-metabolically-engine-2022"
+    },
+    {
+      "title": "Data from: Biomass yield, yield components and growing season phenotypic measurements of Miscanthus",
+      "date": "2024-04-08",
+      "creator": [
+        {
+          "name": "DoKyoung Lee",
+          "primaryContact": true,
+          "email": "leedk@illinois.edu",
+          "affiliation": "University of Illinois Urbana-Champaign"
+        }
+      ],
+      "contributors": [],
+      "brc": "CABBI",
+      "active": true,
+      "alert": false,
+      "repository": "IntentionallyInvalidRepositoryForTesting",
+      "bibliographicCitation": "https://doi.org/10.5061/dryad.z612jm6kk",
+      "identifier": "10.5061/dryad.z612jm6kk",
+      "species": [
+        {
+          "NCBITaxID": 183674,
+          "scientificName": "Miscanthus x giganteus"
+        }
+      ],
+      "description": "Dataset contains end-of-season Dry biomass yield of Miscanthus x giganteus from two sites (Urbana and Pesotum) in Central Illinois. The Urbana and Pesotum yields are collected over 4 years (2018-2021) and 2 years (2020-2021) respectively. Dataset also contains yield component traits (tiller height, tiller density and tiller weight) obtained at harvest. Phenotypic traits (canopy height, Leaf area index (LAI) and Leaf Chlorophyll content (LCC)) measured during the growing season are also included.",
+      "keywords": [
+        "miscanthus",
+        "field data",
+        "biomass yield",
+        "phenotypic measurements"
+      ],
+      "relatedItem": [
+        {
+          "title": "Nitrogen Fertilization Effects on Aged Miscanthus x giganteus Stands: Exploring Biomass Yield, Yield Components, and Biomass Prediction Using In-Season Morphological Traits",
+          "relatedItemType": "JournalArticle",
+          "relatedItemIdentifier": "https://doi.org/10.1111/gcbb.13139"
+        }
+      ],
+      "theme": [
+        "Sustainability"
+      ],
+      "dataset_url": "https://doi.org/10.5061/dryad.z612jm6kk",
+      "id": "cabbi:dataset-data-from-biomass-yield-yield-components-and-growing-season--2024"
+    }
+  ]
+}
