@@ -7,6 +7,7 @@ require("dotenv").config( {path: ['.env','../.env'] } );
 const datasetRoutes = require('./app/routes/dataset.routes');
 const messageRoutes = require('./app/routes/message.routes');
 const schemaRoutes = require('./app/routes/schema.routes');
+const validateRoutes = require('./app/routes/validate.routes');
 
 const app = express();
 
@@ -16,6 +17,28 @@ var corsOptions = {
 
 // Apply global middleware for all routes first
 app.use(cors(corsOptions));
+
+// Increase the content length limit (validation endpoint needs this).
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+// force API endpoints to return errors in JSON.
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  if (req.path.startsWith("/api/")) {
+    return res.status(err.status || 500).json({
+      error: err.message || "Internal server error",
+      code: err.code || "INTERNAL_ERROR"
+    });
+  }
+
+  return next(err);
+});
 
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
@@ -43,6 +66,7 @@ app.get("/", (req, res) => {
 app.use('/api/datasets', datasetRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/schema', schemaRoutes);
+app.use('/api/validate', validateRoutes);
 
 // Swagger setup
 
