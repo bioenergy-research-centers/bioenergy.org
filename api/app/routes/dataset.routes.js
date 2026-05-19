@@ -101,9 +101,19 @@
  *         schema:
  *           oneOf:
  *             - type: string
+ *               enum:
+ *                 - JBEI
+ *                 - GLBRC
+ *                 - CABBI
+ *                 - CBI
  *             - type: array
  *               items:
  *                 type: string
+ *                 enum:
+ *                   - JBEI
+ *                   - GLBRC
+ *                   - CABBI
+ *                   - CBI
  *         description: Filter by Bioenergy Research Center
  *       - in: query
  *         name: filters[topic]
@@ -194,6 +204,86 @@
  *               sequence:
  *                 type: string
  *                 description: Optional sequence. When provided, a federated sequence search is run.
+ *               page:
+ *                 type: integer
+ *                 default: 1
+ *                 description: Page number to return for local dataset search
+ *               rows:
+ *                 type: integer
+ *                 default: 50
+ *                 maximum: 500
+ *                 description: Number of rows per page for local dataset search
+ *               limit:
+ *                 type: integer
+ *                 maximum: 500
+ *                 description: Legacy alias for rows
+ *               nofacets:
+ *                 type: boolean
+ *                 description: Exclude facets from local dataset search response
+ *               filters:
+ *                 type: object
+ *                 description: Optional local dataset search filters
+ *                 properties:
+ *                   title:
+ *                     type: string
+ *                   brc:
+ *                     oneOf:
+ *                       - type: string
+ *                         enum:
+ *                           - JBEI
+ *                           - GLBRC
+ *                           - CABBI
+ *                           - CBI
+ *                       - type: array
+ *                         items:
+ *                           type: string
+ *                           enum:
+ *                             - JBEI
+ *                             - GLBRC
+ *                             - CABBI
+ *                             - CBI
+ *                   topic:
+ *                     oneOf:
+ *                       - type: string
+ *                       - type: array
+ *                         items:
+ *                           type: string
+ *                   year:
+ *                     oneOf:
+ *                       - type: string
+ *                       - type: array
+ *                         items:
+ *                           type: string
+ *                   personName:
+ *                     oneOf:
+ *                       - type: string
+ *                       - type: array
+ *                         items:
+ *                           type: string
+ *                   repository:
+ *                     oneOf:
+ *                       - type: string
+ *                       - type: array
+ *                         items:
+ *                           type: string
+ *                   species:
+ *                     oneOf:
+ *                       - type: string
+ *                       - type: array
+ *                         items:
+ *                           type: string
+ *                   analysisType:
+ *                     oneOf:
+ *                       - type: string
+ *                       - type: array
+ *                         items:
+ *                           type: string
+ *                   theme:
+ *                     oneOf:
+ *                       - type: string
+ *                       - type: array
+ *                         items:
+ *                           type: string
  *     responses:
  *       200:
  *         description: Search results
@@ -201,9 +291,7 @@
  *           application/json:
  *             schema:
  *               oneOf:
- *                 - type: array
- *                   items:
- *                     $ref: '#/components/schemas/Dataset'
+ *                 - $ref: '#/components/schemas/DatasetSearchResponse'
  *                 - type: object
  *                   description: Federated sequence search results
  *       500:
@@ -260,8 +348,8 @@
  *                         type: string
  *                         nullable: true
  *                       is_source:
- *                          type: boolean
- *                          description: Indicates whether this record is the source dataset used for the lookup
+ *                         type: boolean
+ *                         description: Indicates whether this record is the source dataset used for the lookup
  *               example:
  *                 uid: GLBRC_GSE218642
  *                 identifier: GSE218642
@@ -344,12 +432,12 @@
 
 const datasets = require("../controllers/dataset.controller.js");
 const router = require("express").Router();
-const {search} = require("../controllers/searchController");
+const {search} = require("../controllers/search.controller.js");
 
 // Retrieve all Datasets
 router.get("/", datasets.findAll);
 
-// Retrieve aggregated metrics on Dataasets
+// Retrieve aggregated metrics on Datasets
 router.get("/metrics", datasets.getMetrics);
 
 // Lookup datasets by uid using the source dataset's identifier and/or dataset_url
