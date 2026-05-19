@@ -3,8 +3,8 @@ const DEFAULT_PAGE_INDEX = 1;
 const DEFAULT_PAGE_SIZE = 50;
 
 function parsePositiveInt(value, fallback = null) {
-  const parsed = parseInt(value, DEFAULT_PAGE_SIZE);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+  const parsed = parseInt(value, 10);
+  return (Number.isInteger(parsed) && (parsed > 0)) ? parsed : fallback;
 }
 
 function getPaginationParams(query) {
