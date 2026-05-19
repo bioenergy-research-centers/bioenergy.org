@@ -1,6 +1,6 @@
 const MAX_ROW_LIMIT = 500;
 const DEFAULT_PAGE_INDEX = 1;
-const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 50;
 
 function parsePositiveInt(value, fallback = null) {
   const parsed = parseInt(value, DEFAULT_PAGE_SIZE);
@@ -13,7 +13,7 @@ function getPaginationParams(query) {
   const rows = parsePositiveInt(query.rows);
   const legacyLimit = parsePositiveInt(query.limit);
 
-  const size = rows ?? legacyLimit ?? 50;
+  const size = rows ?? legacyLimit ?? DEFAULT_PAGE_SIZE;
   const limit = Math.min(size, MAX_ROW_LIMIT);
   const offset = (page - 1) * limit;
 
