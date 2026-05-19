@@ -203,7 +203,7 @@
  *                 description: Text query for local dataset search or sequence search context
  *               sequence:
  *                 type: string
- *                 description: Optional sequence. When provided, a federated sequence search is run.
+ *                 description: Optional biological sequence. When provided and non-empty, a federated sequence search is run instead of local dataset search.
  *               page:
  *                 type: integer
  *                 default: 1
@@ -284,6 +284,21 @@
  *                       - type: array
  *                         items:
  *                           type: string
+ *           examples:
+ *             localDatasetSearch:
+ *               summary: Local dataset search
+ *               value:
+ *                 query: ethanol
+ *                 page: 2
+ *                 rows: 3
+ *                 nofacets: true
+ *                 filters:
+ *                   brc: GLBRC
+ *             sequenceSearch:
+ *               summary: Sequence search
+ *               value:
+ *                 query: cellulase
+ *                 sequence: ATCGATCG
  *     responses:
  *       200:
  *         description: Search results
