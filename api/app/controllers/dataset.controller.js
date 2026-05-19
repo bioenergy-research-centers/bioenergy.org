@@ -1,12 +1,12 @@
 const db = require("../models");
+const { getPaginationParams } = require("../utils/pagination");
+
 const Dataset = db.datasets;
 const Op = db.Sequelize.Op;
 const where = db.Sequelize.where;
 const json = db.Sequelize.json;
 const fn = db.Sequelize.fn;
 const keywordCategories = require("../utils/categories");
-
-const MAXROWLIMIT = 500;
 
 // Retrieve all Datasets from the database.
 exports.findAll = async (req, res) => {
@@ -21,12 +21,7 @@ exports.findAll = async (req, res) => {
   const analysisTypeQueryTerm = req.query.filters?.analysisType;
   const themeQueryTerm = req.query.filters?.theme;
   const includeFacets = !req.query.nofacets;
-
-  // Pagination parameters.  Default page index is 1 and default size is 10.
-  const page = parseInt(req.query.page) > 0 ? parseInt(req.query.page) : 1;
-  const size = parseInt(req.query.rows) > 0 ? parseInt(req.query.rows) : (req.query.limit ? parseInt(req.query.limit) : 50);
-  const limit = Math.min(size || 50, MAXROWLIMIT);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = getPaginationParams(req.query);
 
   // Initialize an empty array for search conditions
   const conditions = [];
@@ -85,7 +80,7 @@ exports.findAll = async (req, res) => {
   
   if (titleQueryTerm) {
     conditions.push(
-      where(json("json.title"), { [Op.iLike]: `%${titleSearchQuery}%` })
+      where(json("json.title"), { [Op.iLike]: `%${titleQueryTerm}%` })
     );
   }
   
@@ -205,7 +200,7 @@ exports.findAll = async (req, res) => {
   const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
 
   const dataQuery = Dataset.scope('supportedOnly').findAndCountAll({
-    order: [['json.date', 'DESC']],
+    order: [['json.date', 'DESC'], ['uid', 'ASC']],
     where: mergedWhereConditions,
     limit,
     offset
@@ -252,7 +247,6 @@ exports.findOne = (req, res) => {
     .then(data => {
       if (data) {
         res.send(data.toClientJSON());
-//        res.send(data);
       } else {
         res.status(404).send({
           message: `Cannot find Dataset with identifier: ${id}`
@@ -438,7 +432,7 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
     const facets = { year: [], brc: [], repository: [], species: [], analysisType: [], personName: [], topic: [], theme: [] };
     for (const r of rows) facets[r.facet].push({ value: r.value, count: r.count });
     return facets;
-  }catch(e){
+  } catch(e) {
     console.error('Error in faceted search:', e);
     return { year: {}, brc: {}, repository: {}, species: {} };
   }
@@ -471,7 +465,6 @@ function buildCategoryTsquery(categoryName) {
   // OR across keywords within a category.
   return frags.join(" | ");
 }
-
 
 // Create a Sequelize where() condition for a category.
 function buildCategoryWhere(categoryName) {
