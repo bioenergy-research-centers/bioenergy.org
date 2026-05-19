@@ -26,24 +26,189 @@
  *         title: The Best Bioenergy Dataset
  *         description: Some revolutionary dataset that will change the world
  *         published: true
+ *     DatasetSearchResponse:
+ *       type: object
+ *       properties:
+ *         totalResults:
+ *           type: integer
+ *           description: Total number of datasets matching the query
+ *         totalPages:
+ *           type: integer
+ *           description: Total number of result pages
+ *         query:
+ *           type: object
+ *           properties:
+ *             page:
+ *               type: integer
+ *               description: Current page number
+ *             rows:
+ *               type: integer
+ *               description: Number of rows returned per page
+ *         items:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Dataset'
+ *         facets:
+ *           type: object
+ *           nullable: true
+ *           description: Facet counts for the filtered result set
+ *
  * tags:
  *   name: Datasets
  *   description: The datasets managing API
+ *
  * /api/datasets/:
  *   get:
- *    summary: Returns a list of datasets matching optional filters.
- *    tags: [Datasets]
- *    responses:
- *      200:
- *        description: The list of the datasets
- *        content:
- *          application/json:
- *            schema:
- *              type: array
- *              items:
- *                 $ref: '#/components/schemas/Dataset'
- *      500:
- *        description: Some server error
+ *     summary: Returns a paginated list of datasets matching optional filters.
+ *     tags: [Datasets]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Full-text search query
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number to return
+ *       - in: query
+ *         name: rows
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *           maximum: 500
+ *         description: Number of rows per page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           maximum: 500
+ *         description: Legacy alias for rows
+ *       - in: query
+ *         name: nofacets
+ *         schema:
+ *           type: boolean
+ *         description: Exclude facets from the response when present
+ *       - in: query
+ *         name: filters[title]
+ *         schema:
+ *           type: string
+ *         description: Filter by dataset title
+ *       - in: query
+ *         name: filters[brc]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by Bioenergy Research Center
+ *       - in: query
+ *         name: filters[topic]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by topic category
+ *       - in: query
+ *         name: filters[year]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by dataset year
+ *       - in: query
+ *         name: filters[personName]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by creator or contributor name
+ *       - in: query
+ *         name: filters[repository]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by repository
+ *       - in: query
+ *         name: filters[species]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by species
+ *       - in: query
+ *         name: filters[analysisType]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by analysis type
+ *       - in: query
+ *         name: filters[theme]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by theme
+ *     responses:
+ *       200:
+ *         description: Paginated dataset search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetSearchResponse'
+ *       500:
+ *         description: Some server error
+ *
+ *   post:
+ *     summary: Search datasets or run a sequence search.
+ *     tags: [Datasets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               query:
+ *                 type: string
+ *                 description: Text query for local dataset search or sequence search context
+ *               sequence:
+ *                 type: string
+ *                 description: Optional sequence. When provided, a federated sequence search is run.
+ *     responses:
+ *       200:
+ *         description: Search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Dataset'
+ *                 - type: object
+ *                   description: Federated sequence search results
+ *       500:
+ *         description: Search failed
+ *
  * /api/datasets/lookup/{uid}:
  *   get:
  *     summary: Lookup related datasets using a source dataset uid
