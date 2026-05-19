@@ -427,10 +427,13 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
 function keywordToTsqueryFragment(keyword) {
   const tokens = String(keyword)
     .toLowerCase()
-    .split(/[\s\-_]+/g);
-  if (tokens.length === 0) return null;
+    .trim()
+    .split(/[\s\-_]+/g)
+    .filter(Boolean);
 
+  if (tokens.length === 0) return null;
   if (tokens.length === 1) return tokens[0];
+
   // '<->' is postgres "followed by" operator for phrase style keywords
   // https://www.postgresql.org/docs/current/textsearch-controls.html#TEXTSEARCH-PARSING-QUERIES
   return `(${tokens.join(" <-> ")})`;

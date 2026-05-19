@@ -44,7 +44,7 @@ describe("validateDatafeedJson", () => {
 
   it("throws for invalid feed shape", () => {
     expect(() =>
-      validateDatafeedJson({ schema_version: "0.1.12", datasets: {} })
+      validateDatafeedJson({ schema_version: "0.1.15", datasets: {} })
     ).toThrow("Feed must contain a top-level datasets array or be an array of datasets");
   });
 
