@@ -460,4 +460,22 @@ describe("searchLocalDatasets", () => {
 
     expect(callArgs.where).toEqual({});
   });
+
+  it("includes facets when nofacets is false string", async () => {
+    await datasetsService.searchLocalDatasets({ nofacets: "false" });
+
+    expect(db.sequelize.query).toHaveBeenCalled();
+  });
+
+  it("includes facets when nofacets is 0 string", async () => {
+    await datasetsService.searchLocalDatasets({ nofacets: "0" });
+
+    expect(db.sequelize.query).toHaveBeenCalled();
+  });
+
+  it("skips facets when nofacets is true string", async () => {
+    await datasetsService.searchLocalDatasets({ nofacets: "true" });
+
+    expect(db.sequelize.query).not.toHaveBeenCalled();
+  });
 });

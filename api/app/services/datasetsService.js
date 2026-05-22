@@ -4,6 +4,13 @@ const keywordCategories = require("../utils/categories");
 const Dataset = db.datasets;
 const {Op, where} = db.Sequelize;
 
+function parseBooleanParam(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value !== "string") return false;
+
+  return ["true", "1", "yes"].includes(value.trim().toLowerCase());
+}
+
 async function searchLocalDatasets(params = {}) {
   console.log("datasetservice: searching local datasets", params);
 
@@ -20,7 +27,7 @@ async function searchLocalDatasets(params = {}) {
   const analysisTypeQueryTerm = params.analysisTypeQueryTerm ?? filters.analysisType;
   const themeQueryTerm = params.themeQueryTerm ?? filters.theme;
 
-  const includeFacets = !params.nofacets;
+  const includeFacets = !parseBooleanParam(params.nofacets);
   const { page, limit, offset } = getPaginationParams(params);
 
   const conditions = buildDatasetSearchConditions({
