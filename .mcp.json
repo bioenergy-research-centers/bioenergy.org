@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "bioenergy-datasets": {
+      "type": "http",
+      "url": "https://mcp.bioenergy.org"
+    }
+  }
+}

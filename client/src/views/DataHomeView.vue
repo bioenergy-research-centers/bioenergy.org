@@ -419,7 +419,7 @@ const applySuggestedQuery = () => {
                   <div style="width: 70%;height:2px;border-top:1px solid #ddd;margin:10px auto;"></div>
                   <h5 class="h6 my-3 text-start">
                     <span class="fw-bold"
-                      v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
+                      v-html="sanitizeHtml(truncateMiddle(result.title || 'Untitled data set', 75, 50), ALLOWED_HTML)"></span>
                   </h5>
                   <div class="card-author mb-3 text-start">
                     <AuthorList :creators="result.creator" />
@@ -432,7 +432,7 @@ const applySuggestedQuery = () => {
                     <span class="text-muted">{{ result.date }}</span>
                   </p> -->
                   <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }" class="stretched-link">
-                    <span class="visually-hidden" v-html="sanitizeHtml(truncateMiddle(result.title || 'No Title Provided', 75, 50), ALLOWED_HTML)"></span>
+                    <span class="visually-hidden" v-html="sanitizeHtml(truncateMiddle(result.title || 'Untitled data set', 75, 50), ALLOWED_HTML)"></span>
                   </router-link>
                 </div>
               </div>

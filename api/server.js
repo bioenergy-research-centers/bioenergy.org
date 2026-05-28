@@ -12,7 +12,7 @@ const validateRoutes = require('./app/routes/validate.routes');
 const app = express();
 
 var corsOptions = {
-  origin: [process.env.BIOENERGY_ORG_CLIENT_URI, "https://api.bioenergy.org", "https://bioenergy.org", "https://www.bioenergy.org"]
+  origin: [process.env.BIOENERGY_ORG_CLIENT_URI, process.env.BIOENERGY_ORG_MCP_URI, "https://api.bioenergy.org", "https://mcp.bioenergy.org", "https://bioenergy.org", "https://www.bioenergy.org"]
 };
 
 // Apply global middleware for all routes first

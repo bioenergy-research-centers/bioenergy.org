@@ -138,7 +138,7 @@
                   <td colspan="6">
                     <strong>Description:</strong>
                     <div class="mt-1">
-                      {{ plasmid.description ?? 'No description provided.' }}
+                      {{ plasmid.description ?? 'No plasmid description available.' }}
                     </div>
                   </td>
                 </tr>

@@ -162,7 +162,17 @@ docker compose -f docker-compose.dev.yml build --no-cache client
 - GLBRC: <https://fair-data.glbrc.org/glbrc.json>
 - JBEI: <https://bioenergy.org/JBEI/jbei.json>
 
-## Validating Data Feeds
+## Using Claude Code with the bioenergy.org MCP server.
+
+This project repo automatically registers the MCP server in Claude Code via the `.mcp.json` file at the root of this repo.
+
+Alternatively, to tell Claude where the MCP server is:
+
+`claude mcp add --transport http bioenergy-datasets --scope project https://mcp.bioenergy.org`
+
+Then, in Claude Code, run `/mcp` and approve the server if prompted. You can check to confirm that Claude has registered the MCP with `claude mcp list`.
+
+## Validating Data
 
 A local data feed file can be validated against the schema currently supported by the API by posting the file to the validation endpoint (or `http://localhost:8080/api/validate` if testing against your dev environment). Alternatively, you can paste your data feed into the [Swagger API documentation](https://api.bioenergy.org/api-docs/#/Validation/post_api_validate), which will pretty-print the validation results.
 
