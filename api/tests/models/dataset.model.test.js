@@ -8,7 +8,7 @@ describe("Dataset model", () => {
       // Simulate what toClientJSON does without needing Sequelize
       const instance = {
         json: { title: "Test Dataset", brc: "GLBRC" },
-        schema_version: "0.1.7",
+        schema_version: "0.1.15",
         uid: "abc-123",
         createdAt: new Date("2025-01-01"),
         updatedAt: new Date("2025-06-01"),
@@ -25,7 +25,7 @@ describe("Dataset model", () => {
       const result = instance.toClientJSON();
       expect(result.title).toBe("Test Dataset");
       expect(result.brc).toBe("GLBRC");
-      expect(result.schema_version).toBe("0.1.7");
+      expect(result.schema_version).toBe("0.1.15");
       expect(result.uid).toBe("abc-123");
       expect(result.created_at).toEqual(new Date("2025-01-01"));
       expect(result.updated_at).toEqual(new Date("2025-06-01"));
