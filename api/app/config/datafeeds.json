@@ -10,7 +10,7 @@
         },
         {
             "name": "CBI",
-            "url": "https://fair.ornl.gov/CBI/cbi.json"
+            "url": "https://bioenergy-research-centers.github.io/brc_data_feeds/cbi.json"
         },
         {
             "name": "GLBRC",
