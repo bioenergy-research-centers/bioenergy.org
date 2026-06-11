@@ -158,7 +158,7 @@ docker compose -f docker-compose.dev.yml build --no-cache client
 ## BRC Data End Points
 
 - CABBI: <https://cabbitools.igb.illinois.edu/brc/cabbi.json>
-- CBI: <https://fair.ornl.gov/CBI/cbi.json>
+- CBI: <https://bioenergy-research-centers.github.io/brc_data_feeds/cbi.json>
 - GLBRC: <https://fair-data.glbrc.org/glbrc.json>
 - JBEI: <https://bioenergy.org/JBEI/jbei.json>
 
