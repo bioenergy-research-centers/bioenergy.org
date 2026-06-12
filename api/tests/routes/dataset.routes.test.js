@@ -56,7 +56,7 @@ describe("dataset routes", () => {
   describe("GET /api/datasets", () => {
     it("passes query params to searchLocalDatasets", async () => {
       const res = await supertest(app).get(
-        "/api/datasets?q=ethanol&page=2&rows=25&filters[brc]=JBEI&nofacets=true"
+        "/api/datasets?q=ethanol&page=2&rows=25&filters[brc]=JBEI&nofacets=true&from_date=2025-01-01&until_date=2025-12-31"
       );
 
       expect(res.status).toBe(200);
@@ -70,6 +70,8 @@ describe("dataset routes", () => {
         rows: "25",
         limit: undefined,
         nofacets: "true",
+        from_date: "2025-01-01",
+        until_date: "2025-12-31",
       });
     });
 
@@ -438,5 +440,23 @@ describe("dataset routes", () => {
     });
 
     expect(mockFindAll).toHaveBeenCalled();
+  });
+
+  it("passes date range query params to searchLocalDatasets", async () => {
+    const res = await supertest(app).get(
+      "/api/datasets?q=ethanol&from_date=2025-01-01&until_date=2025-12-31"
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockSearchLocalDatasets).toHaveBeenCalledWith({
+      textQueryTerm: "ethanol",
+      filters: undefined,
+      page: undefined,
+      rows: undefined,
+      limit: undefined,
+      nofacets: undefined,
+      from_date: "2025-01-01",
+      until_date: "2025-12-31",
+    });
   });
 });
