@@ -13,6 +13,8 @@ export const useSearchStore = defineStore('searchStore', () => {
   const searchResultsError = ref(null);
   const filters = ref({});
   const searchTerm = ref('');
+  const fromDate = ref('');
+  const untilDate = ref('');
 
   // page state
   const defaultPageSize = 50;
@@ -76,6 +78,8 @@ export const useSearchStore = defineStore('searchStore', () => {
     searchResults.value = [];
     filterChanges.value = true;
     resultPage.value = 1;
+    fromDate.value = '';
+    untilDate.value = '';
   }
 
   // Retrieve results matching current search filters and store in searchResults
@@ -104,7 +108,9 @@ export const useSearchStore = defineStore('searchStore', () => {
           page: currentPage.value,
           rows: pageSize.value,
           query: searchTerm.value,
-          filters: filters.value
+          filters: filters.value,
+          from_date: fromDate.value || undefined,
+          until_date: untilDate.value || undefined,
         });
       }
       // Handle paginated response shape
@@ -154,6 +160,8 @@ export const useSearchStore = defineStore('searchStore', () => {
         ...route.query,
         q: (searchTerm.value && searchTerm.value.length > 0) ? searchTerm.value : undefined,
         filters: (jsonFilterString && jsonFilterString.length > 0) ? jsonFilterString : undefined,
+        from_date: fromDate.value || undefined,
+        until_date: untilDate.value || undefined,
         page: currentPage.value !== 1 ? currentPage.value : undefined,
         rows: pageSize.value
       }
@@ -175,6 +183,8 @@ export const useSearchStore = defineStore('searchStore', () => {
     } else {
       filters.value = undefined;
     }
+    fromDate.value = query.from_date || '';
+    untilDate.value = query.until_date || '';
     currentPage.value = parseInt(query.page) > 0 ? parseInt(query.page) : 1;
     pageSize.value = parseInt(query.size) > 0 ? parseInt(query.size) : defaultPageSize;
   }
@@ -186,7 +196,9 @@ export const useSearchStore = defineStore('searchStore', () => {
       const sameFilters = JSON.stringify(filters.value) === query.filters;
       const sameSearch = searchTerm.value === query.q;
       const samePage = (currentPage.value === query.page && pageSize.value === query.rows);
-      return !(sameSearch && sameFilters && samePage);
+      const sameFromDate = (fromDate.value || undefined) === query.from_date;
+      const sameUntilDate = (untilDate.value || undefined) === query.until_date;
+      return !(sameSearch && sameFilters && samePage && sameFromDate && sameUntilDate);
     } catch (e) {
       console.error("searchStore URL comparison error.", e);
       return false;
@@ -223,6 +235,8 @@ export const useSearchStore = defineStore('searchStore', () => {
     totalPages,
     totalResults,
     facets,
+    fromDate,
+    untilDate,
     // actions
     runSearch,
     clearSearchData,
