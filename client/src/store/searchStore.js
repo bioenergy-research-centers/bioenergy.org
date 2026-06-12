@@ -186,7 +186,7 @@ export const useSearchStore = defineStore('searchStore', () => {
     fromDate.value = query.from_date || '';
     untilDate.value = query.until_date || '';
     currentPage.value = parseInt(query.page) > 0 ? parseInt(query.page) : 1;
-    pageSize.value = parseInt(query.size) > 0 ? parseInt(query.size) : defaultPageSize;
+    pageSize.value = parseInt(query.rows) > 0 ? parseInt(query.rows) : defaultPageSize;
   }
 
   // Compare current state to provided value
@@ -195,7 +195,10 @@ export const useSearchStore = defineStore('searchStore', () => {
     try {
       const sameFilters = JSON.stringify(filters.value) === query.filters;
       const sameSearch = searchTerm.value === query.q;
-      const samePage = (currentPage.value === query.page && pageSize.value === query.rows);
+      const samePage = (
+        currentPage.value === (parseInt(query.page) > 0 ? parseInt(query.page) : 1) &&
+        pageSize.value === (parseInt(query.rows) > 0 ? parseInt(query.rows) : defaultPageSize)
+      );
       const sameFromDate = (fromDate.value || undefined) === query.from_date;
       const sameUntilDate = (untilDate.value || undefined) === query.until_date;
       return !(sameSearch && sameFilters && samePage && sameFromDate && sameUntilDate);

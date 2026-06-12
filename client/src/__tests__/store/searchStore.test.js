@@ -199,8 +199,8 @@ describe('searchStore', () => {
       expect(store.filters).toBeUndefined();
     });
 
-    it('parses page and size from query', () => {
-      store.importFromURLQuery({ page: '3', size: '25' });
+    it('parses page and rows from query', () => {
+      store.importFromURLQuery({ page: '3', rows: '25' });
       expect(store.currentPage).toBe(3);
       expect(store.pageSize).toBe(25);
     });
@@ -324,5 +324,31 @@ describe('searchStore', () => {
       from_date: '2025-01-01',
       until_date: '2025-12-30',
     })).toBe(true);
+  });
+
+  it('imports page size from rows query param', () => {
+    store.importFromURLQuery({
+      page: '2',
+      rows: '25',
+    });
+
+    expect(store.currentPage).toBe(2);
+    expect(store.pageSize).toBe(25);
+  });
+
+  it('does not report URL changes when numeric pagination state matches string query params', () => {
+    store.currentPage = 2;
+    store.pageSize = 25;
+    store.searchTerm = 'ethanol';
+    store.filters = {};
+
+    const result = store.anyQueryURLChanges({
+      q: 'ethanol',
+      filters: JSON.stringify({}),
+      page: '2',
+      rows: '25',
+    });
+
+    expect(result).toBe(false);
   });
 });
