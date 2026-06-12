@@ -121,6 +121,8 @@ describe('searchStore', () => {
         rows: 50,
         query: 'ethanol',
         filters: {},
+        from_date: undefined,
+        until_date: undefined,
       });
       expect(store.searchResults).toEqual([{ uid: '1', title: 'Dataset A' }]);
       expect(store.totalPages).toBe(3);
@@ -247,5 +249,80 @@ describe('searchStore', () => {
       store.goToPage(-3);
       expect(store.currentPage).toBe(1);
     });
+  });
+
+  it('passes publication date range to getAll', async () => {
+    mockGetAll.mockResolvedValue({
+      data: {
+        items: [],
+        totalPages: 1,
+        totalResults: 0,
+        query: { page: 1 },
+        facets: {},
+      },
+    });
+
+    store.searchTerm = 'ethanol';
+    store.fromDate = '2025-01-01';
+    store.untilDate = '2025-12-31';
+
+    await store.runSearch(false);
+
+    expect(mockGetAll).toHaveBeenCalledWith({
+      page: 1,
+      rows: 50,
+      query: 'ethanol',
+      filters: {},
+      from_date: '2025-01-01',
+      until_date: '2025-12-31',
+    });
+  });
+
+  it('imports date range from query', () => {
+    store.importFromURLQuery({
+      from_date: '2025-01-01',
+      until_date: '2025-12-31',
+    });
+
+    expect(store.fromDate).toBe('2025-01-01');
+    expect(store.untilDate).toBe('2025-12-31');
+  });
+
+  it('clears date range state', () => {
+    store.fromDate = '2025-01-01';
+    store.untilDate = '2025-12-31';
+
+    store.clearSearchData();
+
+    expect(store.fromDate).toBe('');
+    expect(store.untilDate).toBe('');
+  });
+
+  it('adds date range to URL query', async () => {
+    store.searchTerm = 'ethanol';
+    store.fromDate = '2025-01-01';
+    store.untilDate = '2025-12-31';
+
+    await store.applySearchToURL();
+
+    expect(mockPush).toHaveBeenCalledWith({
+      name: 'datasetSearch',
+      query: expect.objectContaining({
+        q: 'ethanol',
+        from_date: '2025-01-01',
+        until_date: '2025-12-31',
+        rows: 50,
+      }),
+    });
+  });
+
+  it('detects date range URL changes', () => {
+    store.fromDate = '2025-01-01';
+    store.untilDate = '2025-12-31';
+
+    expect(store.anyQueryURLChanges({
+      from_date: '2025-01-01',
+      until_date: '2025-12-30',
+    })).toBe(true);
   });
 });
