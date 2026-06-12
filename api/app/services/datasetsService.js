@@ -26,6 +26,8 @@ async function searchLocalDatasets(params = {}) {
   const speciesQueryTerm = params.speciesQueryTerm ?? filters.species;
   const analysisTypeQueryTerm = params.analysisTypeQueryTerm ?? filters.analysisType;
   const themeQueryTerm = params.themeQueryTerm ?? filters.theme;
+  const fromDateQueryTerm = params.fromDateQueryTerm ?? params.from_date ?? filters.from_date;
+  const untilDateQueryTerm = params.untilDateQueryTerm ?? params.until_date ?? filters.until_date;
 
   const includeFacets = !parseBooleanParam(params.nofacets);
   const { page, limit, offset } = getPaginationParams(params);
@@ -36,6 +38,8 @@ async function searchLocalDatasets(params = {}) {
     brcQueryTerm,
     categoryQueryTerm,
     yearQueryTerm,
+    fromDateQueryTerm,
+    untilDateQueryTerm,
     personNameQueryTerm,
     repositoryQueryTerm,
     speciesQueryTerm,
@@ -93,6 +97,8 @@ function buildDatasetSearchConditions({
   brcQueryTerm,
   categoryQueryTerm,
   yearQueryTerm,
+  fromDateQueryTerm,
+  untilDateQueryTerm,
   personNameQueryTerm,
   repositoryQueryTerm,
   speciesQueryTerm,
@@ -259,6 +265,24 @@ function buildDatasetSearchConditions({
                 ],
             });
         }
+    }
+
+    if (fromDateQueryTerm) {
+        conditions.push({
+            [Op.and]: [
+                where(db.Sequelize.json("json.date"), { [Op.regexp]: "^\\d{4}-\\d{2}-\\d{2}$" }),
+                where(db.Sequelize.json("json.date"), { [Op.gte]: fromDateQueryTerm }),
+            ],
+        });
+    }
+
+    if (untilDateQueryTerm) {
+        conditions.push({
+            [Op.and]: [
+                where(db.Sequelize.json("json.date"), { [Op.regexp]: "^\\d{4}-\\d{2}-\\d{2}$" }),
+                where(db.Sequelize.json("json.date"), { [Op.lte]: untilDateQueryTerm }),
+            ],
+        });
     }
 
     if (personNameQueryTerm) {

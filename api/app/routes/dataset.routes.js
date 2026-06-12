@@ -134,6 +134,20 @@
  *                 type: string
  *         description: Filter by dataset year
  *       - in: query
+ *         name: from_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2025-01-01
+ *         description: Include datasets with publication date on or after this date
+ *       - in: query
+ *         name: until_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2025-12-31
+ *         description: Include datasets with publication date on or before this date
+ *       - in: query
  *         name: filters[personName]
  *         schema:
  *           oneOf:
@@ -220,6 +234,14 @@
  *               nofacets:
  *                 type: boolean
  *                 description: Exclude facets from local dataset search response
+ *               from_date:
+ *                 type: string
+ *                 format: date
+ *                 description: Include datasets with publication date on or after this date
+ *               until_date:
+ *                 type: string
+ *                 format: date
+ *                 description: Include datasets with publication date on or before this date
  *               filters:
  *                 type: object
  *                 description: Optional local dataset search filters
