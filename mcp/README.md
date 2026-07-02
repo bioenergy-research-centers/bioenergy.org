@@ -42,22 +42,24 @@ GET /api/datasets/:uid
 
 ### list_datasets
 
-List datasets with pagination.
+### search_datasets
+
+Search datasets by free text and optional metadata filters, including publication date range.
 
 Maps to:
 
 ```
-GET /api/datasets?limit=&offset=
+GET /api/datasets?page=&rows=&q=&from_date=&until_date=
 ```
 
 ### search_datasets
 
-Search datasets by free text.
+Search datasets by free text and optional metadata filters.
 
 Maps to:
 
 ```
-GET /api/datasets?page=&rows=&q=
+GET /api/datasets?page=&rows=&q=&from_date=&until_date=
 ```
 
 ## Environment Variables
@@ -159,9 +161,10 @@ curl http://localhost:8081/mcp \
     "method": "tools/call",
     "params": {
       "name": "list_datasets",
-      "arguments": {
-        "limit": 5,
-        "offset": 0
+        "arguments": {
+          "page": 1,
+          "rows": 5
+        }
       }
     }
   }'
@@ -176,7 +179,6 @@ curl http://localhost:8081/mcp \
 
 ## Potential Future Improvements
 
-- Add search/filter tools
 - Add write operations (create/update/delete) with proper auth
 - Add request logging and rate limiting
 - Add MCP resources (`dataset://{uid}`)

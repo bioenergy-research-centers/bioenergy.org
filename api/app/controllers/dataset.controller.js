@@ -13,6 +13,8 @@ exports.findAll = async (req, res) => {
       rows: req.query.rows,
       limit: req.query.limit,
       nofacets: req.query.nofacets,
+      from_date: req.query.from_date,
+      until_date: req.query.until_date,
     });
 
     res.json(results);

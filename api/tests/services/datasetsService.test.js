@@ -478,4 +478,38 @@ describe("searchLocalDatasets", () => {
 
     expect(db.sequelize.query).not.toHaveBeenCalled();
   });
+
+  it("adds from_date condition when from_date is provided", async () => {
+    await datasetsService.searchLocalDatasets({
+      from_date: "2025-01-01",
+      nofacets: true,
+    });
+
+    const callArgs = mockFindAndCountAll.mock.calls[0][0];
+
+    expect(callArgs.where).not.toEqual({});
+  });
+
+  it("adds until_date condition when until_date is provided", async () => {
+    await datasetsService.searchLocalDatasets({
+      until_date: "2025-12-31",
+      nofacets: true,
+    });
+
+    const callArgs = mockFindAndCountAll.mock.calls[0][0];
+
+    expect(callArgs.where).not.toEqual({});
+  });
+
+  it("adds date range conditions when from_date and until_date are provided", async () => {
+    await datasetsService.searchLocalDatasets({
+      from_date: "2025-01-01",
+      until_date: "2025-12-31",
+      nofacets: true,
+    });
+
+    const callArgs = mockFindAndCountAll.mock.calls[0][0];
+
+    expect(callArgs.where).not.toEqual({});
+  });
 });

@@ -8,7 +8,9 @@ class DatasetDataService {
     const q = options.query || options.q;
     const filters = options.filters;
     const nofacets = options.nofacets;
-    return http.get("/datasets", { params: { page, rows, q, filters, nofacets } });
+    const from_date = options.from_date;
+    const until_date = options.until_date;
+    return http.get("/datasets", { params: { page, rows, q, filters, nofacets, from_date, until_date } });
   }
 
   get(id) {

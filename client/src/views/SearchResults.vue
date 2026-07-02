@@ -142,6 +142,31 @@ const onPageChange = (newPage) => {
                   <FacetFilterChecks title="Year" label="year" :items="facets?.year" v-model="searchStore.year" alphabetical reverse />
                 </div>
 
+                <!-- Publication Date Filter -->
+                <div class="mb-3">
+                  <span class="h5">Publication Date</span>
+
+                  <div class="mt-2">
+                    <label class="form-label small text-muted" for="from-date-filter">From</label>
+                    <input
+                      id="from-date-filter"
+                      type="date"
+                      class="form-control form-control-sm"
+                      v-model="searchStore.fromDate"
+                    />
+                  </div>
+
+                  <div class="mt-2">
+                    <label class="form-label small text-muted" for="until-date-filter">Until</label>
+                    <input
+                      id="until-date-filter"
+                      type="date"
+                      class="form-control form-control-sm"
+                      v-model="searchStore.untilDate"
+                    />
+                  </div>
+                </div>
+
                 <!-- Species Filter -->
                 <div class="mb-2">
                   <FacetFilterDatalist title="Species" label="species" :items="facets?.species" v-model="searchStore.species" placeholder="e.g., Escherichia coli, Sorghum bicolor"/>
