@@ -122,7 +122,7 @@ function createServer() {
 
   server.tool(
     "search_datasets",
-    "Search datasets by free-text query and optional metadata filters. Use this to find datasets by keyword, analysis type, BRC, and other supported filter fields.",
+    "Search datasets by free-text query and optional metadata filters. Use this to find datasets by keyword, publication date, analysis type, BRC, and other supported filter fields.",
     {
       q: z
         .string()
@@ -148,9 +148,17 @@ function createServer() {
       brc: z
         .array(z.string())
         .optional()
-        .describe('Optional list of BRC filters, for example ["JBEI"] or ["JBEI", "CABBI"]. The complete set of BRCs are: ["JBEI", "CABBI", "CBI", "GLBRC"].')
+        .describe('Optional list of BRC filters, for example ["JBEI"] or ["JBEI", "CABBI"]. The complete set of BRCs are: ["JBEI", "CABBI", "CBI", "GLBRC"].'),
+      from_date: z
+        .string()
+        .optional()
+        .describe("Optional publication date lower bound in YYYY-MM-DD format. Includes datasets published on or after this date."),
+      until_date: z
+        .string()
+        .optional()
+        .describe("Optional publication date upper bound in YYYY-MM-DD format. Includes datasets published on or before this date.")
     },
-    async ({ q, page, rows, analysisType, brc }) => {
+    async ({ q, page, rows, analysisType, brc, from_date, until_date }) => {
       try {
         const params = {
           q,
@@ -166,6 +174,14 @@ function createServer() {
           brc.forEach((value, index) => {
             params[`filters[brc][${index}]`] = value;
           });
+        }
+
+        if (from_date) {
+          params.from_date = from_date;
+        }
+
+        if (until_date) {
+          params.until_date = until_date;
         }
 
         const response = await api.get("/api/datasets", { params });
