@@ -51,6 +51,13 @@ describe('DatasetDataService', () => {
     });
   });
 
+  describe('lookup', () => {
+    it('calls GET /datasets/lookup/:uid with encoded uid', () => {
+      DatasetDataService.lookup('abc/123');
+      expect(http.get).toHaveBeenCalledWith('/datasets/lookup/abc%2F123');
+    });
+  });
+
   describe('runAdvancedSearch', () => {
     it('calls POST /datasets/ with query and sequence', () => {
       DatasetDataService.runAdvancedSearch('test', 'ATCGATCG');

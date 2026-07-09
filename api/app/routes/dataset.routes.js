@@ -387,6 +387,11 @@
  *                       is_source:
  *                         type: boolean
  *                         description: Indicates whether this record is the source dataset used for the lookup
+ *                 shared_related_item_datasets:
+ *                   type: array
+ *                   description: Unique datasets that share an exact related item URL with the source dataset. Items use the same dataset response shape returned by GET /api/datasets/{id}.
+ *                   items:
+ *                     $ref: '#/components/schemas/Dataset'
  *               example:
  *                 uid: GLBRC_GSE218642
  *                 identifier: GSE218642
@@ -401,8 +406,13 @@
  *                     brc: GLBRC
  *                     identifier: GSE218642
  *                     dataset_url: null
+ *                 shared_related_item_datasets:
+ *                   - uid: GLBRC_PRJNA830439
+ *                     title: Related dataset title
+ *                     description: Related dataset description
+ *                     schema_version: 0.1.0
  *       400:
- *         description: Dataset uid is missing or the source dataset has neither identifier nor dataset URL
+ *         description: Dataset uid is missing or the source dataset has no identifier, dataset URL, or related item identifier
  *         content:
  *           application/json:
  *             schema:

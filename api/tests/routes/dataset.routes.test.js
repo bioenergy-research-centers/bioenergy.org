@@ -2,6 +2,7 @@ const supertest = require("supertest");
 const { createApp } = require("../helpers/createApp");
 
 const db = require("../../app/models");
+const Dataset = db.datasets;
 
 const mockFindByPk = vi.fn();
 const mockFindAll = vi.fn();
@@ -282,6 +283,12 @@ describe("dataset routes", () => {
   });
 
   describe("GET /api/datasets/lookup/:uid", () => {
+
+    beforeEach(() => {
+      // mock related item queries to empty array by default
+      mockQuery.mockResolvedValue([]);
+    });
+
     it("returns related datasets for a source dataset uid", async () => {
       mockFindByPk.mockResolvedValue({
         uid: "GLBRC_GSE218642",
@@ -321,6 +328,7 @@ describe("dataset routes", () => {
         identifier: "GSE218642",
         dataset_url: null,
         count: 2,
+        shared_related_item_datasets: [],
         datasets: [
           {
             uid: "CABBI_GSE218642",
@@ -352,12 +360,13 @@ describe("dataset routes", () => {
       expect(res.body.message).toContain("Dataset not found");
     });
 
-    it("returns 400 when source dataset has neither identifier nor dataset_url", async () => {
+    it("returns 400 when source dataset has no identifier, dataset_url, or related_items", async () => {
       mockFindByPk.mockResolvedValue({
         uid: "EMPTY_SOURCE",
         json: {
           identifier: "",
           dataset_url: "",
+          related_item: []
         },
       });
 
@@ -366,7 +375,113 @@ describe("dataset routes", () => {
       );
 
       expect(res.status).toBe(400);
-      expect(res.body.message).toContain("identifier or dataset_url");
+      expect(res.body.message).toContain("dentifier, dataset_url, or related item identifier");
+    });
+
+    it("returns shared related item dataset matches", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "BRC_1234",
+        json: {
+          identifier: "1234",
+          dataset_url: "",
+          relatedItem: [
+            {
+              title: "Shared article",
+              relatedItemType: "JournalArticle",
+              relatedItemIdentifier: "https://example.org/article"
+            }
+          ]
+        },
+      });
+
+      mockFindAll.mockResolvedValue([
+        {
+          uid: "BRC_1234",
+          json: {
+            brc: "GLBRC",
+            identifier: "1234",
+            dataset_url: null,
+          },
+        },
+      ]);
+
+      mockQuery.mockResolvedValue([
+        Dataset.build({
+          uid: "RELATED_A",
+          json: {
+            brc: "CABBI",
+            identifier: "A",
+            dataset_url: "https://repo.org/a",
+          },
+          related_item_identifier: "https://example.org/article",
+        }),
+        Dataset.build({
+          uid: "RELATED_B",
+          json: {
+            brc: "JBEI",
+            identifier: "B",
+            dataset_url: "https://repo.org/b",
+          },
+          related_item_identifier: "https://example.org/article",
+        }),
+      ]);
+
+      const res = await supertest(app).get("/api/datasets/lookup/BRC_1234");
+
+      expect(res.status).toBe(200);
+      expect(res.body.shared_related_item_datasets).toEqual([
+        expect.objectContaining({
+          uid: "RELATED_A",
+          brc: "CABBI",
+          identifier: "A",
+          dataset_url: "https://repo.org/a",
+        }),
+        expect.objectContaining({
+          uid: "RELATED_B",
+          brc: "JBEI",
+          identifier: "B",
+          dataset_url: "https://repo.org/b",
+        }),
+      ]);
+      expect(mockQuery).toHaveBeenCalled();
+    });
+
+    it("returns empty shared related item matches when source relatedItem is empty", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "SOURCE_UID",
+        json: {
+          identifier: "SOURCE_IDENTIFIER",
+          dataset_url: "",
+          relatedItem: [],
+        },
+      });
+
+      mockFindAll.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets/lookup/SOURCE_UID");
+
+      expect(res.status).toBe(200);
+      expect(res.body.shared_related_item_datasets).toEqual([]);
+      expect(mockQuery).not.toHaveBeenCalled();
+    });
+
+    it("returns empty shared related item matches when source relatedItem is invalid", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "SOURCE_UID",
+        json: {
+          identifier: "SOURCE_IDENTIFIER",
+          dataset_url: "",
+          relatedItem: "invalidstring",
+        },
+      });
+
+      mockFindAll.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets/lookup/SOURCE_UID");
+
+      expect(res.status).toBe(200);
+      expect(res.body.shared_related_item_datasets).toEqual([]);
+      expect(mockQuery).not.toHaveBeenCalled();
     });
 
     it("returns 500 when source dataset lookup fails", async () => {
@@ -428,6 +543,7 @@ describe("dataset routes", () => {
       identifier: null,
       dataset_url: "https://example.org/dataset",
       count: 1,
+      shared_related_item_datasets: [],
       datasets: [
         {
           uid: "SOURCE_UID",

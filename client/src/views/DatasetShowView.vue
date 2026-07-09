@@ -2,12 +2,11 @@
 import HeaderView from "@/views/HeaderView.vue";
 import DatasetDataService from "../services/DatasetDataService";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
+import DatasetListItem from '@/components/DatasetListItem.vue';
 import { computed, ref, watch, watchEffect} from "vue"
-import { useRouter, useRoute } from 'vue-router';
 import {useSearchStore} from '@/store/searchStore';
 
 
-const route = useRoute();
 const searchStore = useSearchStore();
 
 const props = defineProps({
@@ -19,6 +18,7 @@ const datasetLoading = ref(true);
 const datasetLoadError = ref(null);
 
 const relatedDatasets = ref([]);
+const sharedRelatedItemDatasets = ref([]);
 const relatedDatasetsLoading = ref(false);
 const relatedDatasetsError = ref(null);
 
@@ -27,6 +27,7 @@ watchEffect( async () => {
   datasetLoadError.value = null;
   datasetLoading.value = true;
   relatedDatasets.value = [];
+  sharedRelatedItemDatasets.value = [];
   relatedDatasetsError.value = null;
 
   if (!props.id) return;
@@ -41,9 +42,11 @@ watchEffect( async () => {
       relatedDatasets.value = (lookupResponse.data?.datasets || []).filter(
         (item: any) => !item.is_source
       );
+      sharedRelatedItemDatasets.value = lookupResponse.data?.shared_related_item_datasets || [];
     } catch (e) {
       relatedDatasetsError.value = e;
       relatedDatasets.value = [];
+      sharedRelatedItemDatasets.value = [];
     } finally {
       relatedDatasetsLoading.value = false;
     }
@@ -63,6 +66,12 @@ watch(dataset, (newDataset) => {
   }
 })
 
+const lastUpdateDate = computed(() => {
+  const date = dataset.value?.updated_at
+  if(!date) {return "";}
+  const d = new Date(date)
+  return d.toLocaleDateString(undefined, {dateStyle: "medium"})
+})  
 
 </script>
 
@@ -84,6 +93,26 @@ watch(dataset, (newDataset) => {
             </div>
 
             <component :is="resolveComponentVersion(dataset)"  :selectedResult="dataset"></component>
+
+            <div v-if="sharedRelatedItemDatasets.length" class="related-datasets-section mt-4">
+              <div class="small text-uppercase mt-5 fw-bold">Related Datasets</div>
+              <ul class="list-group mt-2">
+                <li v-for="item in sharedRelatedItemDatasets" class="list-group-item">
+                  <DatasetListItem :item="item" />
+                </li>
+              </ul>
+            </div>
+
+            <hr/>
+
+            <div class='row mt-3 float-end'>
+              <div class='text-end text-muted small'>
+                  Schema Version: <router-link :to="`/schema/${dataset.schema_version}`" class="link-primary text-decoration-underline">{{ dataset.schema_version }}</router-link>
+                  <br/>
+                  Last Update: {{ lastUpdateDate }}
+              </div>
+            </div>
+
             <router-link
               :to="{ name: 'datasetSearch', query: searchStore.lastSearchQuery }"
               class="card-link btn btn-dark rounded-pill px-3 pe-4 fw-bold fs-5 mt-2"
