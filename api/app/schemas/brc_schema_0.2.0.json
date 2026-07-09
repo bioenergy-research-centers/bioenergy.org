@@ -506,10 +506,7 @@
                     "items": {
                         "$ref": "#/$defs/DatasetTopicEnum"
                     },
-                    "type": [
-                        "array",
-                        "null"
-                    ]
+                    "type": "array"
                 },
                 "volume": {
                     "description": "Volume number for a journal or book, if applicable.",
@@ -524,7 +521,8 @@
                 "date",
                 "creator",
                 "brc",
-                "identifier"
+                "identifier",
+                "topic"
             ],
             "title": "Dataset",
             "type": "object"
@@ -566,7 +564,7 @@
             "type": "string"
         },
         "DatasetTopicEnum": {
-            "description": "High-level topic area for the dataset. This is specific to the BRCs and is not intended to be an exhaustive list of topics.",
+            "description": "High-level topic area for the dataset. This is specific to the BRCs and is not intended to be an exhaustive list of topics. Where a close match exists, each value notes the corresponding OSTI subject category code (see https://www.osti.gov/) used when records are submitted to OSTI.",
             "enum": [
                 "Genetic Engineering",
                 "Plant Biology",
@@ -575,7 +573,14 @@
                 "Enzymes & Proteins",
                 "Biomass & Feedstock",
                 "Bioenergy Production",
-                "Process Engineering"
+                "Process Engineering",
+                "Environmental Science & Sustainability",
+                "Chemistry",
+                "Materials Science & Bioproducts",
+                "Computational Biology & Modeling",
+                "Microscopy & Imaging",
+                "Other",
+                "Unknown"
             ],
             "title": "DatasetTopicEnum",
             "type": "string"
@@ -1171,5 +1176,5 @@
     },
     "title": "brc_schema",
     "type": "object",
-    "version": "0.1.14"
+    "version": "0.2.0"
 }
