@@ -107,7 +107,7 @@ exports.lookupByUid = async (req, res) => {
     const dataset_url = String(sourceDataset.json?.dataset_url || "").trim();
     const relatedItemIdentifiers = (Array.isArray(sourceDataset.json?.relatedItem) ? sourceDataset.json.relatedItem : [])
       .map((item) => String(item?.relatedItemIdentifier || "").trim().toLowerCase())
-      .filter((identifier) => identifier)
+      .filter((identifier) => identifier);
 
     if (!identifier && !dataset_url && !relatedItemIdentifiers.length) {
       return res.status(400).send({
