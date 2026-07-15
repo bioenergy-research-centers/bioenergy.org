@@ -73,6 +73,7 @@ describe("dataset routes", () => {
         nofacets: "true",
         from_date: "2025-01-01",
         until_date: "2025-12-31",
+        shape: undefined,
       });
     });
 
@@ -93,6 +94,9 @@ describe("dataset routes", () => {
         rows: undefined,
         limit: undefined,
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: undefined,
       });
     });
 
@@ -108,6 +112,9 @@ describe("dataset routes", () => {
         rows: undefined,
         limit: "25",
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: undefined,
       });
     });
 
@@ -194,6 +201,9 @@ describe("dataset routes", () => {
         limit: undefined,
         filters: undefined,
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: undefined,
       });
     });
 
@@ -223,6 +233,9 @@ describe("dataset routes", () => {
           year: "2024",
         },
         nofacets: true,
+        from_date: undefined,
+        until_date: undefined,
+        shape: undefined,
       });
     });
 
@@ -243,6 +256,28 @@ describe("dataset routes", () => {
         limit: 25,
         filters: undefined,
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: undefined,
+      });
+    });
+
+    it("passes response shape for local search", async () => {
+      const res = await supertest(app)
+        .post("/api/datasets")
+        .send({ query: "ethanol", shape: "list-item" });
+
+      expect(res.status).toBe(200);
+      expect(mockSearchLocalDatasets).toHaveBeenCalledWith({
+        textQueryTerm: "ethanol",
+        page: undefined,
+        rows: undefined,
+        limit: undefined,
+        filters: undefined,
+        nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
@@ -434,13 +469,11 @@ describe("dataset routes", () => {
           uid: "RELATED_A",
           brc: "CABBI",
           identifier: "A",
-          dataset_url: "https://repo.org/a",
         }),
         expect.objectContaining({
           uid: "RELATED_B",
           brc: "JBEI",
           identifier: "B",
-          dataset_url: "https://repo.org/b",
         }),
       ]);
       expect(mockQuery).toHaveBeenCalled();
@@ -573,6 +606,7 @@ describe("dataset routes", () => {
       nofacets: undefined,
       from_date: "2025-01-01",
       until_date: "2025-12-31",
+      shape: undefined,
     });
   });
 });

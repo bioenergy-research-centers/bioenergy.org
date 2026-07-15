@@ -52,6 +52,25 @@ describe("searchLocalDatasets", () => {
     });
   });
 
+  it("returns list item shape when requested", async () => {
+    mockFindAndCountAll.mockResolvedValue({
+      count: 1,
+      rows: [
+        {
+          toClientJSON: () => ({ uid: "1", title: "Full Dataset" }),
+          toClientListItemJSON: () => ({ uid: "1", title: "List Dataset" }),
+        },
+      ],
+    });
+
+    const results = await datasetsService.searchLocalDatasets({
+      shape: "list-item",
+      nofacets: true,
+    });
+
+    expect(results.items).toEqual([{ uid: "1", title: "List Dataset" }]);
+  });
+
   it("uses page and rows for pagination", async () => {
     await datasetsService.searchLocalDatasets({
       page: "3",
