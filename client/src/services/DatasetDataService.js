@@ -10,7 +10,8 @@ class DatasetDataService {
     const nofacets = options.nofacets;
     const from_date = options.from_date;
     const until_date = options.until_date;
-    return http.get("/datasets", { params: { page, rows, q, filters, nofacets, from_date, until_date } });
+    const shape = options.shape ?? 'list-item';
+    return http.get("/datasets", { params: { page, rows, q, filters, nofacets, from_date, until_date, shape } });
   }
 
   get(id) {
@@ -22,7 +23,7 @@ class DatasetDataService {
   }
 
   runAdvancedSearch(filter, sequence) {
-    const payload = { query: filter, sequence: sequence };
+    const payload = { query: filter, sequence: sequence, shape: 'list-item' };
     return http.post('/datasets/', payload);
   }
 

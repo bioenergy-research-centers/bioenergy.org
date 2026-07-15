@@ -13,6 +13,23 @@ module.exports = (sequelize, Sequelize) => {
       jsonData.updated_at = this.updatedAt;
       return jsonData;
     }
+    // return json data representing the subset of dataset fields required for list items.
+    // list item views are not versioned. Ensure any changes are mirrored in client component.
+    toClientListItemJSON() {
+      const jsonData = this.json ?? {};
+      return {
+        uid: this.uid,
+        brc: jsonData.brc ?? null,
+        title: jsonData.title ?? null,
+        creator: jsonData.creator ?? [],
+        description: jsonData.description ?? null,
+        analysisType: jsonData.analysisType ?? null,
+        repository: jsonData.repository ?? null,
+        date: jsonData.date ?? null,
+        identifier: jsonData.identifier ?? null,
+      };
+    };
+
   }
 
   Dataset.init(
