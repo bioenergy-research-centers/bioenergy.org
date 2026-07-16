@@ -244,7 +244,7 @@
                 <section class="mt-4 pb-4">
                   <h3 id="need-more-information">Need More Information?</h3>
                   
-                  <p>For a complete description of the MCP server, available search filters, API behavior, and supported workflows, see the Using the bioenergy.org MCP Server documentation.</p>
+                  <p>For a complete description of the MCP server, available search filters, API behavior, and supported workflows, see the <a href="mcp-docs?tab=using-mcp-server">Using the MCP Server documentation</a>.</p>
                 </section>
               </div>
             </BTab>
