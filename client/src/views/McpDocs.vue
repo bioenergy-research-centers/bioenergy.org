@@ -1,8 +1,52 @@
 <script setup lang="ts">
+  import {ref, watch} from "vue";
+  import {useRoute, useRouter} from "vue-router";
   import HeaderView from "@/views/HeaderView.vue";
   import {BTab, BTabs} from "bootstrap-vue-next";
   
   const docsLink = import.meta.env.VITE_BIOENERGY_ORG_API_URI + '/api-docs';
+
+  const route = useRoute();
+  const router = useRouter();
+
+  const slugToTab: Record<string, string> = {
+    'getting-started': 'getting-started-tab',
+    'using-mcp-server': 'using-mcp-server-tab',
+  };
+
+  const tabToSlug: Record<string, string> = {
+    'getting-started-tab': 'getting-started',
+    'using-mcp-server-tab': 'using-mcp-server',
+  };
+
+  // Reads the tab query parameter, maps it to a tab ID, and falls back to Getting Started
+  const tabFromUrl = () => {
+    const slug = typeof route.query.tab === 'string'
+      ? route.query.tab
+      : 'getting-started';
+
+    return slugToTab[slug] ?? 'getting-started-tab';
+  };
+
+  const activeTab = ref(tabFromUrl());
+
+  watch(
+    () => route.query.tab,
+    () => {
+      activeTab.value = tabFromUrl();
+    },
+  );
+
+  // Convert tab's internal ID to query parameter, preserves other query parameters, and clears URL hash
+  const updateTabUrl = (tabId: string) => {
+    void router.replace({
+      query: {
+        ...route.query,
+        tab: tabToSlug[tabId] ?? 'getting-started',
+      },
+      hash: '',
+    });
+  };
 </script>
 
 <template>
@@ -11,12 +55,14 @@
     <div class="container">
       <div class="row">
         <div class="col-12 mt-4">
-          <BTabs>
+          <BTabs
+            v-model="activeTab"
+            @update:model-value="updateTabUrl"
+          >
             <BTab
               id="getting-started-tab"
               button-id="getting-started-tab-button"
               title="Getting Started"
-              active
             >
               <div class="border border-top-0 bg-white p-4">
                 <h2 id="getting-started">Getting Started with the MCP Server</h2>
