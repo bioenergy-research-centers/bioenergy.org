@@ -338,9 +338,26 @@ function createServer(getActiveSessionId = () => null) {
           return formatNoSearchSessionError();
         }
 
+        const currentPage = Number(state.currentPage || state.params.page || 1);
+
+        if (currentPage <= 1) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: "Already on the first page of results (1 of " + Number(state.totalPages || 1) + ")."
+              }
+            ],
+            structuredContent: {
+              currentPage: 1,
+              totalPages: Number(state.totalPages || 1)
+            }
+          };
+        }
+
         const params = {
           ...state.params,
-          page: Math.max(Number(state.params.page || 1) - 1, 1)
+          page: currentPage - 1
         };
 
         const { data, result } = await fetchDatasetPage(params);
