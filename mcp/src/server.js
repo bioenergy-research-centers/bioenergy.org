@@ -451,7 +451,7 @@ app.all("/mcp", async (req, res) => {
         jsonrpc: "2.0",
         error: {
           code: JSONRPC_ERROR.INVALID_REQUEST,
-          message: "Bad Request: No valid MCP session"
+          message: "Bad Request: MCP session is missing, expired, or unknown. Reinitialize the MCP connection."
         },
         id: req.body?.id ?? null
       });
