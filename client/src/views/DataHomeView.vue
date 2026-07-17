@@ -172,8 +172,8 @@ const applySuggestedQuery = () => {
       <div class="container text-center">
         <div class="row justify-content-center">
           <div class="col-12 col-lg-10 col-xl-10">
-            <h2 class="subsection-header">Themes and Categories</h2>
-            <p>Jump to datasets based on core research themes or categories.</p>
+            <h2 class="subsection-header">Themes and Topics</h2>
+            <p>Jump to datasets based on core research themes or topics.</p>
                     
             <div class="themes-row pt-3 pb-5">
               <div class="theme-item">
@@ -258,7 +258,7 @@ const applySuggestedQuery = () => {
               </div>
             </div>
             
-            <ul class="list-unstyled list-inline categories">
+            <ul class="list-unstyled list-inline topics">
               <li class="list-inline-item">
                 <router-link
                   class="btn btn-labeled btn-secondary mb-2"
@@ -560,12 +560,12 @@ const applySuggestedQuery = () => {
   transition: transform 0.2s ease;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
-.categories a {
+.topics a {
   transition: transform 0.2s ease;
 }
 .theme-card a:hover::after,
 .research-card a:hover::after,
-.categories a:hover {
+.topics a:hover {
   box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 .feedstock-development {
