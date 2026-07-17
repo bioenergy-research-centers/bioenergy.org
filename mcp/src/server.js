@@ -12,6 +12,9 @@ const PORT = Number(process.env.PORT || 8081);
 const API_BASE_URL = process.env.API_BASE_URL;
 const API_TOKEN = process.env.API_TOKEN || "";
 
+const SESSION_TTL_MS = 30 * 60 * 1000;
+const SESSION_CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
+
 // JSON-RPC 2.0 standard error codes
 const JSONRPC_ERROR = {
   PARSE_ERROR: -32700,
@@ -359,7 +362,9 @@ app.all("/mcp", async (req, res) => {
 
   try {
     if (sessionId && transports.has(sessionId)) {
-      ({ transport, server } = transports.get(sessionId));
+      const entry = transports.get(sessionId);
+      entry.lastAccessed = Date.now();
+      ({ transport, server } = entry);
     } else if (req.method === "POST" && !sessionId) {
       server = createServer(() => session.id);
 
@@ -367,17 +372,25 @@ app.all("/mcp", async (req, res) => {
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (newSessionId) => {
           session.id = newSessionId;
-          transports.set(newSessionId, { transport, server, session });
+          transports.set(newSessionId, {
+            transport,
+            server,
+            session,
+            lastAccessed: Date.now()
+          });
         }
       });
 
       // Clean up both transport state and pagination state when the MCP session ends.
-      transport.onclose = async () => {
+      transport.onclose = () => {
         if (transport.sessionId) {
           transports.delete(transport.sessionId);
           datasetSearchSessions.delete(transport.sessionId);
         }
-        await server.close();
+
+        // Do not call server.close() here. Closing the server can trigger transport
+        // closure again in some clients (i.e. Codex), causing recursive onclose handling
+        // and resulting in RangeError: Maximum call stack size exceeded.
       };
 
       await server.connect(transport);
@@ -409,6 +422,22 @@ app.all("/mcp", async (req, res) => {
     }
   }
 });
+
+// Clean up abandoned MCP sessions in case a client disconnects without sending DELETE.
+setInterval(() => {
+  const now = Date.now();
+
+  for (const [sessionId, entry] of transports.entries()) {
+    if (now - entry.lastAccessed > SESSION_TTL_MS) {
+      transports.delete(sessionId);
+      datasetSearchSessions.delete(sessionId);
+
+      try {
+        entry.transport.close();
+      } catch {}
+    }
+  }
+}, SESSION_CLEANUP_INTERVAL_MS).unref();
 
 app.get("/health", (req, res) => {
   res.json({ ok: true });
