@@ -88,13 +88,40 @@ async function fetchDatasetPage(params) {
   const data = response.data;
 
   return {
+    data,
+    result: {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(data, null, 2)
+        }
+      ],
+      structuredContent: data
+    }
+  };
+}
+
+function buildDatasetSearchSessionState(tool, params, data) {
+  return {
+    tool,
+    params,
+    currentPage: Number(data?.query?.page || params.page || 1),
+    totalPages: Number(data?.totalPages || 1)
+  };
+}
+
+function formatLastPageResponse(currentPage, totalPages) {
+  return {
     content: [
       {
         type: "text",
-        text: JSON.stringify(data, null, 2)
+        text: `Already on the last page of results (${currentPage} of ${totalPages}).`
       }
     ],
-    structuredContent: data
+    structuredContent: {
+      currentPage,
+      totalPages
+    }
   };
 }
 
@@ -167,12 +194,12 @@ function createServer(getActiveSessionId = () => null) {
     async ({ page, rows }, extra) => {
       try {
         const params = { page, rows };
-        const result = await fetchDatasetPage(params);
+        const { data, result } = await fetchDatasetPage(params);
 
-        saveDatasetSearchSession(getSessionKey(extra, getActiveSessionId), {
-          tool: "list_datasets",
-          params
-        });
+        saveDatasetSearchSession(
+          getSessionKey(extra, getActiveSessionId),
+          buildDatasetSearchSessionState("list_datasets", params, data)
+        );
 
         return result;
       } catch (err) {
@@ -245,12 +272,12 @@ function createServer(getActiveSessionId = () => null) {
           params.until_date = until_date;
         }
 
-        const result = await fetchDatasetPage(params);
+        const { data, result } = await fetchDatasetPage(params);
 
-        saveDatasetSearchSession(getSessionKey(extra, getActiveSessionId), {
-          tool: "search_datasets",
-          params
-        });
+        saveDatasetSearchSession(
+          getSessionKey(extra, getActiveSessionId),
+          buildDatasetSearchSessionState("search_datasets", params, data)
+        );
 
         return result;
       } catch (err) {
@@ -272,17 +299,24 @@ function createServer(getActiveSessionId = () => null) {
           return formatNoSearchSessionError();
         }
 
+        const currentPage = Number(state.currentPage || state.params.page || 1);
+        const totalPages = Number(state.totalPages || 1);
+
+        if (currentPage >= totalPages) {
+          return formatLastPageResponse(currentPage, totalPages);
+        }
+
         const params = {
           ...state.params,
-          page: Number(state.params.page || 1) + 1
+          page: currentPage + 1
         };
 
-        const result = await fetchDatasetPage(params);
+        const { data, result } = await fetchDatasetPage(params);
 
-        saveDatasetSearchSession(sessionKey, {
-          ...state,
-          params
-        });
+        saveDatasetSearchSession(
+          sessionKey,
+          buildDatasetSearchSessionState(state.tool, params, data)
+        );
 
         return result;
       } catch (err) {
@@ -309,12 +343,12 @@ function createServer(getActiveSessionId = () => null) {
           page: Math.max(Number(state.params.page || 1) - 1, 1)
         };
 
-        const result = await fetchDatasetPage(params);
+        const { data, result } = await fetchDatasetPage(params);
 
-        saveDatasetSearchSession(sessionKey, {
-          ...state,
-          params
-        });
+        saveDatasetSearchSession(
+          sessionKey,
+          buildDatasetSearchSessionState(state.tool, params, data)
+        );
 
         return result;
       } catch (err) {
@@ -336,7 +370,8 @@ function createServer(getActiveSessionId = () => null) {
           return formatNoSearchSessionError();
         }
 
-        return await fetchDatasetPage(state.params);
+        const { result } = await fetchDatasetPage(state.params);
+        return result;
       } catch (err) {
         return formatError("Error fetching current dataset page", err);
       }
