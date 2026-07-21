@@ -83,8 +83,8 @@
                   <p>Most MCP-compatible applications require only the MCP server URL.</p>
                   
                   <pre class="bg-light border rounded p-3"><code>Server Name: bioenergy.org
-      Transport: Streamable HTTP
-      URL: https://mcp.bioenergy.org/mcp</code></pre>
+Transport: Streamable HTTP
+URL: https://mcp.bioenergy.org/mcp</code></pre>
 
                   <p>Once connected, your AI assistant will automatically discover the available dataset search tools.</p>
                 </section>
@@ -95,8 +95,8 @@
                   <p>Open the MCP configuration in Claude Desktop and add a new remote MCP server.</p>
                   
                   <pre class="bg-light border rounded p-3"><code>Name: bioenergy.org
-      Transport: Streamable HTTP
-      URL: https://mcp.bioenergy.org/mcp</code></pre>
+Transport: Streamable HTTP
+URL: https://mcp.bioenergy.org/mcp</code></pre>
                   
                   <p>Restart Claude Desktop.</p>
                   
@@ -108,8 +108,7 @@
                   
                   <p>Claude Code supports remote MCP servers. See the <a href="https://code.claude.com/docs/en/mcp-quickstart">Claude Code MCP quickstart</a> for additional configuration options. </p>
 
-                  <pre class="bg-light border rounded p-3"><code>claude mcp add --transport http bioenergy
-  https://mcp.bioenergy.org/mcp</code></pre>
+                  <pre class="bg-light border rounded p-3"><code>claude mcp add --transport http bioenergy https://mcp.bioenergy.org/mcp</code></pre>
                   
                   <p>Claude Code can search the bioenergy.org dataset catalog directly during coding or research workflows.</p>
                   
@@ -162,12 +161,12 @@
                   <p>Example workflow:</p>
                   
                   <pre class="bg-light border rounded p-3"><code>User
-          ↓
-      Local LLM
-          ↓
-      bioenergy.org MCP Server
-          ↓
-      bioenergy.org Dataset API</code></pre>
+↓
+Local LLM
+↓
+bioenergy.org MCP Server
+↓
+bioenergy.org Dataset API</code></pre>
                               
                   <p>This allows lightweight local models to access the complete public dataset catalog.</p>
                 </section>
