@@ -57,6 +57,12 @@ const router = createRouter({
             component: AboutView,
             meta: { title: 'About Us - Bioenergy.org' }
         },
+        {
+            path: '/mcp-docs',
+            name: 'mcpDocs',
+            component:  () => import('../views/McpDocs.vue'),
+            meta: { title: 'MCP Docs - Bioenergy.org' }
+        },
     ]
 });
 
