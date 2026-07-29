@@ -15,8 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions QC workflow
 - Initial ESLint config file (eslint.config.js)
 - Initial top-level package metadata files (package.json, package-lock.json)
+- Script for data ingestion.
 - API endpoint for data feed validation.
-- API endpoints for schema listing and retrieval.
+- Multi-schema support for views and data ingest / validation to support schema migration.
+- API endpoints for schema listing and retrieval with pagination.
+- MCP server for Agentic AI access.
 
 [unreleased]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.2...HEAD
 [0.0.2]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.1...v0.0.2
