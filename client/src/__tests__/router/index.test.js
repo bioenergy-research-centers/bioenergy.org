@@ -13,6 +13,7 @@ describe('router', () => {
     expect(names).toContain('schemaShow');
     expect(names).toContain('contact');
     expect(names).toContain('about');
+    expect(names).toContain('mcpDocs');
   });
 
   it('maps / to home', () => {
@@ -34,5 +35,10 @@ describe('router', () => {
   it('lazy loads contact route', () => {
     const contact = routes.find((r) => r.name === 'contact');
     expect(contact.path).toBe('/contact');
+  });
+  
+  it('maps /mcp-docs to mcpDocs', () => {
+    const mcpDocs = routes.find((r) => r.name === 'mcpDocs');
+    expect(mcpDocs.path).toBe('/mcp-docs');
   });
 });
