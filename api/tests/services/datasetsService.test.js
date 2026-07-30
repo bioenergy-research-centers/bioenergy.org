@@ -227,9 +227,9 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.where).not.toEqual({});
   });
 
-  it("adds topic/category condition when categoryQueryTerm is provided", async () => {
+  it("adds topic condition when topicQueryTerm is provided", async () => {
     await datasetsService.searchLocalDatasets({
-      categoryQueryTerm: "Microbiology",
+      topicQueryTerm: "Microbiology",
       nofacets: true,
     });
 
@@ -406,9 +406,9 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.where).not.toEqual({});
   });
 
-  it("adds topic/category condition when categoryQueryTerm is an array", async () => {
+  it("adds topic condition when topicQueryTerm is an array", async () => {
     await datasetsService.searchLocalDatasets({
-      categoryQueryTerm: ["Microbiology", "Plant Biology"],
+      topicQueryTerm: ["Microbiology", "Plant Biology"],
       nofacets: true,
     });
 
@@ -417,9 +417,9 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.where).not.toEqual({});
   });
 
-  it("ignores empty category arrays", async () => {
+  it("ignores an empty topic array", async () => {
     await datasetsService.searchLocalDatasets({
-      categoryQueryTerm: [],
+      topicQueryTerm: [],
       nofacets: true,
     });
 
@@ -428,9 +428,20 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.where).toEqual({});
   });
 
-  it("ignores unknown category names", async () => {
+  it("adds a condition for an arbitrary topic value", async () => {
     await datasetsService.searchLocalDatasets({
-      categoryQueryTerm: "UnknownCategory",
+      topicQueryTerm: "Unknown Topic",
+      nofacets: true,
+    });
+
+    const callArgs = mockFindAndCountAll.mock.calls[0][0];
+
+    expect(callArgs.where).not.toEqual({});
+  });
+
+  it("ignores an array containing only empty topic values", async () => {
+    await datasetsService.searchLocalDatasets({
+      topicQueryTerm: [""],
       nofacets: true,
     });
 
@@ -439,26 +450,15 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.where).toEqual({});
   });
 
-  it("ignores empty category query values", async () => {
+  it("adds a condition using only non-empty topic values", async () => {
     await datasetsService.searchLocalDatasets({
-      categoryQueryTerm: [""],
+      topicQueryTerm: ["", "Microbiology"],
       nofacets: true,
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
 
-    expect(callArgs.where).toEqual({});
-  });
-
-  it("ignores empty and unknown category filters", async () => {
-    await datasetsService.searchLocalDatasets({
-      categoryQueryTerm: ["", "Unknown Category"],
-      nofacets: true,
-    });
-
-    const callArgs = mockFindAndCountAll.mock.calls[0][0];
-
-    expect(callArgs.where).toEqual({});
+    expect(callArgs.where).not.toEqual({});
   });
 
   it("includes facets when nofacets is false string", async () => {
@@ -511,5 +511,52 @@ describe("searchLocalDatasets", () => {
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
 
     expect(callArgs.where).not.toEqual({});
+  });
+
+  
+  it("builds stored-topic SQL with HTML entity normalization", async () => {
+    const literalSpy = vi.spyOn(db.Sequelize, "literal");
+
+    await datasetsService.searchLocalDatasets({
+      topicQueryTerm: "Analytics & Methods",
+      nofacets: true,
+    });
+
+    expect(literalSpy).toHaveBeenCalledWith(
+      expect.stringContaining("replace(t.value, '&amp;', '&')")
+    );
+    expect(literalSpy).toHaveBeenCalledWith(
+      expect.stringContaining("'Analytics & Methods'")
+    );
+
+    literalSpy.mockRestore();
+  });
+
+  it("generates facet SQL using the dataset alias for topic filters", async () => {
+    await datasetsService.searchLocalDatasets({
+      topicQueryTerm: "Microbiology",
+    });
+
+    expect(
+      db.sequelize.dialect.queryGenerator.selectQuery
+    ).toHaveBeenCalledWith(
+      "datasets",
+      expect.objectContaining({
+        tableAs: "dataset",
+        attributes: ["uid"],
+      })
+    );
+  });
+
+  it("normalizes HTML entities in topic facet values", async () => {
+    db.sequelize.query.mockResolvedValue([]);
+
+    await datasetsService.searchLocalDatasets({});
+
+    const facetSql = db.sequelize.query.mock.calls[0][0];
+
+    expect(facetSql).toContain(
+      `replace(jsonb_array_elements_text(d."json"->'topic'), '&amp;', '&')`
+    );
   });
 });

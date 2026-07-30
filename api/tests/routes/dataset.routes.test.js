@@ -459,4 +459,19 @@ describe("dataset routes", () => {
       until_date: "2025-12-31",
     });
   });
+
+  it("passes topic filters to searchLocalDatasets", async () => {
+    const res = await supertest(app).get(
+      "/api/datasets?filters[topic]=Microbiology&filters[topic]=Plant%20Biology"
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockSearchLocalDatasets).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: {
+          topic: ["Microbiology", "Plant Biology"],
+        },
+      })
+    );
+  });
 });
