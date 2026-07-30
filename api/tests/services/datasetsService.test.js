@@ -512,4 +512,51 @@ describe("searchLocalDatasets", () => {
 
     expect(callArgs.where).not.toEqual({});
   });
+
+  
+  it("builds stored-topic SQL with HTML entity normalization", async () => {
+    const literalSpy = vi.spyOn(db.Sequelize, "literal");
+
+    await datasetsService.searchLocalDatasets({
+      topicQueryTerm: "Analytics & Methods",
+      nofacets: true,
+    });
+
+    expect(literalSpy).toHaveBeenCalledWith(
+      expect.stringContaining("replace(t.value, '&amp;', '&')")
+    );
+    expect(literalSpy).toHaveBeenCalledWith(
+      expect.stringContaining("'Analytics & Methods'")
+    );
+
+    literalSpy.mockRestore();
+  });
+
+  it("generates facet SQL using the dataset alias for topic filters", async () => {
+    await datasetsService.searchLocalDatasets({
+      topicQueryTerm: "Microbiology",
+    });
+
+    expect(
+      db.sequelize.dialect.queryGenerator.selectQuery
+    ).toHaveBeenCalledWith(
+      "datasets",
+      expect.objectContaining({
+        tableAs: "dataset",
+        attributes: ["uid"],
+      })
+    );
+  });
+
+  it("normalizes HTML entities in topic facet values", async () => {
+    db.sequelize.query.mockResolvedValue([]);
+
+    await datasetsService.searchLocalDatasets({});
+
+    const facetSql = db.sequelize.query.mock.calls[0][0];
+
+    expect(facetSql).toContain(
+      `replace(jsonb_array_elements_text(d."json"->'topic'), '&amp;', '&')`
+    );
+  });
 });

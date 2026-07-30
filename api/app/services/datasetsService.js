@@ -238,7 +238,11 @@ function buildDatasetSearchConditions({
     }
 
     if (topicQueryTerm) {
-        conditions.push(buildStoredTopicWhere(topicQueryTerm));
+        const topicCondition = buildStoredTopicWhere(topicQueryTerm);
+
+        if (topicCondition) {
+            conditions.push(topicCondition);
+        }
     }
 
     if (yearQueryTerm) {
@@ -438,9 +442,16 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
 
 function buildStoredTopicWhere(topicName) {
   const topics = (Array.isArray(topicName) ? topicName : [topicName])
-  .filter(Boolean);
+    .map((topic) => String(topic).trim())
+    .filter(Boolean);
 
-  const escapedTopics = topics.map((t) => db.sequelize.escape(t)).join(", ");
+  if (!topics.length) {
+    return null;
+  }
+
+  const escapedTopics = topics
+    .map((topic) => db.sequelize.escape(topic))
+    .join(", ");
 
   return where(
     db.Sequelize.literal(`EXISTS (
