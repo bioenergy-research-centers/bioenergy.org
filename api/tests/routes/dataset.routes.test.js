@@ -469,11 +469,13 @@ describe("dataset routes", () => {
           uid: "RELATED_A",
           brc: "CABBI",
           identifier: "A",
+          dataset_url: "https://repo.org/a"
         }),
         expect.objectContaining({
           uid: "RELATED_B",
           brc: "JBEI",
           identifier: "B",
+          dataset_url: "https://repo.org/b"
         }),
       ]);
       expect(mockQuery).toHaveBeenCalled();

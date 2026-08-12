@@ -27,6 +27,7 @@ module.exports = (sequelize, Sequelize) => {
         repository: jsonData.repository ?? null,
         date: jsonData.date ?? null,
         identifier: jsonData.identifier ?? null,
+        dataset_url: jsonData.dataset_url ?? null
       };
     };
 
