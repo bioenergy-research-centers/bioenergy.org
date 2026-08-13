@@ -13,12 +13,16 @@ function parseBooleanParam(value) {
 
 // Selects the client-facing JSON representation for a dataset.
 // Defaults to including full details unless a different named shape is requested.
-function serializeDatasetForClient(dataset, shape="detail"){
-    const normalizedShape = typeof shape === "string" ? shape.trim().toLowerCase() : "detail";
-    if (normalizedShape === "list-item") {
-      return dataset.toClientListItemJSON();
+function serializeDatasetForClient(dataset, shape){
+    const normalizedShape = typeof shape === "string" ? shape.trim().toLowerCase() : "";
+    switch(normalizedShape) {
+      case "list-item":
+        return dataset.toClientListItemJSON();
+      case "detail":
+        return dataset.toClientJSON();
+      default:
+        throw new Error(`Unsupported dataset response shape: ${shape}`);
     }
-    return dataset.toClientJSON();
 }
 
 async function searchLocalDatasets(params = {}) {

@@ -25,14 +25,14 @@ describe('DatasetDataService', () => {
     it('accepts q as alias for query', () => {
       DatasetDataService.getAll({ q: 'biomass' });
       expect(http.get).toHaveBeenCalledWith('/datasets', {
-        params: expect.objectContaining({ q: 'biomass' }),
+        params: expect.objectContaining({ q: 'biomass', shape: 'list-item' }),
       });
     });
 
     it('passes nofacets when set', () => {
       DatasetDataService.getAll({ nofacets: true });
       expect(http.get).toHaveBeenCalledWith('/datasets', {
-        params: expect.objectContaining({ nofacets: true }),
+        params: expect.objectContaining({ nofacets: true, shape: 'list-item' }),
       });
     });
 
@@ -47,7 +47,9 @@ describe('DatasetDataService', () => {
   describe('get', () => {
     it('calls GET /datasets/:id with encoded id', () => {
       DatasetDataService.get('abc/123');
-      expect(http.get).toHaveBeenCalledWith('/datasets/abc%2F123');
+      expect(http.get).toHaveBeenCalledWith('/datasets/abc%2F123', {
+        params: { shape: 'detail' },
+      });
     });
   });
 

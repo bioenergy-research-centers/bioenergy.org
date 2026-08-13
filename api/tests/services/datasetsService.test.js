@@ -31,7 +31,7 @@ describe("searchLocalDatasets", () => {
       ],
     });
 
-    const results = await datasetsService.searchLocalDatasets({ nofacets: true });
+    const results = await datasetsService.searchLocalDatasets({ nofacets: true, shape: "detail" });
 
     expect(results).toEqual({
       totalResults: 1,
@@ -71,11 +71,28 @@ describe("searchLocalDatasets", () => {
     expect(results.items).toEqual([{ uid: "1", title: "List Dataset" }]);
   });
 
+  it("throws when no response shape is provided", async () => {
+    mockFindAndCountAll.mockResolvedValue({
+      count: 1,
+      rows: [
+        {
+          toClientJSON: () => ({ uid: "1", title: "Full Dataset" }),
+          toClientListItemJSON: () => ({ uid: "1", title: "List Dataset" }),
+        },
+      ],
+    });
+
+    await expect(
+      datasetsService.searchLocalDatasets({ nofacets: true })
+    ).rejects.toThrow("Some error occurred while retrieving Datasets.");
+  });
+
   it("uses page and rows for pagination", async () => {
     await datasetsService.searchLocalDatasets({
       page: "3",
       rows: "10",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -88,6 +105,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       rows: "9999",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -101,6 +119,7 @@ describe("searchLocalDatasets", () => {
       page: "2",
       limit: "25",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -114,6 +133,7 @@ describe("searchLocalDatasets", () => {
       rows: "30",
       limit: "25",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -125,6 +145,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       textQueryTerm: "ethanol",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -137,6 +158,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       textQueryTerm: "ethanol OR biomass",
       nofacets: true,
+      shape: "list-item",
     });
 
     expect(mockFindAndCountAll).toHaveBeenCalled();
@@ -146,6 +168,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       textQueryTerm: "ethanol NOT corn",
       nofacets: true,
+      shape: "list-item",
     });
 
     expect(mockFindAndCountAll).toHaveBeenCalled();
@@ -155,6 +178,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       textQueryTerm: "(ethanol OR biomass) cellulose",
       nofacets: true,
+      shape: "list-item",
     });
 
     expect(mockFindAndCountAll).toHaveBeenCalled();
@@ -164,6 +188,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       textQueryTerm: "ethanol ! corn",
       nofacets: true,
+      shape: "list-item",
     });
 
     expect(mockFindAndCountAll).toHaveBeenCalled();
@@ -173,6 +198,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       titleQueryTerm: "GLBRC Study",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -184,6 +210,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       brcQueryTerm: "JBEI",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -195,6 +222,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       brcQueryTerm: ["JBEI", "GLBRC"],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -206,6 +234,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       repositoryQueryTerm: "JGI",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -217,6 +246,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       analysisTypeQueryTerm: "genomics",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -228,6 +258,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       speciesQueryTerm: "Saccharomyces",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -239,6 +270,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       themeQueryTerm: "Sustainability",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -250,6 +282,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       categoryQueryTerm: "Microbiology",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -261,6 +294,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       yearQueryTerm: "2024",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -272,6 +306,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       personNameQueryTerm: "Smith",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -293,6 +328,7 @@ describe("searchLocalDatasets", () => {
         theme: "Sustainability",
       },
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -306,6 +342,7 @@ describe("searchLocalDatasets", () => {
       titleQueryTerm: "Study",
       brcQueryTerm: "GLBRC",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -319,14 +356,14 @@ describe("searchLocalDatasets", () => {
       { facet: "brc", value: "JBEI", count: 2 },
     ]);
 
-    const results = await datasetsService.searchLocalDatasets({});
+    const results = await datasetsService.searchLocalDatasets({ shape: "list-item" });
 
     expect(db.sequelize.query).toHaveBeenCalled();
     expect(results.facets.brc).toEqual([{ value: "JBEI", count: 2 }]);
   });
 
   it("skips facet query when nofacets is true", async () => {
-    await datasetsService.searchLocalDatasets({ nofacets: true });
+    await datasetsService.searchLocalDatasets({ nofacets: true, shape: "list-item" });
 
     expect(db.sequelize.query).not.toHaveBeenCalled();
   });
@@ -334,7 +371,7 @@ describe("searchLocalDatasets", () => {
   it("returns empty facets when facet query fails", async () => {
     db.sequelize.query.mockRejectedValue(new Error("facet query failed"));
 
-    const results = await datasetsService.searchLocalDatasets({});
+    const results = await datasetsService.searchLocalDatasets({ shape: "list-item" });
 
     expect(results.facets).toEqual({
       year: [],
@@ -355,12 +392,13 @@ describe("searchLocalDatasets", () => {
       datasetsService.searchLocalDatasets({
         textQueryTerm: "test",
         nofacets: true,
+        shape: "list-item",
       })
     ).rejects.toThrow("Some error occurred while retrieving Datasets.");
   });
 
   it("uses supportedOnly scope", async () => {
-    await datasetsService.searchLocalDatasets({ nofacets: true });
+    await datasetsService.searchLocalDatasets({ nofacets: true, shape: "list-item" });
 
     expect(db.datasets.scope).toHaveBeenCalledWith("supportedOnly");
   });
@@ -369,6 +407,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       repositoryQueryTerm: ["JGI", "NCBI"],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -379,6 +418,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       analysisTypeQueryTerm: ["genomics", "proteomics"],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -389,6 +429,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       speciesQueryTerm: ["Saccharomyces", "Escherichia"],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -399,6 +440,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       themeQueryTerm: ["Sustainability", "Conversion"],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -409,6 +451,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       yearQueryTerm: ["2024", "2023"],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -419,6 +462,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       personNameQueryTerm: ["Smith", "Jones"],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -429,6 +473,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       categoryQueryTerm: ["Microbiology", "Plant Biology"],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -440,6 +485,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       categoryQueryTerm: [],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -451,6 +497,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       categoryQueryTerm: "UnknownCategory",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -462,6 +509,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       categoryQueryTerm: [""],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -473,6 +521,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       categoryQueryTerm: ["", "Unknown Category"],
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -481,19 +530,19 @@ describe("searchLocalDatasets", () => {
   });
 
   it("includes facets when nofacets is false string", async () => {
-    await datasetsService.searchLocalDatasets({ nofacets: "false" });
+    await datasetsService.searchLocalDatasets({ nofacets: "false", shape: "list-item" });
 
     expect(db.sequelize.query).toHaveBeenCalled();
   });
 
   it("includes facets when nofacets is 0 string", async () => {
-    await datasetsService.searchLocalDatasets({ nofacets: "0" });
+    await datasetsService.searchLocalDatasets({ nofacets: "0", shape: "list-item" });
 
     expect(db.sequelize.query).toHaveBeenCalled();
   });
 
   it("skips facets when nofacets is true string", async () => {
-    await datasetsService.searchLocalDatasets({ nofacets: "true" });
+    await datasetsService.searchLocalDatasets({ nofacets: "true", shape: "list-item" });
 
     expect(db.sequelize.query).not.toHaveBeenCalled();
   });
@@ -502,6 +551,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       from_date: "2025-01-01",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -513,6 +563,7 @@ describe("searchLocalDatasets", () => {
     await datasetsService.searchLocalDatasets({
       until_date: "2025-12-31",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
@@ -525,6 +576,7 @@ describe("searchLocalDatasets", () => {
       from_date: "2025-01-01",
       until_date: "2025-12-31",
       nofacets: true,
+      shape: "list-item",
     });
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];

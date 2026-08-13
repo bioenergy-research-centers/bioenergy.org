@@ -115,11 +115,11 @@
  *         description: Exclude facets from the response when present
  *       - in: query
  *         name: shape
+ *         required: true
  *         schema:
  *           type: string
  *           enum: [detail, list-item]
- *           default: detail
- *         description: Response shape for dataset records. Use list-item for a stable summary across schema versions.
+ *         description: Response shape for dataset records. Use list-item for a stable summary across schema versions. Use detail for full record.
  *       - in: query
  *         name: filters[title]
  *         schema:
@@ -240,6 +240,8 @@
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - shape
  *             properties:
  *               query:
  *                 type: string
@@ -266,7 +268,6 @@
  *               shape:
  *                 type: string
  *                 enum: [detail, list-item]
- *                 default: detail
  *                 description: Response shape for local dataset records. Use list-item for a stable summary across schema versions.
  *               from_date:
  *                 type: string
@@ -480,10 +481,10 @@
  *        description: The dataset id
  *      - in: query
  *        name: shape
+ *        required: true
  *        schema:
  *          type: string
  *          enum: [detail, list-item]
- *          default: detail
  *        description: Response shape for the dataset record.
  *    responses:
  *      200:

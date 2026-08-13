@@ -30,7 +30,7 @@ exports.findAll = async (req, res) => {
 // Find a single Dataset with an id
 exports.findOne = (req, res) => {
   const id = req.params.id;
-  const shape = req.query.shape ?? 'detail';
+  const shape = req.query.shape;
 
   const condition = `${id}`;
 

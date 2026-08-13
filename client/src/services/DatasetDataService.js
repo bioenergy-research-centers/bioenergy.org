@@ -17,7 +17,7 @@ class DatasetDataService {
   }
 
   get(id) {
-    return http.get(`/datasets/${encodeURIComponent(id)}`);
+    return http.get(`/datasets/${encodeURIComponent(id)}`, { params: { shape: 'detail' } });
   }
 
   lookup(uid) {
