@@ -35,6 +35,9 @@ const docs_link = import.meta.env.VITE_BIOENERGY_ORG_API_URI + "/api-docs";
             <a :href="docs_link" class="text-muted me-3 py-3">
               API Docs
             </a>
+            <router-link :to="{ name: 'mcpDocs'}" class="text-muted me-3 py-3">
+              MCP Docs
+            </router-link>
         </nav>
       </div>
     </div>
