@@ -62,7 +62,9 @@ function createServer() {
     },
     async ({ uid }) => {
       try {
-        const response = await api.get(`/api/datasets/${encodeURIComponent(uid)}`);
+        const response = await api.get(`/api/datasets/${encodeURIComponent(uid)}`, {
+          params: { shape: "detail" }
+        });
         const data = response.data;
 
         return {
@@ -101,7 +103,7 @@ function createServer() {
     async ({ page, rows }) => {
       try {
         const response = await api.get("/api/datasets", {
-          params: { page, rows }
+          params: { page, rows, shape: "list-item" }
         });
         const data = response.data;
 
@@ -163,7 +165,8 @@ function createServer() {
         const params = {
           q,
           page,
-          rows
+          rows,
+          shape: "list-item"
         };
 
         if (analysisType) {
