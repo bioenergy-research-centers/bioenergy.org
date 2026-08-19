@@ -13,6 +13,7 @@ import {BPagination, BSpinner} from 'bootstrap-vue-next'
 import FacetCharts from '@/components/FacetCharts.vue';
 import FacetFilterChecks from '@/components/FacetFilterChecks.vue';
 import FacetFilterDatalist from '@/components/FacetFilterDatalist.vue';
+import { pluralizeAuthors } from '@/utils/pluralize';
 
 const route = useRoute()
 const searchStore = useSearchStore();
@@ -268,13 +269,13 @@ const onPageChange = (newPage) => {
                         :creators="result.creator"
                         :max-visible="searchAuthorMaxVisible"
                       />
-                      <router-link
+                      <span
                         v-if="Array.isArray(result.creator) && result.creator.length > searchAuthorMaxVisible"
-                        :to="{ name: 'datasetShow', params: { id: result.uid } }"
-                        class="small"
+                        class="small text-muted"
                       >
                         +{{ result.creator.length - searchAuthorMaxVisible }} more
-                      </router-link>
+                        {{ pluralizeAuthors(result.creator.length - searchAuthorMaxVisible) }}
+                      </span>
                     </div>
                   </div>
 
