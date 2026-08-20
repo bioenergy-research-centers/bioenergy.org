@@ -15,6 +15,7 @@ exports.findAll = async (req, res) => {
       nofacets: req.query.nofacets,
       from_date: req.query.from_date,
       until_date: req.query.until_date,
+      shape: req.query.shape
     });
 
     res.json(results);
@@ -29,13 +30,14 @@ exports.findAll = async (req, res) => {
 // Find a single Dataset with an id
 exports.findOne = (req, res) => {
   const id = req.params.id;
+  const shape = req.query.shape;
 
   const condition = `${id}`;
 
   Dataset.scope('defaultScope').findByPk(condition)
     .then(data => {
       if (data) {
-        res.send(data.toClientJSON());
+        res.send(datasetsService.serializeDatasetForClient(data, shape));
       } else {
         res.status(404).send({
           message: `Cannot find Dataset with identifier: ${id}`
@@ -175,7 +177,9 @@ exports.lookupByUid = async (req, res) => {
         dataset_url: dataset.json?.dataset_url ?? null,
         is_source: dataset.uid === uid
       })),
-      shared_related_item_datasets: sharedRelatedItemDatasets.map((dataset) => dataset?.toClientJSON())
+      shared_related_item_datasets: sharedRelatedItemDatasets.map( (dataset) => 
+        datasetsService.serializeDatasetForClient(dataset, "list-item")
+      )
     });
   } catch (err) {
     return res.status(500).send({

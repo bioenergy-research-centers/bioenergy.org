@@ -97,7 +97,7 @@ const lastUpdateDate = computed(() => {
             <div v-if="sharedRelatedItemDatasets.length" class="related-datasets-section mt-4">
               <div class="small text-uppercase mt-5 fw-bold">Related Datasets</div>
               <ul class="list-group mt-2">
-                <li v-for="item in sharedRelatedItemDatasets" class="list-group-item">
+                <li v-for="item in sharedRelatedItemDatasets" :key="item.uid" class="list-group-item">
                   <DatasetListItem :item="item" />
                 </li>
               </ul>

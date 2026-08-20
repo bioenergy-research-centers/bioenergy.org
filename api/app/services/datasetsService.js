@@ -11,6 +11,20 @@ function parseBooleanParam(value) {
   return ["true", "1", "yes"].includes(value.trim().toLowerCase());
 }
 
+// Selects the client-facing JSON representation for a dataset.
+// Defaults to including full details unless a different named shape is requested.
+function serializeDatasetForClient(dataset, shape){
+    const normalizedShape = typeof shape === "string" ? shape.trim().toLowerCase() : "";
+    switch(normalizedShape) {
+      case "list-item":
+        return dataset.toClientListItemJSON();
+      case "detail":
+        return dataset.toClientJSON();
+      default:
+        throw new Error(`Unsupported dataset response shape: ${shape}`);
+    }
+}
+
 async function searchLocalDatasets(params = {}) {
   console.log("datasetservice: searching local datasets", params);
 
@@ -28,7 +42,7 @@ async function searchLocalDatasets(params = {}) {
   const themeQueryTerm = params.themeQueryTerm ?? filters.theme;
   const fromDateQueryTerm = params.fromDateQueryTerm ?? params.from_date ?? filters.from_date;
   const untilDateQueryTerm = params.untilDateQueryTerm ?? params.until_date ?? filters.until_date;
-
+  const responseShape = params.shape;
   const includeFacets = !parseBooleanParam(params.nofacets);
   const { page, limit, offset } = getPaginationParams(params);
 
@@ -73,7 +87,7 @@ async function searchLocalDatasets(params = {}) {
 
     const totalResults = data.count;
     const totalPages = Math.ceil(totalResults / limit);
-    const items = data.rows.map((x) => x.toClientJSON());
+    const items = data.rows.map((x) => serializeDatasetForClient(x, responseShape));
 
     return {
       totalResults,
@@ -511,4 +525,4 @@ function buildCategoryWhere(categoryName) {
   );
 }
 
-module.exports = {searchLocalDatasets};
+module.exports = { searchLocalDatasets, serializeDatasetForClient };

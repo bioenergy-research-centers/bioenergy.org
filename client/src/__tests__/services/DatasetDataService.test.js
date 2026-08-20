@@ -18,28 +18,28 @@ describe('DatasetDataService', () => {
     it('calls GET /datasets with pagination and query params', () => {
       DatasetDataService.getAll({ page: 2, rows: 25, query: 'ethanol', filters: { brc: 'JBEI' }, from_date: '2025-01-01', until_date: '2025-12-31', });
       expect(http.get).toHaveBeenCalledWith('/datasets', {
-        params: { page: 2, rows: 25, q: 'ethanol', filters: { brc: 'JBEI' }, nofacets: undefined, from_date: '2025-01-01', until_date: '2025-12-31' },
+        params: { page: 2, rows: 25, q: 'ethanol', filters: { brc: 'JBEI' }, nofacets: undefined, from_date: '2025-01-01', until_date: '2025-12-31', shape: 'list-item' },
       });
     });
 
     it('accepts q as alias for query', () => {
       DatasetDataService.getAll({ q: 'biomass' });
       expect(http.get).toHaveBeenCalledWith('/datasets', {
-        params: expect.objectContaining({ q: 'biomass' }),
+        params: expect.objectContaining({ q: 'biomass', shape: 'list-item' }),
       });
     });
 
     it('passes nofacets when set', () => {
       DatasetDataService.getAll({ nofacets: true });
       expect(http.get).toHaveBeenCalledWith('/datasets', {
-        params: expect.objectContaining({ nofacets: true }),
+        params: expect.objectContaining({ nofacets: true, shape: 'list-item' }),
       });
     });
 
     it('works with no options', () => {
       DatasetDataService.getAll();
       expect(http.get).toHaveBeenCalledWith('/datasets', {
-        params: { page: undefined, rows: undefined, q: undefined, filters: undefined, nofacets: undefined, from_date: undefined, until_date: undefined },
+        params: { page: undefined, rows: undefined, q: undefined, filters: undefined, nofacets: undefined, from_date: undefined, until_date: undefined, shape: 'list-item' },
       });
     });
   });
@@ -47,7 +47,9 @@ describe('DatasetDataService', () => {
   describe('get', () => {
     it('calls GET /datasets/:id with encoded id', () => {
       DatasetDataService.get('abc/123');
-      expect(http.get).toHaveBeenCalledWith('/datasets/abc%2F123');
+      expect(http.get).toHaveBeenCalledWith('/datasets/abc%2F123', {
+        params: { shape: 'detail' },
+      });
     });
   });
 
@@ -64,6 +66,7 @@ describe('DatasetDataService', () => {
       expect(http.post).toHaveBeenCalledWith('/datasets/', {
         query: 'test',
         sequence: 'ATCGATCG',
+        shape: 'list-item',
       });
     });
   });

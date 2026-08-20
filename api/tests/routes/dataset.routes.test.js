@@ -57,7 +57,7 @@ describe("dataset routes", () => {
   describe("GET /api/datasets", () => {
     it("passes query params to searchLocalDatasets", async () => {
       const res = await supertest(app).get(
-        "/api/datasets?q=ethanol&page=2&rows=25&filters[brc]=JBEI&nofacets=true&from_date=2025-01-01&until_date=2025-12-31"
+        "/api/datasets?q=ethanol&page=2&rows=25&filters[brc]=JBEI&nofacets=true&from_date=2025-01-01&until_date=2025-12-31&shape=list-item"
       );
 
       expect(res.status).toBe(200);
@@ -73,12 +73,13 @@ describe("dataset routes", () => {
         nofacets: "true",
         from_date: "2025-01-01",
         until_date: "2025-12-31",
+        shape: "list-item",
       });
     });
 
     it("passes multiple filter values to searchLocalDatasets", async () => {
       const res = await supertest(app).get(
-        "/api/datasets?filters[brc]=JBEI&filters[brc]=GLBRC&filters[year]=2024&filters[year]=2023"
+        "/api/datasets?filters[brc]=JBEI&filters[brc]=GLBRC&filters[year]=2024&filters[year]=2023&shape=list-item"
       );
 
       expect(res.status).toBe(200);
@@ -93,11 +94,14 @@ describe("dataset routes", () => {
         rows: undefined,
         limit: undefined,
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
     it("passes legacy limit to searchLocalDatasets", async () => {
-      const res = await supertest(app).get("/api/datasets?limit=25");
+      const res = await supertest(app).get("/api/datasets?limit=25&shape=list-item");
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(mockSearchResponse);
@@ -108,13 +112,16 @@ describe("dataset routes", () => {
         rows: undefined,
         limit: "25",
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
     it("returns 500 when dataset search fails", async () => {
       mockSearchLocalDatasets.mockRejectedValue(new Error("search failed"));
 
-      const res = await supertest(app).get("/api/datasets?q=test");
+      const res = await supertest(app).get("/api/datasets?q=test&shape=list-item");
 
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("search failed");
@@ -154,7 +161,7 @@ describe("dataset routes", () => {
         toClientJSON: () => ({ uid: "abc-123", title: "Test" }),
       });
 
-      const res = await supertest(app).get("/api/datasets/abc-123");
+      const res = await supertest(app).get("/api/datasets/abc-123?shape=detail");
 
       expect(res.status).toBe(200);
       expect(res.body.uid).toBe("abc-123");
@@ -163,7 +170,7 @@ describe("dataset routes", () => {
     it("returns 404 when dataset not found", async () => {
       mockFindByPk.mockResolvedValue(null);
 
-      const res = await supertest(app).get("/api/datasets/nonexistent");
+      const res = await supertest(app).get("/api/datasets/nonexistent?shape=detail");
 
       expect(res.status).toBe(404);
       expect(res.body.message).toContain("Cannot find Dataset");
@@ -172,7 +179,7 @@ describe("dataset routes", () => {
     it("returns 500 on database error", async () => {
       mockFindByPk.mockRejectedValue(new Error("db error"));
 
-      const res = await supertest(app).get("/api/datasets/abc-123");
+      const res = await supertest(app).get("/api/datasets/abc-123?shape=detail");
 
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("Error retrieving Dataset");
@@ -183,7 +190,7 @@ describe("dataset routes", () => {
     it("returns paginated local results when no sequence provided", async () => {
       const res = await supertest(app)
         .post("/api/datasets")
-        .send({ query: "test" });
+        .send({ query: "test", shape: "list-item" });
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(mockSearchResponse);
@@ -194,6 +201,9 @@ describe("dataset routes", () => {
         limit: undefined,
         filters: undefined,
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
@@ -209,6 +219,7 @@ describe("dataset routes", () => {
             year: "2024",
           },
           nofacets: true,
+          shape: "list-item",
         });
 
       expect(res.status).toBe(200);
@@ -223,6 +234,9 @@ describe("dataset routes", () => {
           year: "2024",
         },
         nofacets: true,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
@@ -232,6 +246,7 @@ describe("dataset routes", () => {
         .send({
           query: "ethanol",
           limit: 25,
+          shape: "list-item",
         });
 
       expect(res.status).toBe(200);
@@ -243,6 +258,28 @@ describe("dataset routes", () => {
         limit: 25,
         filters: undefined,
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
+      });
+    });
+
+    it("passes response shape for local search", async () => {
+      const res = await supertest(app)
+        .post("/api/datasets")
+        .send({ query: "ethanol", shape: "list-item" });
+
+      expect(res.status).toBe(200);
+      expect(mockSearchLocalDatasets).toHaveBeenCalledWith({
+        textQueryTerm: "ethanol",
+        page: undefined,
+        rows: undefined,
+        limit: undefined,
+        filters: undefined,
+        nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
@@ -251,7 +288,7 @@ describe("dataset routes", () => {
 
       const res = await supertest(app)
         .post("/api/datasets")
-        .send({ query: "test", sequence: "ATCGATCG" });
+        .send({ query: "test", sequence: "ATCGATCG", shape: "list-item" });
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual([{ title: "ICE Result" }]);
@@ -264,7 +301,7 @@ describe("dataset routes", () => {
 
       const res = await supertest(app)
         .post("/api/datasets")
-        .send({ query: "test" });
+        .send({ query: "test", shape: "list-item" });
 
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("Search failed");
@@ -275,7 +312,7 @@ describe("dataset routes", () => {
 
       const res = await supertest(app)
         .post("/api/datasets")
-        .send({ query: "test", sequence: "ATCGATCG" });
+        .send({ query: "test", sequence: "ATCGATCG", shape: "list-item" });
 
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("Search failed");
@@ -434,13 +471,13 @@ describe("dataset routes", () => {
           uid: "RELATED_A",
           brc: "CABBI",
           identifier: "A",
-          dataset_url: "https://repo.org/a",
+          dataset_url: "https://repo.org/a"
         }),
         expect.objectContaining({
           uid: "RELATED_B",
           brc: "JBEI",
           identifier: "B",
-          dataset_url: "https://repo.org/b",
+          dataset_url: "https://repo.org/b"
         }),
       ]);
       expect(mockQuery).toHaveBeenCalled();
@@ -560,7 +597,7 @@ describe("dataset routes", () => {
 
   it("passes date range query params to searchLocalDatasets", async () => {
     const res = await supertest(app).get(
-      "/api/datasets?q=ethanol&from_date=2025-01-01&until_date=2025-12-31"
+      "/api/datasets?q=ethanol&from_date=2025-01-01&until_date=2025-12-31&shape=list-item"
     );
 
     expect(res.status).toBe(200);
@@ -573,6 +610,7 @@ describe("dataset routes", () => {
       nofacets: undefined,
       from_date: "2025-01-01",
       until_date: "2025-12-31",
+      shape: "list-item",
     });
   });
 });
