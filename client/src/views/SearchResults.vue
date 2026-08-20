@@ -13,9 +13,11 @@ import {BPagination, BSpinner} from 'bootstrap-vue-next'
 import FacetCharts from '@/components/FacetCharts.vue';
 import FacetFilterChecks from '@/components/FacetFilterChecks.vue';
 import FacetFilterDatalist from '@/components/FacetFilterDatalist.vue';
+import { pluralizeAuthors } from '@/utils/pluralize';
 
 const route = useRoute()
 const searchStore = useSearchStore();
+const searchAuthorMaxVisible = 3;
 
 const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
 
@@ -263,7 +265,17 @@ const onPageChange = (newPage) => {
 
                   <div class="row">
                     <div class="fs-6 fw-light">
-                      <AuthorList :creators="result.creator" />
+                      <AuthorList
+                        :creators="result.creator"
+                        :max-visible="searchAuthorMaxVisible"
+                      />
+                      <span
+                        v-if="Array.isArray(result.creator) && result.creator.length > searchAuthorMaxVisible"
+                        class="small text-muted"
+                      >
+                        +{{ result.creator.length - searchAuthorMaxVisible }} more
+                        {{ pluralizeAuthors(result.creator.length - searchAuthorMaxVisible) }}
+                      </span>
                     </div>
                   </div>
 
