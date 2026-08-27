@@ -260,6 +260,21 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.where).not.toEqual({});
   });
 
+  it("matches against the schema's json.contributors field, not json.contributor", async () => {
+    await datasetsService.searchLocalDatasets({
+      personNameQueryTerm: "Smith",
+      nofacets: true,
+    });
+
+    const callArgs = mockFindAndCountAll.mock.calls[0][0];
+    const [creatorClause, contributorsClause] = callArgs.where[db.Sequelize.Op.and][0][
+      db.Sequelize.Op.or
+    ];
+
+    expect(creatorClause.attribute.path).toBe("json.creator");
+    expect(contributorsClause.attribute.path).toBe("json.contributors");
+  });
+
   it("supports filters object", async () => {
     await datasetsService.searchLocalDatasets({
       filters: {
@@ -404,6 +419,21 @@ describe("searchLocalDatasets", () => {
 
     const callArgs = mockFindAndCountAll.mock.calls[0][0];
     expect(callArgs.where).not.toEqual({});
+  });
+
+  it("matches against json.contributors, not json.contributor, when personNameQueryTerm is an array", async () => {
+    await datasetsService.searchLocalDatasets({
+      personNameQueryTerm: ["Smith", "Jones"],
+      nofacets: true,
+    });
+
+    const callArgs = mockFindAndCountAll.mock.calls[0][0];
+    const [creatorClause, contributorsClause] = callArgs.where[db.Sequelize.Op.and][0][
+      db.Sequelize.Op.or
+    ];
+
+    expect(creatorClause.attribute.path).toBe("json.creator");
+    expect(contributorsClause.attribute.path).toBe("json.contributors");
   });
 
   it("adds topic condition when topicQueryTerm is an array", async () => {
@@ -558,5 +588,16 @@ describe("searchLocalDatasets", () => {
     expect(facetSql).toContain(
       `replace(jsonb_array_elements_text(d."json"->'topic'), '&amp;', '&')`
     );
+  });
+
+  it("builds the personName facet against json.contributors, not json.contributor", async () => {
+    await datasetsService.searchLocalDatasets({});
+
+    const facetSql = db.sequelize.query.mock.calls[0][0];
+
+    expect(facetSql).toContain(
+      `jsonb_array_elements(d."json"->'contributors') AS cn(elem)`
+    );
+    expect(facetSql).toContain(`jsonb_typeof(d."json"->'contributors') = 'array'`);
   });
 });
