@@ -1,10 +1,25 @@
 <script setup>
   import { computed } from 'vue';
-  const props = defineProps(['creators']);
+  const props = defineProps({
+    creators: {
+      type: Array,
+      default: () => [],
+    },
+    maxVisible: {
+      type: Number,
+      default: null,
+    },
+  });
 
-  const primaryCreators = computed(() => {
+  const creators = computed(() => {
     if(!Array.isArray(props.creators)) { return []; }
-    return props.creators.filter(item => item.primaryContact === true);
+    if (
+      !Number.isInteger(props.maxVisible) ||
+      props.maxVisible < 0
+    ) {
+      return props.creators;
+    }
+    return props.creators.slice(0, props.maxVisible);
   });
   const contactTooltip = (creator) => {
     return `Corresponding Contact: ${creator.email || 'No e-mail address provided.'}`
@@ -13,7 +28,7 @@
 
 <template>
   <div>
-    <template v-for="(creator, index) in creators">
+    <template v-for="(creator, index) in creators" :key="creator.name + index">
       <div class="d-inline-flex align-items-baseline me-2">
 
         <span class="me-1">{{ creator.name }}</span>

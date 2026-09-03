@@ -14,6 +14,18 @@ describe('AuthorList', () => {
     expect(wrapper.text()).toContain('Dr. Jones');
   });
 
+  it('renders only the configured number of creators', () => {
+    const wrapper = mount(AuthorList, { props: { creators, maxVisible: 1 } });
+    expect(wrapper.text()).toContain('Dr. Smith');
+    expect(wrapper.text()).not.toContain('Dr. Jones');
+  });
+
+  it('renders all creators when maxVisible is invalid', () => {
+    const wrapper = mount(AuthorList, { props: { creators, maxVisible: 1.5 } });
+    expect(wrapper.text()).toContain('Dr. Smith');
+    expect(wrapper.text()).toContain('Dr. Jones');
+  });
+
   it('shows email icon only for primary contacts', () => {
     const wrapper = mount(AuthorList, { props: { creators } });
     const envelopeIcons = wrapper.findAll('.bi-envelope');

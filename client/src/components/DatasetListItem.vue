@@ -1,8 +1,11 @@
 <script setup>
 import AuthorList from '@/components/AuthorList.vue';
 import sanitizeHtml from 'sanitize-html';
+import { pluralizeAuthors } from '@/utils/pluralize';
 
 const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
+
+const searchAuthorMaxVisible = 3;
 
 defineProps(['item']);
 
@@ -26,7 +29,17 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
 
     <div class="row">
       <div class="fs-6 fw-light">
-        <AuthorList :creators="item.creator" />
+        <AuthorList
+          :creators="item.creator"
+          :max-visible="searchAuthorMaxVisible"
+        />
+        <span
+          v-if="Array.isArray(item.creator) && item.creator.length > searchAuthorMaxVisible"
+          class="small text-muted"
+        >
+          +{{ item.creator.length - searchAuthorMaxVisible }} more
+          {{ pluralizeAuthors(item.creator.length - searchAuthorMaxVisible) }}
+        </span>
       </div>
     </div>
 

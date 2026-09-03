@@ -7,6 +7,7 @@ import { useRoute } from 'vue-router'
 import DatasetDataService from "../services/DatasetDataService";
 import sanitizeHtml from 'sanitize-html';
 import { useSearchStore } from '@/store/searchStore';
+import { pluralizeAuthors } from '@/utils/pluralize';
 
 import heroBg from "@/assets/hero-bg.png";
 import speciesIcon from "@/assets/species-icon.png";
@@ -30,6 +31,7 @@ const recentDataLoading = ref(false)
 const error = ref(null)
 const dataMetrics = ref(null)
 const metricsLoading = ref(false)
+const recentDatasetAuthorMaxVisible = 3;
 
 async function loadRecentData() {
   recentDataLoading.value = true
@@ -422,7 +424,17 @@ const applySuggestedQuery = () => {
                       v-html="sanitizeHtml(truncateMiddle(result.title || 'Untitled data set', 75, 50), ALLOWED_HTML)"></span>
                   </h5>
                   <div class="card-author mb-3 text-start">
-                    <AuthorList :creators="result.creator" />
+                    <AuthorList
+                      :creators="result.creator"
+                      :max-visible="recentDatasetAuthorMaxVisible"
+                    />
+                    <span
+                      v-if="Array.isArray(result.creator) && result.creator.length > recentDatasetAuthorMaxVisible"
+                      class="small text-muted"
+                    >
+                      +{{ result.creator.length - recentDatasetAuthorMaxVisible }} more
+                      {{ pluralizeAuthors(result.creator.length - recentDatasetAuthorMaxVisible) }}
+                    </span>
                   </div>
                   <p class="card-text text-start fst-italic">
                     <span

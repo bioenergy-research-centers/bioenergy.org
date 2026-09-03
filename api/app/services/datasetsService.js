@@ -308,7 +308,7 @@ function buildDatasetSearchConditions({
                     where(db.Sequelize.json("json.creator"), {
                         [Op.iLike]: { [Op.any]: personNameQueryTermMapping },
                     }),
-                     where(db.Sequelize.json("json.contributor"), {
+                     where(db.Sequelize.json("json.contributors"), {
                         [Op.iLike]: { [Op.any]: personNameQueryTermMapping },
                     }),
                 ],
@@ -317,7 +317,7 @@ function buildDatasetSearchConditions({
             conditions.push({
                 [Op.or]: [
                     where(db.Sequelize.json("json.creator"), { [Op.iLike]: `%${personNameQueryTerm}%` }),
-                    where(db.Sequelize.json("json.contributor"), { [Op.iLike]: `%${personNameQueryTerm}%` }),
+                    where(db.Sequelize.json("json.contributors"), { [Op.iLike]: `%${personNameQueryTerm}%` }),
                 ],
             });
         }
@@ -357,8 +357,8 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
         SELECT d.uid, COALESCE(NULLIF(BTRIM(cn.elem->>'name'), ''), 'NA') AS name
         FROM datasets d
         JOIN filtered_datasets f ON f.uid = d.uid
-        CROSS JOIN LATERAL jsonb_array_elements(d."json"->'contributor') AS cn(elem)
-        WHERE jsonb_typeof(d."json"->'contributor') = 'array'
+        CROSS JOIN LATERAL jsonb_array_elements(d."json"->'contributors') AS cn(elem)
+        WHERE jsonb_typeof(d."json"->'contributors') = 'array'
           AND jsonb_typeof(cn.elem) = 'object'
       )
       SELECT facet, value, count
