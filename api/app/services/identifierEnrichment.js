@@ -1,17 +1,16 @@
 const { parseCurie, getRegistry } = require("./bioregistryClient");
 
+// Expects an array of strings formatted as compact URIs (CURIEs) formatted as 'prefix:identifier'
+// Returns array of objects with resolved details for each identifier
 async function enrichIds(ids = []) {
   if (!Array.isArray(ids) || ids.length === 0) return [];
 
   const parsedIds = ids.map(parseCurie);
-  const prefixes = [
-    ...new Set(
-      parsedIds
-        .map((item) => item.prefix)
-        .filter(Boolean)
-        .map((prefix) => prefix.toLowerCase())
-    ),
-  ];
+  const uniquePrefixes = new Set(
+      parsedIds.map(id => id.prefix?.toLowerCase())
+               .filter(id => typeof id === "string" && id.trim().length > 0)
+    )
+  const prefixes = Array.from(uniquePrefixes)
   const registryEntries = await Promise.all(
     prefixes.map(async (prefix) => [prefix, await getRegistry(prefix)])
   );
