@@ -10,7 +10,6 @@ const props = defineProps({
 
 const visibleCount = 5;
 const expandedGroups = ref({});
-const showUnresolved = ref(false);
 
 const resolvedGroups = computed(() => {
   const filtered_identifiers = props.identifiers.filter(
@@ -31,12 +30,6 @@ const resolvedGroups = computed(() => {
     identifiers
   }));
 });
-
-const unresolvedIdentifiers = computed(() =>
-  props.identifiers.filter(
-    (identifier) => !identifier?.registered || !identifier?.url
-  )
-);
 
 function toggleGroup(prefix) {
   expandedGroups.value[prefix] = !expandedGroups.value[prefix];
@@ -74,26 +67,6 @@ function toggleGroup(prefix) {
         </li>
       </ul>
 
-    </div>
-
-    <div
-      v-if="unresolvedIdentifiers.length"
-      class="mt-3"
-      data-related-identifier-group="unresolved"
-    >
-      <button
-        type="button"
-        class="btn btn-link btn-sm px-0"
-        :aria-expanded="showUnresolved"
-        @click="showUnresolved = !showUnresolved"
-      >
-        {{ showUnresolved ? 'Hide unresolved identifiers' : `Show ${unresolvedIdentifiers.length} unresolved identifiers` }}
-      </button>
-      <ul v-if="showUnresolved" class="mb-0 ps-3 text-muted">
-        <li v-for="(identifier, index) in unresolvedIdentifiers" :key="`${identifier.id}-${index}`">
-          {{ identifier.id }}
-        </li>
-      </ul>
     </div>
   </section>
 </template>

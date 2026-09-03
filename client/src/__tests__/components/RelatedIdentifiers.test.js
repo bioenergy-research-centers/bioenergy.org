@@ -40,7 +40,7 @@ describe('RelatedIdentifiers', () => {
     expect(biosampleGroup.findAll('li')).toHaveLength(6);
   });
 
-  it('keeps unresolved identifiers hidden until requested', async () => {
+  it('does not show unresolved identifiers', async () => {
     const wrapper = mount(RelatedIdentifiers, {
       props: {
         identifiers: [
@@ -49,14 +49,8 @@ describe('RelatedIdentifiers', () => {
         ],
       },
     });
-    const unresolvedGroup = wrapper.get('[data-related-identifier-group="unresolved"]');
-
-    expect(unresolvedGroup.text()).toContain('Show 1 unresolved identifiers');
-    expect(unresolvedGroup.find('ul').exists()).toBe(false);
-
-    await unresolvedGroup.get('button').trigger('click');
-
-    expect(unresolvedGroup.findAll('li')).toHaveLength(1);
-    expect(unresolvedGroup.text()).toContain('private-id');
+    expect(wrapper.text()).toContain('NCBI BioSample');
+    expect(wrapper.text()).toContain('SAMN1');
+    expect(wrapper.text()).not.toContain("private-id")
   });
 });
