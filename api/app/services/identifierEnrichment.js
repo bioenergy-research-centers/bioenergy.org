@@ -1,0 +1,69 @@
+const { parseCurie, getRegistry } = require("./bioregistryClient");
+
+async function enrichIds(ids = []) {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
+
+  const parsedIds = ids.map(parseCurie);
+  const prefixes = [
+    ...new Set(
+      parsedIds
+        .map((item) => item.prefix)
+        .filter(Boolean)
+        .map((prefix) => prefix.toLowerCase())
+    ),
+  ];
+  const registryEntries = await Promise.all(
+    prefixes.map(async (prefix) => [prefix, await getRegistry(prefix)])
+  );
+  const registries = new Map(registryEntries);
+
+  return parsedIds.map((item) => {
+    const registry = item.prefix
+      ? registries.get(item.prefix.toLowerCase())
+      : null;
+
+    return {
+      id: item.id,
+      prefix: item.prefix,
+      local_id: item.localId,
+      registered: Boolean(registry),
+      valid: registry ? validateLocalId(registry, item.localId) : null,
+      url: registry ? resolveUrl(registry, item.localId) : null,
+      registry: registry ? publicRegistry(item.prefix, registry) : null,
+    };
+  });
+}
+
+function resolveUrl(registry, localId) {
+  if (!registry?.uri_format || registry.uri_format_resolvable === false) {
+    return null;
+  }
+
+  return registry.uri_format.replace("$1", localId);
+}
+
+function validateLocalId(registry, localId) {
+  if (!registry?.pattern) return null;
+
+  try {
+    return new RegExp(registry.pattern).test(localId);
+  } catch {
+    return null;
+  }
+}
+
+function publicRegistry(inputPrefix, registry) {
+  const prefix = registry.prefix || inputPrefix;
+
+  return {
+    prefix,
+    name: registry.name || registry.preferred_prefix || prefix,
+    homepage: registry.homepage || null,
+    bioregistry_url: `https://bioregistry.io/registry/${encodeURIComponent(prefix)}`,
+  };
+}
+
+module.exports = {
+  enrichIds,
+  parseCurie,
+};

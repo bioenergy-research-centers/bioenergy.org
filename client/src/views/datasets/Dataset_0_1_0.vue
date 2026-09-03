@@ -2,6 +2,8 @@
   import { ref, computed } from 'vue';
   import OrganismLink from '@/components/OrganismLink.vue';
   import AuthorList from '@/components/AuthorList.vue';
+  import RelatedIdentifiers from '@/components/RelatedIdentifiers.vue';
+  import RelatedItems from '@/components/RelatedItems.vue';
   import sanitizeHtml from 'sanitize-html';
   const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
 
@@ -140,17 +142,8 @@
           </table>
         </div>
 
-        <div v-if="selectedResult.relatedItem && selectedResult.relatedItem.length" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">External Links</div>
-          <div v-for="item in selectedResult.relatedItem">
-            <div class="text-muted italic mt-2 fw-bold">
-              {{ item.relatedItemType }}
-              <i class="bi bi-box-arrow-up-right"></i>
-            </div>
-            <a :href="item.relatedItemIdentifier" target="_blank" rel="noopener noreferrer">
-              <span v-html="sanitizeHtml(item.title, ALLOWED_HTML)"/>
-            </a>
-          </div>
-        </div>
+        <RelatedItems :items="selectedResult.relatedItem" />
+
+        <RelatedIdentifiers :identifiers="selectedResult.bioregistry_enriched_ids" />
 
 </template>

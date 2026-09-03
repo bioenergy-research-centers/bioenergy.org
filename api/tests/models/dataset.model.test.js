@@ -4,7 +4,7 @@ describe("Dataset model", () => {
   const Dataset = db.datasets;
 
   describe("toClientJSON", () => {
-    it("merges schema_version, uid, and timestamps into the json object", () => {
+    it("merges schema_version, uid, timestamps, and empty enrichment into the json object", async () => {
       const instance = Dataset.build({
         uid: "abc-123",
         schema_version: "0.1.15",
@@ -17,7 +17,7 @@ describe("Dataset model", () => {
       instance.createdAt = new Date("2025-01-01");
       instance.updatedAt = new Date("2025-06-01");
 
-      const result = instance.toClientJSON();
+      const result = await instance.toClientJSON();
 
       expect(result).toMatchObject({
         title: "Test Dataset",
@@ -27,6 +27,7 @@ describe("Dataset model", () => {
       });
       expect(result.created_at).toEqual(new Date("2025-01-01"));
       expect(result.updated_at).toEqual(new Date("2025-06-01"));
+      expect(result.bioregistry_enriched_ids).toEqual([]);
     });
   });
 

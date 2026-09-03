@@ -28,28 +28,26 @@ exports.findAll = async (req, res) => {
 };
 
 // Find a single Dataset with an id
-exports.findOne = (req, res) => {
+exports.findOne = async (req, res) => {
   const id = req.params.id;
   const shape = req.query.shape;
 
-  const condition = `${id}`;
+  try {
+    const data = await Dataset.scope('defaultScope').findByPk(`${id}`);
 
-  Dataset.scope('defaultScope').findByPk(condition)
-    .then(data => {
-      if (data) {
-        res.send(datasetsService.serializeDatasetForClient(data, shape));
-      } else {
-        res.status(404).send({
-          message: `Cannot find Dataset with identifier: ${id}`
-        });
-      }
-    })
-    .catch(err => {
-      console.error(err.message);
-      res.status(500).send({
-        message: `Error retrieving Dataset with identifier: ${id}`
+    if (!data) {
+      return res.status(404).send({
+        message: `Cannot find Dataset with identifier: ${id}`
       });
+    }
+
+    return res.send(await datasetsService.serializeDatasetForClient(data, shape));
+  } catch (err) {
+    console.error(err.message);
+    return res.status(500).send({
+      message: `Error retrieving Dataset with identifier: ${id}`
     });
+  }
 };
 
 exports.getMetrics = async (req, res) => {
