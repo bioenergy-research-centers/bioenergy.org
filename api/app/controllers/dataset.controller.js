@@ -15,6 +15,7 @@ exports.findAll = async (req, res) => {
       nofacets: req.query.nofacets,
       from_date: req.query.from_date,
       until_date: req.query.until_date,
+      shape: req.query.shape
     });
 
     res.json(results);
@@ -29,13 +30,14 @@ exports.findAll = async (req, res) => {
 // Find a single Dataset with an id
 exports.findOne = (req, res) => {
   const id = req.params.id;
+  const shape = req.query.shape;
 
   const condition = `${id}`;
 
   Dataset.scope('defaultScope').findByPk(condition)
     .then(data => {
       if (data) {
-        res.send(data.toClientJSON());
+        res.send(datasetsService.serializeDatasetForClient(data, shape));
       } else {
         res.status(404).send({
           message: `Cannot find Dataset with identifier: ${id}`
@@ -105,12 +107,36 @@ exports.lookupByUid = async (req, res) => {
 
     const identifier = String(sourceDataset.json?.identifier || "").trim();
     const dataset_url = String(sourceDataset.json?.dataset_url || "").trim();
+    const relatedItemIdentifiers = (Array.isArray(sourceDataset.json?.relatedItem) ? sourceDataset.json.relatedItem : [])
+      .map((item) => String(item?.relatedItemIdentifier || "").trim().toLowerCase())
+      .filter((identifier) => identifier);
 
-    if (!identifier && !dataset_url) {
+    if (!identifier && !dataset_url && !relatedItemIdentifiers.length) {
       return res.status(400).send({
-        message: "Source dataset does not contain an identifier or dataset_url."
+        message: "Source dataset does not contain an identifier, dataset_url, or related item identifier."
       });
     }
+
+    const sharedRelatedItemDatasets = relatedItemIdentifiers.length ? await db.sequelize.query(`
+      SELECT DISTINCT ON (d.uid) d.*
+      FROM datasets d
+      CROSS JOIN LATERAL (
+        SELECT lower(trim(record->>'relatedItemIdentifier')) AS identifier
+        FROM jsonb_array_elements(
+          CASE
+            WHEN jsonb_typeof(d.json->'relatedItem') = 'array'
+            THEN d.json->'relatedItem'
+            ELSE '[]'::jsonb
+          END
+        ) AS record
+      ) AS related_item
+      WHERE d.uid <> :uid AND related_item.identifier IN (:relatedItemIdentifiers)
+      ORDER BY d.uid ASC
+    `, {
+      replacements: { uid, relatedItemIdentifiers },
+      model: Dataset,
+      mapToModel: true
+    }) : [];
 
     const conditions = [];
 
@@ -132,12 +158,12 @@ exports.lookupByUid = async (req, res) => {
       );
     }
 
-    const datasets = await Dataset.findAll({
+    const datasets = conditions.length ? await Dataset.findAll({
       where: {
         [db.Sequelize.Op.or]: conditions
       },
       order: [["uid", "ASC"]]
-    });
+    }) : [];
 
     return res.send({
       uid,
@@ -150,7 +176,10 @@ exports.lookupByUid = async (req, res) => {
         identifier: dataset.json?.identifier ?? null,
         dataset_url: dataset.json?.dataset_url ?? null,
         is_source: dataset.uid === uid
-      }))
+      })),
+      shared_related_item_datasets: sharedRelatedItemDatasets.map( (dataset) => 
+        datasetsService.serializeDatasetForClient(dataset, "list-item")
+      )
     });
   } catch (err) {
     return res.status(500).send({

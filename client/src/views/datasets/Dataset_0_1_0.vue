@@ -10,13 +10,6 @@
   function toggleDesc(idx) {
     expandedIndex.value = expandedIndex.value === idx ? null : idx;
   }
-  
-  const updatedDate = computed(() => {
-    const date = props.selectedResult?.updated_at
-    if(!date) {return "";}
-    const d = new Date(date)
-    return d.toLocaleDateString(undefined, {dateStyle: "medium"})
-  })
 
   const publishedDate = computed(() => {
     const date = props.selectedResult?.date
@@ -148,7 +141,7 @@
         </div>
 
         <div v-if="selectedResult.relatedItem && selectedResult.relatedItem.length" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Related Items</div>
+          <div class="small text-uppercase mt-5 fw-bold">External Links</div>
           <div v-for="item in selectedResult.relatedItem">
             <div class="text-muted italic mt-2 fw-bold">
               {{ item.relatedItemType }}
@@ -157,15 +150,6 @@
             <a :href="item.relatedItemIdentifier" target="_blank" rel="noopener noreferrer">
               <span v-html="sanitizeHtml(item.title, ALLOWED_HTML)"/>
             </a>
-          </div>
-        </div>
-
-        <hr/>
-        <div class='row mt-3 float-end'>
-          <div class='text-end text-muted small'>
-              Schema Version: <router-link :to="`/schema/${selectedResult.schema_version}`" class="link-primary text-decoration-underline">{{ selectedResult.schema_version }}</router-link>
-              <br/>
-              Record Updated: {{ updatedDate }}
           </div>
         </div>
 

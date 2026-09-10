@@ -4,28 +4,48 @@
  *   schemas:
  *     Dataset:
  *       type: object
- *       required:
- *         - title
- *         - description
- *         - published
+ *       description: Full dataset record using the dataset's versioned BRC schema, plus uid, schema_version, created_at, and updated_at metadata. See /api/schema for schema details.
+ *     DatasetListItem:
+ *       type: object
+ *       description: Stable summary shape for dataset list views.
  *       properties:
- *         id:
+ *         uid:
  *           type: string
- *           description: The auto-generated id of the dataset
+ *         brc:
+ *           type: string
+ *           nullable: true
  *         title:
  *           type: string
- *           description: The title of your dataset
+ *           nullable: true
+ *         creator:
+ *           type: array
+ *           items:
+ *             type: object
  *         description:
  *           type: string
- *           description: The dataset description
- *         published:
- *           type: boolean
- *           description: Whether the dataset is published or not
+ *           nullable: true
+ *         analysisType:
+ *           type: string
+ *           nullable: true
+ *         repository:
+ *           type: string
+ *           nullable: true
+ *         date:
+ *           type: string
+ *           nullable: true
+ *         identifier:
+ *           type: string
+ *           nullable: true
  *       example:
- *         id: d5fE_asz
- *         title: The Best Bioenergy Dataset
- *         description: Some revolutionary dataset that will change the world
- *         published: true
+ *         uid: GLBRC_GSE218642
+ *         brc: GLBRC
+ *         title: Example dataset title
+ *         creator: []
+ *         description: Example dataset description
+ *         analysisType: Transcriptomics
+ *         repository: NCBI GEO
+ *         date: 2025-01-01
+ *         identifier: GSE218642
  *     DatasetSearchResponse:
  *       type: object
  *       properties:
@@ -47,7 +67,9 @@
  *         items:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Dataset'
+ *             oneOf:
+ *               - $ref: '#/components/schemas/Dataset'
+ *               - $ref: '#/components/schemas/DatasetListItem'
  *         facets:
  *           type: object
  *           nullable: true
@@ -91,6 +113,13 @@
  *         schema:
  *           type: boolean
  *         description: Exclude facets from the response when present
+ *       - in: query
+ *         name: shape
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [detail, list-item]
+ *         description: Response shape for dataset records. Use list-item for a stable summary across schema versions. Use detail for full record.
  *       - in: query
  *         name: filters[title]
  *         schema:
@@ -211,6 +240,8 @@
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - shape
  *             properties:
  *               query:
  *                 type: string
@@ -234,6 +265,10 @@
  *               nofacets:
  *                 type: boolean
  *                 description: Exclude facets from local dataset search response
+ *               shape:
+ *                 type: string
+ *                 enum: [detail, list-item]
+ *                 description: Response shape for local dataset records. Use list-item for a stable summary across schema versions.
  *               from_date:
  *                 type: string
  *                 format: date
@@ -387,6 +422,11 @@
  *                       is_source:
  *                         type: boolean
  *                         description: Indicates whether this record is the source dataset used for the lookup
+ *                 shared_related_item_datasets:
+ *                   type: array
+ *                   description: Unique datasets that share an exact related item URL with the source dataset. Items use the list-item response shape.
+ *                   items:
+ *                     $ref: '#/components/schemas/DatasetListItem'
  *               example:
  *                 uid: GLBRC_GSE218642
  *                 identifier: GSE218642
@@ -401,8 +441,13 @@
  *                     brc: GLBRC
  *                     identifier: GSE218642
  *                     dataset_url: null
+ *                 shared_related_item_datasets:
+ *                   - uid: GLBRC_PRJNA830439
+ *                     title: Related dataset title
+ *                     description: Related dataset description
+ *                     analysisType: Transcriptomics
  *       400:
- *         description: Dataset uid is missing or the source dataset has neither identifier nor dataset URL
+ *         description: Dataset uid is missing or the source dataset has no identifier, dataset URL, or related item identifier
  *         content:
  *           application/json:
  *             schema:
@@ -434,6 +479,13 @@
  *          type: string
  *        required: true
  *        description: The dataset id
+ *      - in: query
+ *        name: shape
+ *        required: true
+ *        schema:
+ *          type: string
+ *          enum: [detail, list-item]
+ *        description: Response shape for the dataset record.
  *    responses:
  *      200:
  *        description: The dataset by id
