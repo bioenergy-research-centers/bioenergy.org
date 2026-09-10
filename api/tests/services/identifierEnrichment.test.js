@@ -2,19 +2,21 @@ const {
   getRegistry,
   getPrefix,
   resetCache,
-  bioregistry,
+  bioregistry_api,
 } = require("../../app/services/bioregistryClient");
 const { enrichIds, parseCurie } = require("../../app/services/identifierEnrichment");
-const originalGet = bioregistry.get;
+
+// Mock by mutating the shared module object
+const mockBioregistryGet = vi.fn();
+bioregistry_api.get = mockBioregistryGet;
 
 describe("identifier enrichment", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     resetCache();
-    bioregistry.get = vi.fn();
   });
 
   afterEach(() => {
-    bioregistry.get = originalGet;
     resetCache();
     vi.useRealTimers();
   });
@@ -37,7 +39,7 @@ describe("identifier enrichment", () => {
   });
 
   it("enriches a known identifier and preserves the source value", async () => {
-    bioregistry.get.mockResolvedValue({
+    mockBioregistryGet.mockResolvedValue({
       data: {
         prefix: "nmdc",
         name: "National Microbiome Data Collaborative",
@@ -66,20 +68,20 @@ describe("identifier enrichment", () => {
   });
 
   it("uses one lookup for a large set with the same prefix", async () => {
-    bioregistry.get.mockResolvedValue({
+    mockBioregistryGet.mockResolvedValue({
       data: { prefix: "biosample", name: "BioSample", uri_format: "https://example.org/$1" },
     });
     const ids = Array.from({ length: 100 }, (_, index) => `biosample:SAMN${index}`);
 
     const enriched = await enrichIds(ids);
 
-    expect(bioregistry.get).toHaveBeenCalledTimes(1);
+    expect(mockBioregistryGet).toHaveBeenCalledTimes(1);
     expect(enriched).toHaveLength(100);
     expect(enriched[99].local_id).toBe("SAMN99");
   });
 
   it("returns unresolved values for unknown prefixes without failing", async () => {
-    bioregistry.get.mockRejectedValue({ response: { status: 404 } });
+    mockBioregistryGet.mockRejectedValue({ response: { status: 404 } });
 
     await expect(enrichIds(["unknown:123", "opaque-id"])).resolves.toEqual([
       {
@@ -103,23 +105,23 @@ describe("identifier enrichment", () => {
     ]);
 
     await getRegistry("unknown");
-    expect(bioregistry.get).toHaveBeenCalledTimes(1);
+    expect(mockBioregistryGet).toHaveBeenCalledTimes(1);
   });
 
   it("does not cache transient failures", async () => {
-    bioregistry.get.mockRejectedValue(new Error("network unavailable"));
+    mockBioregistryGet.mockRejectedValue(new Error("network unavailable"));
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     await getRegistry("nmdc");
     await getRegistry("nmdc");
 
-    expect(bioregistry.get).toHaveBeenCalledTimes(2);
+    expect(mockBioregistryGet).toHaveBeenCalledTimes(2);
     warn.mockRestore();
   });
 
   it("shares one pending request for concurrent lookups", async () => {
     let resolveRequest;
-    bioregistry.get.mockReturnValue(new Promise((resolve) => {
+    mockBioregistryGet.mockReturnValue(new Promise((resolve) => {
       resolveRequest = resolve;
     }));
 
@@ -131,11 +133,11 @@ describe("identifier enrichment", () => {
       { prefix: "nmdc", name: "NMDC" },
       { prefix: "nmdc", name: "NMDC" },
     ]);
-    expect(bioregistry.get).toHaveBeenCalledTimes(1);
+    expect(mockBioregistryGet).toHaveBeenCalledTimes(1);
   });
 
   it("returns null validation when a pattern is absent or invalid", async () => {
-    bioregistry.get
+    mockBioregistryGet
       .mockResolvedValueOnce({
         data: { prefix: "one", name: "One", uri_format: "https://one.example/$1" },
       })
@@ -150,7 +152,7 @@ describe("identifier enrichment", () => {
 
   it("refreshes expired entries on the next lookup without a cleanup timer", async () => {
     vi.useFakeTimers();
-    bioregistry.get
+    mockBioregistryGet
       .mockResolvedValueOnce({ data: { prefix: "nmdc", name: "NMDC" } })
       .mockResolvedValueOnce({ data: { prefix: "nmdc", name: "NMDC" } });
 
@@ -159,6 +161,6 @@ describe("identifier enrichment", () => {
     vi.advanceTimersByTime(24 * 60 * 60 * 1000 + 1);
     await getRegistry("nmdc");
 
-    expect(bioregistry.get).toHaveBeenCalledTimes(2);
+    expect(mockBioregistryGet).toHaveBeenCalledTimes(2);
   });
 });
