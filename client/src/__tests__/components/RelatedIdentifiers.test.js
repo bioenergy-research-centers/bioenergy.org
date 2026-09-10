@@ -51,6 +51,6 @@ describe('RelatedIdentifiers', () => {
     });
     expect(wrapper.text()).toContain('NCBI BioSample');
     expect(wrapper.text()).toContain('SAMN1');
-    expect(wrapper.text()).not.toContain("private-id")
+    expect(wrapper.text()).not.toContain("private-id");
   });
 });

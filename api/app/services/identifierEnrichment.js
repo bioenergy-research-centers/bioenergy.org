@@ -9,8 +9,8 @@ async function enrichIds(ids = []) {
   const uniquePrefixes = new Set(
       parsedIds.map(id => id.prefix?.toLowerCase())
                .filter(id => typeof id === "string" && id.trim().length > 0)
-    )
-  const prefixes = Array.from(uniquePrefixes)
+    );
+  const prefixes = Array.from(uniquePrefixes);
   const registryEntries = await Promise.all(
     prefixes.map(async (prefix) => [prefix, await getRegistry(prefix)])
   );
