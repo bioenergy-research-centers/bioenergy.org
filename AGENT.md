@@ -43,7 +43,7 @@
   - API: `cd api`
   - Client: `cd client`
   - MCP server: `cd mcp`
-- Local Node development should follow `.nvmrc` (`v20.11.0`). The GitHub Actions workflow currently runs Node 22.
+- Local Node development should follow `.nvmrc` (`v20.11.0`). The GitHub Actions workflow currently runs Node 24.
 - Before running the stack locally, copy `.env.sample` to `.env` and fill in the required variables. Empty placeholder `VITE_*` entries may be needed for some Docker commands.
 
 ### Full stack
