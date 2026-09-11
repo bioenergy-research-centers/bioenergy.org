@@ -96,6 +96,7 @@ describe("identifier enrichment", () => {
 
   it("returns unresolved values for unknown prefixes without failing", async () => {
     mockBioregistryGet.mockRejectedValue({ response: { status: 404 } });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     await expect(enrichIds(["unknown:123", "opaque-id"])).resolves.toEqual([
       {
@@ -120,14 +121,41 @@ describe("identifier enrichment", () => {
 
     await getRegistry("unknown");
     expect(mockBioregistryGet).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith("Bioregistry lookup failed for unknown: HTTP 404");
+    warn.mockRestore();
   });
 
-  it("does not cache transient failures", async () => {
-    mockBioregistryGet.mockRejectedValue(new Error("network unavailable"));
+  it("temporarily caches transient failures", async () => {
+    vi.useFakeTimers();
+    mockBioregistryGet
+      .mockRejectedValueOnce(new Error("network unavailable"))
+      .mockResolvedValueOnce({ data: { prefix: "nmdc", name: "NMDC" } });
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     await getRegistry("nmdc");
     await getRegistry("nmdc");
+    expect(mockBioregistryGet).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(30 * 60 * 1000 + 1);
+    await expect(getRegistry("nmdc")).resolves.toEqual({ prefix: "nmdc", name: "NMDC" });
+
+    expect(mockBioregistryGet).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
+  it("temporarily caches invalid responses", async () => {
+    vi.useFakeTimers();
+    mockBioregistryGet
+      .mockResolvedValueOnce({ data: {} })
+      .mockResolvedValueOnce({ data: { prefix: "nmdc", name: "NMDC" } });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await getRegistry("nmdc");
+    await getRegistry("nmdc");
+    expect(mockBioregistryGet).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(30 * 60 * 1000 + 1);
+    await expect(getRegistry("nmdc")).resolves.toEqual({ prefix: "nmdc", name: "NMDC" });
 
     expect(mockBioregistryGet).toHaveBeenCalledTimes(2);
     warn.mockRestore();

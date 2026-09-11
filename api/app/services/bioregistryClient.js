@@ -16,7 +16,6 @@ const bioregistry_api = axios.create({
 const registryCache = new Map();
 const pendingRequests = new Map();
 
-
 // Get the registry details for a prefix using a simple cache to reduce API requests
 function getRegistry(prefix) {
   if (!prefix) return Promise.resolve(null);
@@ -50,36 +49,39 @@ function getRegistry(prefix) {
 // Fetches registry details for prefix and updates stored cache value.
 // async promise allows caller to store and reuse active queries.
 async function fetchRegistry(prefix) {
-  const now = Date.now();
-
   try {
     const response = await bioregistry_api.get(
       `/api/registry/${encodeURIComponent(prefix)}`
     );
 
-    if (!response.data || typeof response.data !== "object") {
+    if (
+      !response.data ||
+      typeof response.data !== "object" ||
+      typeof response.data.prefix !== "string" ||
+      !response.data.prefix.trim()
+    ) {
       console.warn(`Bioregistry returned an invalid response for ${prefix}.`);
+      registryCache.set(prefix, {
+        value: null,
+        expiresAt: Date.now() + BIOREGISTRY_CONFIG.errorTTL,
+      });
       return null;
     }
 
     registryCache.set(prefix, {
       value: response.data,
-      expiresAt: now + BIOREGISTRY_CONFIG.successTTL,
+      expiresAt: Date.now() + BIOREGISTRY_CONFIG.successTTL,
     });
-
     return response.data;
   } catch (error) {
-    const status = error.response?.status;
+    const status = error?.response?.status;
+    const reason = error?.message || (status ? `HTTP ${status}` : "unknown error");
+    console.warn(`Bioregistry lookup failed for ${prefix}: ${reason}`);
 
-    if (status >= 400 && status < 500) {
-      registryCache.set(prefix, {
-        value: null,
-        expiresAt: now + BIOREGISTRY_CONFIG.errorTTL,
-      });
-      return null;
-    }
-
-    console.warn(`Bioregistry lookup failed for ${prefix}: ${error.message}`);
+    registryCache.set(prefix, {
+      value: null,
+      expiresAt: Date.now() + BIOREGISTRY_CONFIG.errorTTL,
+    });
     return null;
   }
 }
