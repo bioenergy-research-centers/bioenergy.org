@@ -12,12 +12,9 @@ const visibleCount = 5;
 const expandedGroups = ref({});
 
 const resolvedGroups = computed(() => {
-  const filtered_identifiers = props.identifiers.filter(
-    (identifier) => identifier?.registered && identifier?.registry && identifier?.url
-  )
   // Map.groupBy would be simpler but does not work in tests
   const groups = new Map();
-  filtered_identifiers.forEach((identifier) => {
+  props.identifiers.forEach((identifier) => {
     const prefix = identifier.registry.prefix;
     if (!groups.has(prefix)) {
       groups.set(prefix, []);
@@ -37,7 +34,7 @@ function toggleGroup(prefix) {
 </script>
 
 <template>
-  <section v-if="identifiers.length" class="mt-4" aria-labelledby="related-identifiers-heading">
+  <section v-if="identifiers.length" class="mt-4">
 
     <div
       v-for="group in resolvedGroups"

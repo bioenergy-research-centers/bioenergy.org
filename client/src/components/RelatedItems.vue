@@ -35,9 +35,7 @@ function itemTitle(item) {
 </script>
 
 <template>
-  <section v-if="items.length" class="mt-4" :aria-label="heading">
-    <div class="small text-uppercase mt-5 fw-bold">Linked Resources</div>
-
+  <section v-if="items.length" class="mt-4">
     <div
       v-for="group in groupedItems"
       :key="group.type"

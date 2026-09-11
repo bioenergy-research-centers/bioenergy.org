@@ -40,17 +40,9 @@ describe('RelatedIdentifiers', () => {
     expect(biosampleGroup.findAll('li')).toHaveLength(6);
   });
 
-  it('does not show unresolved identifiers', async () => {
-    const wrapper = mount(RelatedIdentifiers, {
-      props: {
-        identifiers: [
-          resolved('SAMN1'),
-          { id: 'private-id', registered: false, url: null, registry: null },
-        ],
-      },
-    });
-    expect(wrapper.text()).toContain('NCBI BioSample');
-    expect(wrapper.text()).toContain('SAMN1');
-    expect(wrapper.text()).not.toContain("private-id");
+  it('does not render an empty section', () => {
+    const wrapper = mount(RelatedIdentifiers, { props: { identifiers: [] } });
+
+    expect(wrapper.find('section').exists()).toBe(false);
   });
 });

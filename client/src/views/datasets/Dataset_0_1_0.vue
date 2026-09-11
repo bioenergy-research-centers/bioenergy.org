@@ -19,6 +19,13 @@
     const d = new Date(date)
     return d.toLocaleDateString(undefined, {dateStyle: "medium"})
   })
+
+  const displayableEnrichedIdentifiers = computed(() =>
+    props.selectedResult?.bioregistry_enriched_ids?.filter(
+      identifier => identifier?.registry && identifier?.url
+    ) || []
+  )
+
 </script>
 
 <template>
@@ -142,8 +149,12 @@
           </table>
         </div>
 
-        <RelatedItems :items="selectedResult.relatedItem" />
-
-        <RelatedIdentifiers :identifiers="selectedResult.bioregistry_enriched_ids" />
+        <div v-if="selectedResult.relatedItem?.length || displayableEnrichedIdentifiers.length" class="mt-4">
+          <div class="small text-uppercase mt-5 fw-bold">
+            Linked Resources
+          </div>
+          <RelatedItems :items="selectedResult.relatedItem" />
+          <RelatedIdentifiers :identifiers="displayableEnrichedIdentifiers" />
+        </div>
 
 </template>
