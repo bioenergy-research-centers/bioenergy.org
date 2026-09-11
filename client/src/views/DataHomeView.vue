@@ -5,9 +5,9 @@ import AuthorList from '@/components/AuthorList.vue';
 import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import DatasetDataService from "../services/DatasetDataService";
-import sanitizeHtml from 'sanitize-html';
 import { useSearchStore } from '@/store/searchStore';
 import { pluralizeAuthors } from '@/utils/pluralize';
+import { sanitizeDatasetHtml } from '@/utils/sanitizeDatasetHtml';
 
 import heroBg from "@/assets/hero-bg.png";
 import speciesIcon from "@/assets/species-icon.png";
@@ -421,7 +421,7 @@ const applySuggestedQuery = () => {
                   <div style="width: 70%;height:2px;border-top:1px solid #ddd;margin:10px auto;"></div>
                   <h5 class="h6 my-3 text-start">
                     <span class="fw-bold"
-                      v-html="sanitizeHtml(truncateMiddle(result.title || 'Untitled data set', 75, 50), ALLOWED_HTML)"></span>
+                      v-html="sanitizeDatasetHtml(truncateMiddle(result.title || 'Untitled data set', 75, 50))"></span>
                   </h5>
                   <div class="card-author mb-3 text-start">
                     <AuthorList
@@ -438,13 +438,13 @@ const applySuggestedQuery = () => {
                   </div>
                   <p class="card-text text-start fst-italic">
                     <span
-                      v-html="sanitizeHtml(truncateMiddle(result.description || '', 150, 75), ALLOWED_HTML)"></span>
+                      v-html="sanitizeDatasetHtml(truncateMiddle(result.description || '', 150, 75))"></span>
                   </p>
                   <!-- <p class="text-start">
                     <span class="text-muted">{{ result.date }}</span>
                   </p> -->
                   <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }" class="stretched-link">
-                    <span class="visually-hidden" v-html="sanitizeHtml(truncateMiddle(result.title || 'Untitled data set', 75, 50), ALLOWED_HTML)"></span>
+                    <span class="visually-hidden" v-html="sanitizeDatasetHtml(truncateMiddle(result.title || 'Untitled data set', 75, 50))"></span>
                   </router-link>
                 </div>
               </div>

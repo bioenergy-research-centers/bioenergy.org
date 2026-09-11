@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import sanitizeHtml from 'sanitize-html';
+import { sanitizeDatasetHtml } from '@/utils/sanitizeDatasetHtml';
 
 const props = defineProps({
   items: {
@@ -30,7 +30,7 @@ function toggleGroup(type) {
 }
 
 function itemTitle(item) {
-  return sanitizeHtml(item?.title || item?.relatedItemIdentifier || '');
+  return sanitizeDatasetHtml(item?.title || item?.relatedItemIdentifier);
 }
 </script>
 

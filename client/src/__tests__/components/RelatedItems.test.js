@@ -30,6 +30,20 @@ describe('RelatedItems', () => {
     expect(wrapper.find('section').exists()).toBe(false);
   });
 
+  it('uses the dataset HTML allowlist for item titles', () => {
+    const wrapper = mount(RelatedItems, {
+      props: {
+        items: [{
+          relatedItemType: 'Dataset',
+          title: '<em>Related</em><sub>2</sub><a href="https://example.org/nested"> nested link</a>',
+          relatedItemIdentifier: 'https://example.org/related',
+        }],
+      },
+    });
+
+    expect(wrapper.get('li > a').element.innerHTML).toBe('Related<sub>2</sub> nested link');
+  });
+
   it('limits large groups and expands them on request', async () => {
     const wrapper = mount(RelatedItems, {
       props: {

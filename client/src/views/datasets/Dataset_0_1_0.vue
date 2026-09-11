@@ -4,8 +4,7 @@
   import AuthorList from '@/components/AuthorList.vue';
   import RelatedIdentifiers from '@/components/RelatedIdentifiers.vue';
   import RelatedItems from '@/components/RelatedItems.vue';
-  import sanitizeHtml from 'sanitize-html';
-  const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
+  import { sanitizeDatasetHtml } from '@/utils/sanitizeDatasetHtml';
 
   const props = defineProps(['selectedResult']);
   const expandedIndex=ref(null);
@@ -44,7 +43,7 @@
 
   <div class="row mt-4">
     <div class="col-12 col-md">
-      <h3 v-html="sanitizeHtml(selectedResult?.title, ALLOWED_HTML)"></h3>
+      <h3 v-html="sanitizeDatasetHtml(selectedResult?.title)"></h3>
       <AuthorList :creators="selectedResult.creator"/>
 
     </div>
@@ -74,7 +73,7 @@
 
   <div v-if="selectedResult.description" class="row">
     <div class="small text-uppercase fw-bold">Description</div>
-    <p v-html="sanitizeHtml(selectedResult.description, ALLOWED_HTML)"></p>
+    <p v-html="sanitizeDatasetHtml(selectedResult.description)"></p>
   </div>
 
 
