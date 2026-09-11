@@ -38,7 +38,12 @@ function resolveUrl(registry, localId) {
     return null;
   }
 
-  return registry.uri_format.replace("$1", localId);
+  // Get URI pattern and replace according to bioregistry conventions
+  // https://github.com/biopragmatics/bioregistry/blob/main/src/bioregistry/uri_format.py
+
+  // Use function value as replacement to avoid potential special replacement patterns in localId
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#specifying_a_function_as_the_replacement
+  return registry.uri_format.replaceAll("$1", () => localId);
 }
 
 function validateLocalId(registry, localId) {

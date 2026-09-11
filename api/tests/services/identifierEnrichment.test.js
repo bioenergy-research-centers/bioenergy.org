@@ -67,6 +67,20 @@ describe("identifier enrichment", () => {
     ]);
   });
 
+  it("replaces every URI format placeholder with the literal identifier", async () => {
+    mockBioregistryGet.mockResolvedValue({
+      data: {
+        prefix: "repeat",
+        name: "Repeated Placeholder Registry",
+        uri_format: "https://example.org/$1/copy/$1",
+      },
+    });
+
+    const [enriched] = await enrichIds(["repeat:a$&b"]);
+
+    expect(enriched.url).toBe("https://example.org/a$&b/copy/a$&b");
+  });
+
   it("uses one lookup for a large set with the same prefix", async () => {
     mockBioregistryGet.mockResolvedValue({
       data: { prefix: "biosample", name: "BioSample", uri_format: "https://example.org/$1" },
