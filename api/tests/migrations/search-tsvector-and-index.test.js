@@ -87,6 +87,22 @@ describe("search tsvector and index migration", () => {
     expect(addColumn).toMatch(/"json"->>'abstract',''\)\), 'D'\)/);
   });
 
+  it("passes the transaction to every query in up and down", async () => {
+    const transaction = { id: "tx" };
+
+    const upInterface = buildQueryInterface();
+    await migration.up({ context: upInterface, transaction });
+    for (const [, options] of upInterface.query.mock.calls) {
+      expect(options).toEqual({ transaction });
+    }
+
+    const downInterface = buildQueryInterface();
+    await migration.down({ context: downInterface, transaction });
+    for (const [, options] of downInterface.query.mock.calls) {
+      expect(options).toEqual({ transaction });
+    }
+  });
+
   it("removes the index, column, and function on down", async () => {
     const queryInterface = buildQueryInterface();
 
