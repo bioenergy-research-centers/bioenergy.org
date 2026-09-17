@@ -7,16 +7,18 @@ const {Op, where} = db.Sequelize;
 // else is treated as plain terms and gets partial-word (prefix) matching.
 // '!' and '-' count as operators only at the start of a term, so hyphenated words such as
 // "co-culture" are still searched literally.
-const WEBSEARCH_OPERATORS = /"|(?:^|\s)[-!]|\bOR\b|\bNOT\b/i;
+const WEBSEARCH_OPERATORS = /"|(?:^|\s)[-!]|\bOR\b|\bNOT\b|\|/i;
 
-// websearch_to_tsquery spells exclusion as a leading hyphen. The UI documents NOT and '!',
-// so both are rewritten to '-' to keep the advertised syntax working.
+// websearch_to_tsquery spells exclusion as a leading hyphen and alternation as OR. The
+// previous tokenizer accepted NOT, '!' and '|' as well, so those are rewritten to keep the
+// established syntax working.
 // Note that parentheses no longer group: websearch_to_tsquery ignores them, so
 // "(a OR b) c" is read as "a OR (b AND c)".
 function toWebsearchSyntax(queryText) {
     return queryText
         .replace(/\bNOT\s+/gi, "-")
-        .replace(/(^|\s)!\s*/g, "$1-");
+        .replace(/(^|\s)!\s*/g, "$1-")
+        .replace(/\s*\|+\s*/g, " OR ");
 }
 
 // Both branches accept arbitrary user input without raising a syntax error, unlike
