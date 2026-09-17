@@ -21,6 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API endpoints for schema listing and retrieval with pagination.
 - MCP server for Agentic AI access.
 - Database migrations via Umzug, replacing `sequelize.sync({ alter })` at server boot.
+- Full text search index (`search_tsv` generated column with GIN index) covering specific
+  dataset fields, replacing a per-request scan of the whole JSON document.
+
+### Changed
+
+- Dataset text search now supports quoted phrases, ranks results by relevance instead of
+  date, applies English stemming, and no longer matches on JSON key names.
+
+### Fixed
+
+- Text searches containing unbalanced parentheses, colons, or other punctuation returned
+  HTTP 500. Such queries are now parsed safely.
 
 [unreleased]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.2...HEAD
 [0.0.2]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.1...v0.0.2
