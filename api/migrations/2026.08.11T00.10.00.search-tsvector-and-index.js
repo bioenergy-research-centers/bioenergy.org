@@ -6,9 +6,10 @@
 // names*, so schema key names such as "primaryContact" matched every record. Enumerating
 // value paths instead removes that leakage and makes the expression indexable.
 //
-// The paths below are limited to keys present in all supported schema versions
-// (0.1.12, 0.1.15, 0.2.0), so the column is safe across versions. Adding a searchable
-// field later is deliberately a migration rather than a silent change.
+// The paths below are keys of the supported schema versions (0.1.12, 0.1.15, 0.2.0).
+// A key absent from a record's version yields NULL, which coalesce() turns into an empty
+// vector, so the column is safe across versions. journal_name exists only from 0.1.15.
+// Adding a searchable field later is deliberately a migration rather than a silent change.
 
 // Weighting: A title, B names/keywords/identifier, C controlled vocabularies, D long prose.
 // ts_rank_cd applies the default {D,C,B,A} = {0.1, 0.2, 0.4, 1.0} weights.
@@ -21,11 +22,14 @@ async function up({ context: queryInterface }) {
   await queryInterface.sequelize.query(`
     ALTER TABLE datasets ADD COLUMN search_tsv tsvector GENERATED ALWAYS AS (
       setweight(to_tsvector('english', coalesce("json"->>'title','')), 'A') ||
+      setweight(to_tsvector('english', coalesce("json"->>'datasetName','')), 'B') ||
       setweight(to_tsvector('english', coalesce(jsonb_path_query_array("json",'$.keywords[*]')::text,'')), 'B') ||
       setweight(to_tsvector('english', coalesce(jsonb_path_query_array("json",'$.species[*].scientificName')::text,'')), 'B') ||
+      setweight(to_tsvector('english', coalesce(jsonb_path_query_array("json",'$.species[*].strains[*]')::text,'')), 'B') ||
       setweight(to_tsvector('english', coalesce(jsonb_path_query_array("json",'$.creator[*].name')::text,'')), 'B') ||
       setweight(to_tsvector('english', coalesce(jsonb_path_query_array("json",'$.contributors[*].name')::text,'')), 'B') ||
       setweight(to_tsvector('english', coalesce("json"->>'identifier','')), 'B') ||
+      setweight(to_tsvector('english', coalesce("json"->>'journal_name','')), 'B') ||
       setweight(to_tsvector('english', coalesce("json"->>'brc','')), 'C') ||
       setweight(to_tsvector('english', coalesce("json"->>'repository','')), 'C') ||
       setweight(to_tsvector('english', coalesce("json"->>'analysisType','')), 'C') ||
