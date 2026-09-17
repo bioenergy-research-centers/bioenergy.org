@@ -20,16 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-schema support for views and data ingest / validation to support schema migration.
 - API endpoints for schema listing and retrieval with pagination.
 - MCP server for Agentic AI access.
-- Database migrations via Umzug for schema changes the model cannot express, applied with `npm run migrate`. The server refuses to start while migrations are pending.
-- Integration test suite (`api/tests/integration/`, `npm run test:integration`) that runs
-  migrations, search and the HTTP route against a real PostgreSQL; CI runs it on `postgres:16`.
-- Full text search index (`search_tsv` generated column with GIN index) covering specific
-  dataset fields, replacing a per-request scan of the whole JSON document.
-
-### Changed
-
-- Dataset text search now supports quoted phrases, ranks results by relevance instead of
-  date, applies English stemming, and no longer matches on JSON key names.
+- Database migrations via Umzug for schema changes the model cannot express.
+- Integration test suite that runs migrations, search and the HTTP route.
+- Full text search index GIN indexing covering dataset fields.
 
 ### Fixed
 
