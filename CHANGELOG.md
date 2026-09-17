@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-schema support for views and data ingest / validation to support schema migration.
 - API endpoints for schema listing and retrieval with pagination.
 - MCP server for Agentic AI access.
+- Database migrations via Umzug, replacing `sequelize.sync({ alter })` at server boot.
 
 [unreleased]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.2...HEAD
 [0.0.2]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.1...v0.0.2
