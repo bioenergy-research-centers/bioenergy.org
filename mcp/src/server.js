@@ -215,7 +215,12 @@ function createServer(getActiveSessionId = () => null) {
       q: z
         .string()
         .default("")
-        .describe("Optional free-text search query. Use an empty string to search only by filters."),
+        .describe(
+          "Optional free-text search query. Use an empty string to search only by filters. " +
+          "Terms are ANDed and match as prefixes (\"ligni\" finds \"lignin\"). " +
+          "Quote a phrase for an exact match (\"cell wall\"), use OR between alternatives, " +
+          "and a leading - or NOT to exclude a term. Results are ranked by relevance, with title matches first."
+        ),
       page: z
         .number()
         .int()

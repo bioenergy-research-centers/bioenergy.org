@@ -148,6 +148,15 @@ describe("searchLocalDatasets", () => {
     expect(searchFn.args).toEqual(["english", "ethanol OR biomass"]);
   });
 
+  it("rewrites the | operator to websearch OR", async () => {
+    // Without the rewrite, '|' falls through to the prefix builder, which drops the
+    // character and silently turns the alternation into an AND.
+    const searchFn = await getTextSearchFn("ethanol | biomass");
+
+    expect(searchFn.fn).toBe("websearch_to_tsquery");
+    expect(searchFn.args).toEqual(["english", "ethanol OR biomass"]);
+  });
+
   it("rewrites the documented NOT syntax to websearch exclusion", async () => {
     const searchFn = await getTextSearchFn("ethanol NOT corn");
 
