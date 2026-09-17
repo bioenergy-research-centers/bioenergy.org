@@ -68,6 +68,28 @@ docker compose run api npm run migrate:down
 
 Changes to `api/app/models/` no longer take effect automatically. Any change to a model needs a matching migration file added in the same pull request. New migrations should be named with a sortable timestamp prefix, following the existing baseline file.
 
+### Dataset text search
+
+Free-text search runs against `search_tsv`, a generated `tsvector` column maintained by PostgreSQL and backed by a GIN index. It indexes named fields rather than the whole JSON document, so schema key names are no longer matched as content.
+
+Supported query syntax:
+
+| Query | Behavior |
+| --- | --- |
+| `lignin degradation` | All terms must match. Partial words match as prefixes, so `ligni` finds `lignin`. |
+| `"cell wall"` | Quoted text matches the exact phrase. |
+| `ethanol OR biomass` | Either term matches. |
+| `ethanol NOT corn`, `ethanol -corn`, `ethanol ! corn` | Excludes the second term. |
+
+Results are ordered by relevance (`ts_rank_cd`) when a search term is present, and by date when browsing without one. Matches in a dataset title rank above matches in its description or abstract.
+
+Two behaviors changed with the move to PostgreSQL's `websearch_to_tsquery`:
+
+- Parentheses no longer group sub-expressions. `(a OR b) c` is read as `a OR (b AND c)`.
+- Terms are stemmed, so `fermentations` also matches `fermentation`.
+
+The searchable field list is fixed in the migration that defines the column. Making a new field searchable requires a migration, so the index cannot drift from the query layer silently.
+
 ### Testing
 
 Tests use [Vitest](https://vitest.dev/) and run inside Docker containers. No database connection is required.
