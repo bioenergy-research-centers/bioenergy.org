@@ -50,12 +50,11 @@ The following command will run a postgres container with the password `mysecretp
 
 ### Database migrations
 
-The API applies pending database migrations at startup, before it begins accepting requests. If a migration fails the server logs the error and exits rather than serving against an unexpected schema.
-
-Migration files live in `api/migrations/` and run in filename order. Applied migrations are recorded in the `SequelizeMeta` table, so each one runs exactly once.
+At startup the API runs `sequelize.sync({ alter: { drop: false } })`, which keeps the columns declared in `api/app/models/` aligned with the table and never removes anything. Schema changes the model cannot express — generated columns, GIN or expression indexes, SQL functions — live in `api/migrations/` and are applied on demand:
 
 ```bash
-# Apply pending migrations manually
+# Build the image so the container has the current migration files, then apply them
+docker compose build api
 docker compose run api npm run migrate
 
 # List pending / applied migrations
@@ -66,7 +65,11 @@ docker compose run api npm run migrate:executed
 docker compose run api npm run migrate:down
 ```
 
-Changes to `api/app/models/` no longer take effect automatically. Any change to a model needs a matching migration file added in the same pull request. New migrations should be named with a sortable timestamp prefix, following the existing baseline file.
+Migration files run in filename order and each runs inside a single transaction, so a failure part-way leaves the schema unchanged. Applied migrations are recorded in the `SequelizeMeta` table, so `npm run migrate` is safe to run on every deploy whether or not anything is pending.
+
+**Deploying a change that includes a migration:** build, migrate, then start — `docker compose build api && docker compose run api npm run migrate && docker compose up -d api`. The server checks for pending migrations at startup and exits with a message naming them rather than serving against a schema the code does not expect.
+
+Which goes where: a change to a model attribute goes in the model and `sync` applies it; anything else goes in a migration. Do not put the same change in both. New migration files should be named with a sortable timestamp prefix, following the existing baseline file.
 
 ### Dataset text search
 

@@ -34,4 +34,15 @@ function createMigrator(sequelize) {
   });
 }
 
-module.exports = { createMigrator };
+// Migrations are applied on demand with `npm run migrate`, not at boot. This lets the server
+// refuse to start against a schema the code does not expect, instead of failing later at
+// request time (for example a text search against a column that does not exist yet).
+async function assertNoPendingMigrations(sequelize, migrator = createMigrator(sequelize)) {
+  const pending = await migrator.pending();
+  if (pending.length > 0) {
+    const names = pending.map((m) => m.name).join(", ");
+    throw new Error(`Pending database migrations: ${names}. Run \`npm run migrate\` before starting the server.`);
+  }
+}
+
+module.exports = { createMigrator, assertNoPendingMigrations };

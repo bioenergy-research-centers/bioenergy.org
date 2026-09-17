@@ -1,5 +1,5 @@
 const db = require("../../app/models");
-const { createMigrator } = require("../../app/db/migrator");
+const { createMigrator, assertNoPendingMigrations } = require("../../app/db/migrator");
 
 describe("createMigrator", () => {
   it("discovers migration files in filename order with up and down handlers", async () => {
@@ -46,5 +46,25 @@ describe("createMigrator", () => {
 
     expect(getQueryInterface).toHaveBeenCalled();
     getQueryInterface.mockRestore();
+  });
+});
+
+describe("assertNoPendingMigrations", () => {
+  it("resolves when every migration has been applied", async () => {
+    const migrator = { pending: vi.fn().mockResolvedValue([]) };
+
+    await expect(assertNoPendingMigrations(db.sequelize, migrator)).resolves.toBeUndefined();
+  });
+
+  it("rejects, naming the migrations and the command to run, when any are pending", async () => {
+    const migrator = {
+      pending: vi.fn().mockResolvedValue([
+        { name: "2026.08.11T00.10.00.search-tsvector-and-index.js" },
+      ]),
+    };
+
+    await expect(assertNoPendingMigrations(db.sequelize, migrator)).rejects.toThrow(
+      "Pending database migrations: 2026.08.11T00.10.00.search-tsvector-and-index.js. Run `npm run migrate` before starting the server."
+    );
   });
 });
