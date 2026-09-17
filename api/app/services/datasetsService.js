@@ -3,6 +3,54 @@ const { getPaginationParams } = require("../utils/pagination");
 const Dataset = db.datasets;
 const {Op, where} = db.Sequelize;
 
+// Queries using quotes or boolean operators are handled by websearch_to_tsquery; anything
+// else is treated as plain terms and gets partial-word (prefix) matching.
+// '!' and '-' count as operators only at the start of a term, so hyphenated words such as
+// "co-culture" are still searched literally.
+const WEBSEARCH_OPERATORS = /"|(?:^|\s)[-!]|\bOR\b|\bNOT\b/i;
+
+// websearch_to_tsquery spells exclusion as a leading hyphen. The UI documents NOT and '!',
+// so both are rewritten to '-' to keep the advertised syntax working.
+// Note that parentheses no longer group: websearch_to_tsquery ignores them, so
+// "(a OR b) c" is read as "a OR (b AND c)".
+function toWebsearchSyntax(queryText) {
+    return queryText
+        .replace(/\bNOT\s+/gi, "-")
+        .replace(/(^|\s)!\s*/g, "$1-");
+}
+
+// Both branches accept arbitrary user input without raising a syntax error, unlike
+// to_tsquery, which returned 500 for ordinary punctuation such as "(cellulose" or "1:1".
+function buildTextSearchQuery(textQueryTerm) {
+    const trimmedQueryTerm = textQueryTerm.trim();
+
+    if (WEBSEARCH_OPERATORS.test(trimmedQueryTerm)) {
+        // Precise mode: "cell wall" matches the phrase, NOT/-/! exclude, OR alternates.
+        return db.Sequelize.fn("websearch_to_tsquery", "english", toWebsearchSyntax(trimmedQueryTerm));
+    }
+
+    // Broad mode: every term matches as a prefix, so "ligni" still finds "lignin".
+    return db.Sequelize.fn("brc_prefix_tsquery", trimmedQueryTerm);
+}
+
+// Free-text searches are ordered by relevance; browsing without a search term keeps the
+// newest-first ordering the catalogue has always used.
+function buildSearchOrder(textQueryTerm) {
+    const dateOrder = [["json.date", "DESC"], ["uid", "ASC"]];
+
+    if (!textQueryTerm || textQueryTerm.trim() === "") {
+        return dateOrder;
+    }
+
+    const relevance = db.Sequelize.fn(
+        "ts_rank_cd",
+        db.Sequelize.col("search_tsv"),
+        buildTextSearchQuery(textQueryTerm)
+    );
+
+    return [[relevance, "DESC"], ...dateOrder];
+}
+
 function parseBooleanParam(value) {
   if (typeof value === "boolean") return value;
   if (typeof value !== "string") return false;
@@ -50,7 +98,7 @@ async function searchLocalDatasets(params = {}) {
 
   try {
     const dataQuery = Dataset.scope("supportedOnly").findAndCountAll({
-      order: [["json.date", "DESC"], ["uid", "ASC"]],
+      order: buildSearchOrder(textQueryTerm),
       where: mergedWhereConditions,
       limit,
       offset,
@@ -108,58 +156,12 @@ function buildDatasetSearchConditions({
     const conditions = [];
 
     if (textQueryTerm && textQueryTerm.trim() !== "") {
-        // Setup a search across all JSON data using postgres built-in full text search.
-        // This works okay for matching multiple terms after manually adding a wildcard prefix to support partial matches.
-        // Supporting special characters makes the token processing more complicated.
+        // Full text search runs against the generated search_tsv column, which indexes
+        // specific JSON value paths. See migrations/2026.08.11T00.10.00.search-tsvector-and-index.js.
         // https://www.postgresql.org/docs/15/textsearch-controls.html#TEXTSEARCH-PARSING-QUERIES
-        // https://www.postgresql.org/docs/15/datatype-textsearch.html#DATATYPE-TSQUERY
-
-        // NOT and OR boolean terms are supported along with characters '!' and '|'
-        // Parenthesis can be used to group and set precedence  term1 and term2 OR (term3 NOT term4)
-
-        // Split the input into terms on whitespace
-        const specialTokens = ['OR', '|', '!', '(', ')'];
-        const searchTerms = textQueryTerm.trim().match(/(\(|\)|\bOR\b|\bNOT\b|[^\s()]+)/gi);
-
-        const tokenizedSearchTerms = searchTerms.filter(t => t).map(token => {
-            // convert keywords to characters
-            if (token.toUpperCase() === 'OR') {
-                return '|';
-            }
-            if (token.toUpperCase() === 'NOT') {
-                return '!';
-            }
-            if (token === ')') {
-                return ') &';
-            }
-            // don't add wildcard to special tokens
-            if (specialTokens.includes(token.toUpperCase())) {
-                return token;
-            } else {
-                // Add wildcard for partial matching
-                return `${token}:* &`;
-            }
-        });
-
-        let tokenizedSearchTerm = tokenizedSearchTerms.join(' ');
-        // remove any extra trailing &. Quick hack to avoid more complicated processing of the terms
-        tokenizedSearchTerm = tokenizedSearchTerm.replace(/\&$/, "").replace(/\&\s+\|/g, "|").replace(/\&\s+\)/g, ")");
-
-        const textSearchQuery = where(
-            db.Sequelize.fn(
-                'to_tsvector',
-                'simple',
-                db.Sequelize.cast(db.Sequelize.col('json'), 'text')
-            ),
-            {
-                [Op.match]: db.Sequelize.fn(
-                    'to_tsquery',
-                    'simple',
-                    tokenizedSearchTerm
-                )
-            }
+        conditions.push(
+            where(db.Sequelize.col("search_tsv"), { [Op.match]: buildTextSearchQuery(textQueryTerm) })
         );
-        conditions.push(textSearchQuery);
     }
 
     if (titleQueryTerm) {

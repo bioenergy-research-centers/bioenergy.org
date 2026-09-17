@@ -102,6 +102,19 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.limit).toBe(30);
   });
 
+  // Returns the tsquery function Sequelize was asked to match against, so tests can assert
+  // which search mode was chosen and what text reached PostgreSQL.
+  // The condition is Sequelize.where(col, { [Op.match]: fn }), so the function is stored
+  // on the logic object under the Op.match symbol.
+  async function getTextSearchFn(textQueryTerm) {
+    await datasetsService.searchLocalDatasets({ textQueryTerm, nofacets: true });
+
+    const callArgs = mockFindAndCountAll.mock.calls[0][0];
+    const condition = callArgs.where[db.Sequelize.Op.and][0];
+
+    return condition.logic[db.Sequelize.Op.match];
+  }
+
   it("adds text search condition when textQueryTerm is provided", async () => {
     await datasetsService.searchLocalDatasets({
       textQueryTerm: "ethanol",
@@ -114,40 +127,80 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.where).not.toEqual({});
   });
 
+  it("uses the prefix query builder for plain terms so partial words still match", async () => {
+    const searchFn = await getTextSearchFn("ligni");
+
+    expect(searchFn.fn).toBe("brc_prefix_tsquery");
+    expect(searchFn.args).toEqual(["ligni"]);
+  });
+
+  it("uses websearch_to_tsquery for quoted phrases", async () => {
+    const searchFn = await getTextSearchFn('"cell wall"');
+
+    expect(searchFn.fn).toBe("websearch_to_tsquery");
+    expect(searchFn.args).toEqual(["english", '"cell wall"']);
+  });
+
   it("handles OR boolean in text search", async () => {
-    await datasetsService.searchLocalDatasets({
-      textQueryTerm: "ethanol OR biomass",
-      nofacets: true,
-    });
+    const searchFn = await getTextSearchFn("ethanol OR biomass");
 
-    expect(mockFindAndCountAll).toHaveBeenCalled();
+    expect(searchFn.fn).toBe("websearch_to_tsquery");
+    expect(searchFn.args).toEqual(["english", "ethanol OR biomass"]);
   });
 
-  it("handles NOT boolean in text search", async () => {
-    await datasetsService.searchLocalDatasets({
-      textQueryTerm: "ethanol NOT corn",
-      nofacets: true,
-    });
+  it("rewrites the documented NOT syntax to websearch exclusion", async () => {
+    const searchFn = await getTextSearchFn("ethanol NOT corn");
 
-    expect(mockFindAndCountAll).toHaveBeenCalled();
+    expect(searchFn.fn).toBe("websearch_to_tsquery");
+    expect(searchFn.args).toEqual(["english", "ethanol -corn"]);
   });
 
-  it("handles parentheses in text search", async () => {
-    await datasetsService.searchLocalDatasets({
-      textQueryTerm: "(ethanol OR biomass) cellulose",
-      nofacets: true,
-    });
+  it("rewrites the documented ! syntax to websearch exclusion", async () => {
+    const searchFn = await getTextSearchFn("ethanol ! corn");
 
-    expect(mockFindAndCountAll).toHaveBeenCalled();
+    expect(searchFn.fn).toBe("websearch_to_tsquery");
+    expect(searchFn.args).toEqual(["english", "ethanol -corn"]);
   });
 
-  it("handles special token ! in text search", async () => {
-    await datasetsService.searchLocalDatasets({
-      textQueryTerm: "ethanol ! corn",
-      nofacets: true,
-    });
+  it("passes punctuation through untouched instead of building tsquery syntax", async () => {
+    // These inputs previously produced malformed to_tsquery syntax and returned 500.
+    // Both builders accept arbitrary text, so the fix is that the raw term is handed to
+    // PostgreSQL as an argument rather than assembled into query operators.
+    const cases = [
+      ["(cellulose", "brc_prefix_tsquery"],
+      ["1:1", "brc_prefix_tsquery"],
+      ['")', "websearch_to_tsquery"],
+    ];
 
-    expect(mockFindAndCountAll).toHaveBeenCalled();
+    for (const [malformed, expectedFn] of cases) {
+      mockFindAndCountAll.mockClear();
+      const searchFn = await getTextSearchFn(malformed);
+
+      expect(searchFn.fn).toBe(expectedFn);
+      expect(searchFn.args).toContain(malformed);
+    }
+  });
+
+  it("treats hyphenated words as literal terms rather than exclusions", async () => {
+    const searchFn = await getTextSearchFn("co-culture");
+
+    expect(searchFn.fn).toBe("brc_prefix_tsquery");
+    expect(searchFn.args).toEqual(["co-culture"]);
+  });
+
+  it("orders by relevance when searching and by date when browsing", async () => {
+    await datasetsService.searchLocalDatasets({ textQueryTerm: "lignin", nofacets: true });
+    const searchOrder = mockFindAndCountAll.mock.calls[0][0].order;
+
+    expect(searchOrder[0][0].fn).toBe("ts_rank_cd");
+    expect(searchOrder[0][1]).toBe("DESC");
+
+    mockFindAndCountAll.mockClear();
+
+    await datasetsService.searchLocalDatasets({ nofacets: true });
+    const browseOrder = mockFindAndCountAll.mock.calls[0][0].order;
+
+    expect(browseOrder).toEqual([["json.date", "DESC"], ["uid", "ASC"]]);
   });
 
   it("adds title condition when titleQueryTerm is provided", async () => {
