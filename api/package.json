@@ -6,7 +6,11 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "migrate": "node scripts/migrate.js up",
+    "migrate:down": "node scripts/migrate.js down",
+    "migrate:pending": "node scripts/migrate.js pending",
+    "migrate:executed": "node scripts/migrate.js executed"
   },
   "keywords": [
     "nodejs",
@@ -33,7 +37,8 @@
     "sequelize": "^6.37.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
-    "sync-fetch": "^0.5.2"
+    "sync-fetch": "^0.5.2",
+    "umzug": "^3.8.3"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
