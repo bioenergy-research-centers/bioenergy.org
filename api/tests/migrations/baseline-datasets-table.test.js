@@ -39,11 +39,24 @@ describe("baseline datasets table migration", () => {
     expect(columns.json.allowNull).toBe(false);
   });
 
-  it("drops the datasets table on down", async () => {
+  it("passes the transaction to every query", async () => {
+    const queryInterface = buildQueryInterface();
+    const transaction = { id: "tx" };
+
+    await baseline.up({ context: queryInterface, transaction });
+
+    expect(queryInterface.showAllTables).toHaveBeenCalledWith({ transaction });
+    expect(queryInterface.createTable.mock.calls[0][2]).toEqual({ transaction });
+  });
+
+  it("leaves the datasets table in place on down", async () => {
     const queryInterface = buildQueryInterface({ existingTables: ["datasets"] });
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
 
     await baseline.down({ context: queryInterface });
 
-    expect(queryInterface.dropTable).toHaveBeenCalledWith("datasets");
+    expect(queryInterface.dropTable).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith(expect.stringContaining("no-op"));
+    log.mockRestore();
   });
 });

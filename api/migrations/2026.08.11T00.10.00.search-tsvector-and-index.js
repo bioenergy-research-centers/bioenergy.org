@@ -14,7 +14,7 @@
 // Weighting: A title, B names/keywords/identifier, C controlled vocabularies, D long prose.
 // ts_rank_cd applies the default {D,C,B,A} = {0.1, 0.2, 0.4, 1.0} weights.
 
-async function up({ context: queryInterface }) {
+async function up({ context: queryInterface, transaction }) {
   // Generated column: PostgreSQL recomputes search_tsv on every insert/update, so it
   // cannot drift from the document the way a trigger-maintained column can.
   // This rewrites the table and takes an ACCESS EXCLUSIVE lock; at catalogue size
@@ -38,11 +38,11 @@ async function up({ context: queryInterface }) {
       setweight(to_tsvector('english', coalesce("json"->>'description','')), 'D') ||
       setweight(to_tsvector('english', coalesce("json"->>'abstract','')), 'D')
     ) STORED;
-  `);
+  `, { transaction });
 
   await queryInterface.sequelize.query(`
     CREATE INDEX datasets_search_tsv_gin ON datasets USING GIN (search_tsv);
-  `);
+  `, { transaction });
 
   // Builds a prefix-matching tsquery from free text.
   //
@@ -59,13 +59,13 @@ async function up({ context: queryInterface }) {
          FROM unnest(tsvector_to_array(to_tsvector('english', query_text))) AS lexeme),
         '')::tsquery
     $fn$ LANGUAGE SQL IMMUTABLE STRICT;
-  `);
+  `, { transaction });
 }
 
-async function down({ context: queryInterface }) {
-  await queryInterface.sequelize.query("DROP INDEX IF EXISTS datasets_search_tsv_gin;");
-  await queryInterface.sequelize.query("ALTER TABLE datasets DROP COLUMN IF EXISTS search_tsv;");
-  await queryInterface.sequelize.query("DROP FUNCTION IF EXISTS brc_prefix_tsquery(text);");
+async function down({ context: queryInterface, transaction }) {
+  await queryInterface.sequelize.query("DROP INDEX IF EXISTS datasets_search_tsv_gin;", { transaction });
+  await queryInterface.sequelize.query("ALTER TABLE datasets DROP COLUMN IF EXISTS search_tsv;", { transaction });
+  await queryInterface.sequelize.query("DROP FUNCTION IF EXISTS brc_prefix_tsquery(text);", { transaction });
 }
 
 module.exports = { up, down };
