@@ -324,7 +324,7 @@ bioenergy.org Dataset API</code></pre>
                       <tbody>
                         <tr>
                           <th scope="row"><code>q</code></th>
-                          <td>Free-text search query.</td>
+                          <td>Free-text search query. Terms are ANDed and match as prefixes; use <code>"quotes"</code> for an exact phrase, <code>OR</code> between alternatives, and a leading <code>-</code> or <code>NOT</code> to exclude a term. Results are ranked by relevance.</td>
                         </tr>
                         <tr>
                           <th scope="row"><code>page</code></th>
