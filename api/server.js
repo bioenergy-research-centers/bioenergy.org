@@ -48,13 +48,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // use sequelize
 const db = require("./app/models");
-// TODO: replace/update with migrations
-//db.sequelize.sync();
-db.sequelize.sync({ alter: { drop: false } });
-// For development
-// db.sequelize.sync({ force: true }).then(() => {
-//   console.log("Drop and re-sync db.");
-// });
+const { createMigrator } = require("./app/db/migrator");
 
 // register routes after global middleware
 // simple route
@@ -102,6 +96,16 @@ app.use(
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-});
+// Apply any pending database migrations before accepting requests.
+// Migration files live in migrations/; see AGENT.md for the workflow.
+createMigrator(db.sequelize)
+  .up()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}.`);
+    });
+  })
+  .catch((err) => {
+    console.error("Database migration failed; not starting server.", err);
+    process.exit(1);
+  });

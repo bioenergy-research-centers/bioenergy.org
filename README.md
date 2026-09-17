@@ -48,6 +48,26 @@ The following command will run a postgres container with the password `mysecretp
   - You can run `docker-compose down` to stop the application and destroy the containers and volumes.
   - Running `docker-compose up --build` will rebuild the containers and restart the application.
 
+### Database migrations
+
+The API applies pending database migrations at startup, before it begins accepting requests. If a migration fails the server logs the error and exits rather than serving against an unexpected schema.
+
+Migration files live in `api/migrations/` and run in filename order. Applied migrations are recorded in the `SequelizeMeta` table, so each one runs exactly once.
+
+```bash
+# Apply pending migrations manually
+docker compose run api npm run migrate
+
+# List pending / applied migrations
+docker compose run api npm run migrate:pending
+docker compose run api npm run migrate:executed
+
+# Revert the most recent migration
+docker compose run api npm run migrate:down
+```
+
+Changes to `api/app/models/` no longer take effect automatically. Any change to a model needs a matching migration file added in the same pull request. New migrations should be named with a sortable timestamp prefix, following the existing baseline file.
+
 ### Testing
 
 Tests use [Vitest](https://vitest.dev/) and run inside Docker containers. No database connection is required.
