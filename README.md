@@ -69,7 +69,7 @@ Migration files run in filename order and each runs inside a single transaction,
 
 **Deploying a change that includes a migration:** build, migrate, then start — `docker compose build api && docker compose run api npm run migrate && docker compose up -d api`. The server checks for pending migrations at startup and exits with a message naming them rather than serving against a schema the code does not expect.
 
-Which goes where: a change to a model attribute goes in the model and `sync` applies it; anything else goes in a migration. Do not put the same change in both. New migration files should be named with a sortable timestamp prefix, following the existing baseline file.
+Which goes where: a change to a model attribute goes in the model and `sync` applies it everywhere; anything the model cannot express goes in a migration. Declaring the same column in both breaks any environment that starts the server before migrating: `sync` creates the column from the model, `npm run migrate` then fails with `column already exists`, and the migration stays pending so the server keeps refusing to start until someone intervenes. New migration files should be named with a sortable timestamp prefix, following the existing baseline file.
 
 ### Dataset text search
 
@@ -95,7 +95,19 @@ The searchable field list is fixed in the migration that defines the column. Mak
 
 ### Testing
 
-Tests use [Vitest](https://vitest.dev/) and run inside Docker containers. No database connection is required.
+Tests use [Vitest](https://vitest.dev/) and run inside Docker containers. The unit suites need no database connection.
+
+The API also has an integration suite, `api/tests/integration/`, that runs the real migrations, model, search service and HTTP route against a real PostgreSQL and asserts on the results that come back. It is what proves search behaviour (prefix matching, phrases, stemming, ranking, exclusion) actually works, since that logic lives in PostgreSQL where the mocked unit tests cannot reach it. CI runs it against a `postgres:16` service container. Locally:
+
+```bash
+docker run --rm -d --name bioenergy-test-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=bioenergy_test -p 5432:5432 postgres:16
+
+cd api && BIOENERGY_ORG_DB_HOST=localhost BIOENERGY_ORG_DB_LOCAL_PORT=5432 \
+  BIOENERGY_ORG_DB_USER=postgres BIOENERGY_ORG_DB_PASSWORD=postgres \
+  BIOENERGY_ORG_DB_NAME=bioenergy_test npm run test:integration
+```
+
+The suite drops and recreates the `datasets` table, so it refuses to run unless the database name ends in `_test`.
 
 ```bash
 # Run API tests

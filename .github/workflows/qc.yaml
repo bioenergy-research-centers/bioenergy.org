@@ -49,6 +49,52 @@ jobs:
             - name: Run API tests with coverage
               run: npx vitest run --coverage
 
+    api-integration-tests:
+        runs-on: ubuntu-latest
+        # Non-blocking while the job is new: a failure shows in the PR checks but does not
+        # fail the run. Remove this line once it has been seen passing on GitHub.
+        continue-on-error: true
+        defaults:
+            run:
+                working-directory: api
+
+        # Real PostgreSQL for the tests in api/tests/integration/: migrations, the generated
+        # search column and index, and search results end to end. See README.md "Testing".
+        services:
+            postgres:
+                image: postgres:16
+                env:
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: bioenergy_test
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd pg_isready
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 10
+
+        env:
+            BIOENERGY_ORG_DB_HOST: localhost
+            BIOENERGY_ORG_DB_LOCAL_PORT: 5432
+            BIOENERGY_ORG_DB_USER: postgres
+            BIOENERGY_ORG_DB_PASSWORD: postgres
+            BIOENERGY_ORG_DB_NAME: bioenergy_test
+
+        steps:
+            - uses: actions/checkout@v7
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v7
+              with:
+                node-version: 24
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Run API integration tests against PostgreSQL
+              run: npm run test:integration
+
     client-tests:
         runs-on: ubuntu-latest
         defaults:
