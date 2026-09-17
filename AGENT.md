@@ -36,8 +36,8 @@
 - Do not bypass dataset model sanitization or change dataset response shape casually; downstream client rendering depends on `toClientJSON()` output.
 - Treat schema snapshots under `api/app/schemas/` as pinned runtime assets. Update them deliberately and keep supported-version metadata aligned with client rendering support.
 - Imported BRC feeds come from external JSON endpoints and may contain inconsistent data. Prefer defensive handling over assuming stable source formatting.
-- Do not run DDL by hand or from application code outside `api/migrations/`; it will not reach other environments and nothing records that it was applied. Migrations are applied on demand with `npm run migrate`, not at boot, and the server refuses to start while any are pending.
 - Migrations run against live data. Prefer additive, reversible changes, and treat any migration that drops or rewrites a column as a change requiring explicit review.
+-Schema changes reach the database in two ways. Model attributes are applied by `sequelize.sync({ alter })` at boot, which reaches every environment automatically and never drops anything. Anything the model cannot express (generated columns, GIN or expression indexes, SQL functions) should be a file in api/migrations/, applied on demand with `npm run migrate` and recorded in SequelizeMeta; the server refuses to start while any are pending. Do not put DDL anywhere else — not in application code, not in scripts, and not as SQL in documentation or a PR for someone to run by hand. If a change needs DDL the model cannot express, it is a migration file.
 
 ## Build, test, and lint commands
 
