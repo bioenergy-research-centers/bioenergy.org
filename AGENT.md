@@ -26,7 +26,7 @@
 - Dataset schema support typically requires coordinated updates to both:
   - API schema allowlist and snapshots under `api/app/schemas/`.
   - Client dataset-version mapping in `client/src/views/datasets/versionComponentMap.js`.
-- Dataset persistence and response shaping belong in the API model layer, especially `api/app/models/dataset.model.js`. Model changes must be paired with a migration in `api/migrations/`; the schema is no longer inferred from the model at boot.
+- Dataset persistence and response shaping belong in the API model layer, especially `api/app/models/dataset.model.js`. Model attribute changes are applied by `sequelize.sync({ alter })` at boot; anything the model cannot express (generated columns, GIN or expression indexes, SQL functions) is a migration in `api/migrations/`. Never put the same change in both.
 - Contact form and issue-sync behavior spans `client/src/views/ContactView.vue` plus the `/api/messages` route and its supporting services.
 - MCP changes should usually be thin API-adapter changes in `mcp/src/`; business logic should stay in the API.
 
@@ -36,7 +36,7 @@
 - Do not bypass dataset model sanitization or change dataset response shape casually; downstream client rendering depends on `toClientJSON()` output.
 - Treat schema snapshots under `api/app/schemas/` as pinned runtime assets. Update them deliberately and keep supported-version metadata aligned with client rendering support.
 - Imported BRC feeds come from external JSON endpoints and may contain inconsistent data. Prefer defensive handling over assuming stable source formatting.
-- Do not reintroduce `sequelize.sync()` to apply schema changes. Database structure is owned by the migrations in `api/migrations/`, and DDL added outside them will not reach deployed environments.
+- Do not run DDL by hand or from application code outside `api/migrations/`; it will not reach other environments and nothing records that it was applied. Migrations are applied on demand with `npm run migrate`, not at boot, and the server refuses to start while any are pending.
 - Migrations run against live data. Prefer additive, reversible changes, and treat any migration that drops or rewrites a column as a change requiring explicit review.
 
 ## Build, test, and lint commands
@@ -93,11 +93,11 @@
 
 ### Database migrations
 
-- Migrations live in `api/migrations/` and are applied automatically at API startup, before the server listens.
+- Migrations live in `api/migrations/` and are applied on demand with `docker compose run api npm run migrate` (build the image first). At startup the API only checks that none are pending and exits with a message naming them if so.
 - Apply manually: `docker compose run api npm run migrate`
 - Inspect state: `docker compose run api npm run migrate:pending` / `npm run migrate:executed`
 - Revert the most recent migration: `docker compose run api npm run migrate:down`
-- Applied migrations are tracked in the `SequelizeMeta` table. Name new files with a sortable timestamp prefix so they run in order.
+- Each migration runs in one transaction; a failure rolls back the whole file. Applied migrations are tracked in the `SequelizeMeta` table. Name new files with a sortable timestamp prefix so they run in order.
 - The runner is configured in `api/app/db/migrator.js`; `api/scripts/migrate.js` is the CLI entry point.
 
 ### Data operations

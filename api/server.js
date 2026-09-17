@@ -48,7 +48,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // use sequelize
 const db = require("./app/models");
-const { createMigrator } = require("./app/db/migrator");
+const { assertNoPendingMigrations } = require("./app/db/migrator");
 
 // register routes after global middleware
 // simple route
@@ -96,16 +96,19 @@ app.use(
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 
-// Apply any pending database migrations before accepting requests.
-// Migration files live in migrations/; see AGENT.md for the workflow.
-createMigrator(db.sequelize)
-  .up()
+// Keep the model's columns aligned with the table. `alter` without `drop` never removes
+// anything, so the columns, indexes and functions owned by migrations/ are left untouched.
+// Schema changes the model cannot express live in migrations/ and are applied with
+// `npm run migrate` before deploying; the server refuses to start while any are pending.
+db.sequelize
+  .sync({ alter: { drop: false } })
+  .then(() => assertNoPendingMigrations(db.sequelize))
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}.`);
     });
   })
   .catch((err) => {
-    console.error("Database migration failed; not starting server.", err);
+    console.error("Database not ready; not starting server.", err);
     process.exit(1);
   });
