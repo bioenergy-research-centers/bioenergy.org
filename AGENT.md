@@ -26,7 +26,7 @@
 - Dataset schema support typically requires coordinated updates to both:
   - API schema allowlist and snapshots under `api/app/schemas/`.
   - Client dataset-version mapping in `client/src/views/datasets/versionComponentMap.js`.
-- Dataset persistence and response shaping belong in the API model layer, especially `api/app/models/dataset.model.js`. Model attribute changes are applied by `sequelize.sync({ alter })` at boot; anything the model cannot express (generated columns, GIN or expression indexes, SQL functions) is a migration in `api/migrations/`. Never put the same change in both.
+- Dataset persistence and response shaping belong in the API model layer, especially `api/app/models/dataset.model.js`. Model attribute changes are applied by `sequelize.sync({ alter })` at boot; anything the model cannot express (generated columns, GIN or expression indexes, SQL functions) is a migration in `api/migrations/`. Declaring the same column in both leaves an environment stuck: `sync` creates it at boot, the migration then fails with `column already exists` and stays pending, and the server refuses to start until someone intervenes.
 - Contact form and issue-sync behavior spans `client/src/views/ContactView.vue` plus the `/api/messages` route and its supporting services.
 - MCP changes should usually be thin API-adapter changes in `mcp/src/`; business logic should stay in the API.
 
@@ -99,6 +99,7 @@
 - Revert the most recent migration: `docker compose run api npm run migrate:down`
 - Each migration runs in one transaction; a failure rolls back the whole file. Applied migrations are tracked in the `SequelizeMeta` table. Name new files with a sortable timestamp prefix so they run in order.
 - The runner is configured in `api/app/db/migrator.js`; `api/scripts/migrate.js` is the CLI entry point.
+- Migration files are unit-tested with a mocked `queryInterface` (statement shape) and exercised for real by `api/tests/integration/`, which runs them against PostgreSQL. A change to search behaviour or to a migration should update both.
 
 ### Data operations
 
