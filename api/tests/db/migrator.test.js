@@ -13,6 +13,32 @@ describe("createMigrator", () => {
     expect(names).toEqual([...names].sort());
   });
 
+  it("runs each migration inside a transaction and hands it to the migration", async () => {
+    const transaction = { id: "tx" };
+    const transactionSpy = vi
+      .spyOn(db.sequelize, "transaction")
+      .mockImplementation(async (fn) => fn(transaction));
+    const query = vi.fn().mockResolvedValue(undefined);
+    const queryInterface = { sequelize: { query } };
+
+    const migrator = createMigrator(db.sequelize);
+    const search = (await migrator.migrations(queryInterface)).find((m) =>
+      m.name.includes("search-tsvector-and-index")
+    );
+
+    await search.up();
+
+    expect(transactionSpy).toHaveBeenCalledTimes(1);
+    // A migration that failed part-way would otherwise leave the schema half-applied
+    // with nothing recorded, so every statement must be bound to that transaction.
+    expect(query).toHaveBeenCalled();
+    for (const [, options] of query.mock.calls) {
+      expect(options).toEqual({ transaction });
+    }
+
+    vi.restoreAllMocks();
+  });
+
   it("uses the provided sequelize connection for migration context", () => {
     const getQueryInterface = vi.spyOn(db.sequelize, "getQueryInterface");
 

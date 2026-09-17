@@ -7,8 +7,8 @@ const TABLE_NAME = "datasets";
 // Existing deployments already have the table, so the baseline adopts it as-is;
 // fresh environments get the same shape the model has always produced.
 // See api/app/models/dataset.model.js for the model definition this mirrors.
-async function up({ context: queryInterface }) {
-  const tables = await queryInterface.showAllTables();
+async function up({ context: queryInterface, transaction }) {
+  const tables = await queryInterface.showAllTables({ transaction });
   if (tables.includes(TABLE_NAME)) {
     // Pre-migration deployment: adopt the existing table without touching it.
     return;
@@ -37,13 +37,15 @@ async function up({ context: queryInterface }) {
       type: DataTypes.DATE,
       allowNull: false,
     },
-  });
+  }, { transaction });
 }
 
-// Reverting the baseline drops the datasets table and all imported records.
-// Only reachable through an explicit `npm run migrate:down`; nightly imports can rebuild the catalog.
-async function down({ context: queryInterface }) {
-  await queryInterface.dropTable(TABLE_NAME);
+// The baseline has no meaningful revert. Before it, the table was created by
+// sequelize.sync() at boot, so "before the baseline" is not a state anyone deploys to.
+// Dropping the table here would make a second `npm run migrate:down` delete the whole
+// catalogue, so down is a deliberate no-op. Use `migrate:down --to <name>` for real reverts.
+async function down() {
+  console.log("Baseline migration down is a no-op; the datasets table is left in place.");
 }
 
 module.exports = { up, down };
