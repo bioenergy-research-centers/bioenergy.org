@@ -48,10 +48,47 @@
  *           type: array
  *           items:
  *             $ref: '#/components/schemas/Dataset'
- *         facets:
- *           type: object
- *           nullable: true
- *           description: Facet counts for the filtered result set
+ *     DatasetFacetsResponse:
+ *       type: object
+ *       description: Facet counts for a filtered dataset result set
+ *       properties:
+ *         year:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               value:
+ *                 type: string
+ *               count:
+ *                 type: integer
+ *         brc:
+ *           type: array
+ *           items:
+ *             type: object
+ *         repository:
+ *           type: array
+ *           items:
+ *             type: object
+ *         species:
+ *           type: array
+ *           items:
+ *             type: object
+ *         analysisType:
+ *           type: array
+ *           items:
+ *             type: object
+ *         personName:
+ *           type: array
+ *           items:
+ *             type: object
+ *         topic:
+ *           type: array
+ *           items:
+ *             type: object
+ *         theme:
+ *           type: array
+ *           items:
+ *             type: object
  *
  * tags:
  *   name: Datasets
@@ -86,11 +123,6 @@
  *           type: integer
  *           maximum: 500
  *         description: Legacy alias for rows
- *       - in: query
- *         name: nofacets
- *         schema:
- *           type: boolean
- *         description: Exclude facets from the response when present
  *       - in: query
  *         name: filters[title]
  *         schema:
@@ -231,9 +263,6 @@
  *                 type: integer
  *                 maximum: 500
  *                 description: Legacy alias for rows
- *               nofacets:
- *                 type: boolean
- *                 description: Exclude facets from local dataset search response
  *               from_date:
  *                 type: string
  *                 format: date
@@ -313,7 +342,6 @@
  *                 query: ethanol
  *                 page: 2
  *                 rows: 3
- *                 nofacets: true
  *                 filters:
  *                   brc: GLBRC
  *             sequenceSearch:
@@ -333,6 +361,115 @@
  *                   description: Federated sequence search results
  *       500:
  *         description: Search failed
+ *
+ * /api/datasets/facets:
+ *   get:
+ *     summary: Returns facet counts for datasets matching optional filters.
+ *     tags: [Datasets]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Full-text search query
+ *       - in: query
+ *         name: filters[title]
+ *         schema:
+ *           type: string
+ *         description: Filter by dataset title
+ *       - in: query
+ *         name: filters[brc]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by Bioenergy Research Center
+ *       - in: query
+ *         name: filters[topic]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by topic category
+ *       - in: query
+ *         name: filters[year]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by dataset year
+ *       - in: query
+ *         name: filters[personName]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by creator or contributor name
+ *       - in: query
+ *         name: filters[repository]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by repository
+ *       - in: query
+ *         name: filters[species]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by species
+ *       - in: query
+ *         name: filters[analysisType]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by analysis type
+ *       - in: query
+ *         name: filters[theme]
+ *         schema:
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: string
+ *         description: Filter by theme
+ *       - in: query
+ *         name: from_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Include datasets with publication date on or after this date
+ *       - in: query
+ *         name: until_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Include datasets with publication date on or before this date
+ *     responses:
+ *       200:
+ *         description: Facet counts for the filtered dataset set
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetFacetsResponse'
+ *       500:
+ *         description: Some server error
  *
  * /api/datasets/lookup/{uid}:
  *   get:
@@ -473,6 +610,9 @@ const {search} = require("../controllers/search.controller.js");
 
 // Retrieve all Datasets
 router.get("/", datasets.findAll);
+
+// Retrieve facet counts for matching datasets
+router.get("/facets", datasets.getFacets);
 
 // Retrieve aggregated metrics on Datasets
 router.get("/metrics", datasets.getMetrics);

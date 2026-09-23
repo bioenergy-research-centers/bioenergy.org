@@ -12,7 +12,6 @@ exports.findAll = async (req, res) => {
       page: req.query.page,
       rows: req.query.rows,
       limit: req.query.limit,
-      nofacets: req.query.nofacets,
       from_date: req.query.from_date,
       until_date: req.query.until_date,
     });
@@ -22,6 +21,24 @@ exports.findAll = async (req, res) => {
     console.error(err.message);
     res.status(500).send({
       message: err.message || "Some error occurred while retrieving Datasets.",
+    });
+  }
+};
+
+exports.getFacets = async (req, res) => {
+  try {
+    const facets = await datasetsService.getLocalDatasetFacets({
+      textQueryTerm: req.query.q,
+      filters: req.query.filters,
+      from_date: req.query.from_date,
+      until_date: req.query.until_date,
+    });
+
+    res.json(facets);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send({
+      message: "Some error occurred while retrieving Dataset facets.",
     });
   }
 };

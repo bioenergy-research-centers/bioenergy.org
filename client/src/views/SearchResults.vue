@@ -23,7 +23,7 @@ const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes
 
 // Creating a reactive value from the store requires destructuring with storeToRefs
 // https://pinia.vuejs.org/core-concepts/#Destructuring-from-a-Store
-const{searchResults, searchResultsLoading, searchResultsError, currentPage, totalPages, totalResults, pageSize, facets, resultPage} = storeToRefs(searchStore);
+const{searchResults, searchResultsLoading, searchResultsError, currentPage, totalPages, totalResults, pageSize, facets, facetsLoading, resultPage} = storeToRefs(searchStore);
 const results = searchResults;
 const loading = searchResultsLoading;
 const error = searchResultsError;
@@ -107,9 +107,9 @@ const onPageChange = (newPage) => {
           <h3>Filters</h3>
           <div class="filter-container">
             <form @submit.prevent="onAdvancedSearch">
-              <div v-if="loading && (!facets || Object.keys(facets).length == 0)">
+              <div v-if="facetsLoading && (!facets || Object.keys(facets).length == 0)">
                 Loading
-                <span v-if="loading" class="loading-indicator"> 
+                <span class="loading-indicator">
                   <BSpinner
                     small
                     variant="primary"

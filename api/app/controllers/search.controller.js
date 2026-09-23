@@ -2,8 +2,8 @@ const strategyManager = require('../services/strategyManager');
 const datasetsService = require("../services/datasetsService");
 
 async function search(req, res) {
-    const { query, sequence, page, rows, limit, filters, nofacets, from_date, until_date } = req.body;
-    console.log('running search', query, sequence, page, rows, limit, filters, nofacets, from_date, until_date);
+    const { query, sequence, page, rows, limit, filters, from_date, until_date } = req.body;
+    console.log('running search', query, sequence, page, rows, limit, filters, from_date, until_date);
 
     try {
         if (sequence && sequence.trim() !== '') {
@@ -19,7 +19,6 @@ async function search(req, res) {
           rows,
           limit,
           filters,
-          nofacets,
           from_date,
           until_date,
         });

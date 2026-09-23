@@ -3,16 +3,52 @@ const { getPaginationParams } = require("../utils/pagination");
 const Dataset = db.datasets;
 const {Op, where} = db.Sequelize;
 
-function parseBooleanParam(value) {
-  if (typeof value === "boolean") return value;
-  if (typeof value !== "string") return false;
-
-  return ["true", "1", "yes"].includes(value.trim().toLowerCase());
-}
-
 async function searchLocalDatasets(params = {}) {
   console.log("datasetservice: searching local datasets", params);
 
+  const { page, limit, offset } = getPaginationParams(params);
+  const mergedWhereConditions = buildDatasetSearchWhere(params);
+
+  try {
+    const data = await Dataset.scope("supportedOnly").findAndCountAll({
+      order: [["json.date", "DESC"], ["uid", "ASC"]],
+      where: mergedWhereConditions,
+      limit,
+      offset,
+    });
+
+    const totalResults = data.count;
+    const totalPages = Math.ceil(totalResults / limit);
+    const items = data.rows.map((x) => x.toClientJSON());
+
+    return {
+      totalResults,
+      totalPages,
+      query: {
+        page,
+        rows: limit,
+      },
+      items,
+    };
+  } catch (err) {
+    console.error(err.message);
+    throw new Error("Some error occurred while retrieving Datasets.");
+  }
+}
+
+async function getLocalDatasetFacets(params = {}) {
+  console.log("datasetservice: retrieving local dataset facets", params);
+
+  const mergedWhereConditions = buildDatasetSearchWhere(params);
+
+  return runFacetQuery({
+    Dataset,
+    mergedWhereConditions,
+    fallbackOnError: false,
+  });
+}
+
+function buildDatasetSearchWhere(params = {}) {
   const filters = params.filters || {};
 
   const textQueryTerm = params.textQueryTerm;
@@ -27,9 +63,6 @@ async function searchLocalDatasets(params = {}) {
   const themeQueryTerm = params.themeQueryTerm ?? filters.theme;
   const fromDateQueryTerm = params.fromDateQueryTerm ?? params.from_date ?? filters.from_date;
   const untilDateQueryTerm = params.untilDateQueryTerm ?? params.until_date ?? filters.until_date;
-
-  const includeFacets = !parseBooleanParam(params.nofacets);
-  const { page, limit, offset } = getPaginationParams(params);
 
   const conditions = buildDatasetSearchConditions({
     textQueryTerm,
@@ -46,48 +79,7 @@ async function searchLocalDatasets(params = {}) {
     themeQueryTerm,
   });
 
-  const mergedWhereConditions = conditions.length > 0 ? { [Op.and]: conditions } : {};
-
-  try {
-    const dataQuery = Dataset.scope("supportedOnly").findAndCountAll({
-      order: [["json.date", "DESC"], ["uid", "ASC"]],
-      where: mergedWhereConditions,
-      limit,
-      offset,
-    });
-
-    let data = null;
-    let facets = null;
-
-    if (includeFacets) {
-      const facetQuery = runFacetQuery({
-        Dataset,
-        mergedWhereConditions,
-      });
-
-      [data, facets] = await Promise.all([dataQuery, facetQuery]);
-    } else {
-      data = await dataQuery;
-    }
-
-    const totalResults = data.count;
-    const totalPages = Math.ceil(totalResults / limit);
-    const items = data.rows.map((x) => x.toClientJSON());
-
-    return {
-      totalResults,
-      totalPages,
-      query: {
-        page,
-        rows: limit,
-      },
-      items,
-      facets,
-    };
-  } catch (err) {
-    console.error(err.message);
-    throw new Error("Some error occurred while retrieving Datasets.");
-  }
+  return conditions.length > 0 ? { [Op.and]: conditions } : {};
 }
 
 function buildDatasetSearchConditions({
@@ -312,7 +304,7 @@ function buildDatasetSearchConditions({
     return conditions;
 }
 
-async function runFacetQuery({ Dataset, mergedWhereConditions }) {
+async function runFacetQuery({ Dataset, mergedWhereConditions, fallbackOnError = true }) {
   try {
     // Create a minimal SELECT to get the Sequelize generated SQL from QueryGenerator
     // This is a workaround that may break with changes to the sql conditions
@@ -436,6 +428,9 @@ async function runFacetQuery({ Dataset, mergedWhereConditions }) {
     return facets;
   } catch(e) {
     console.error('Error in faceted search:', e);
+    if (!fallbackOnError) {
+      throw e;
+    }
     return { year: [], brc: [], repository: [], species: [], analysisType: [], personName: [], topic: [], theme: [], };
   }
 }
@@ -463,4 +458,4 @@ function buildStoredTopicWhere(topicName) {
   );
 }
 
-module.exports = {searchLocalDatasets};
+module.exports = {searchLocalDatasets, getLocalDatasetFacets};
