@@ -7,10 +7,17 @@ class DatasetDataService {
     const rows = options.rows;
     const q = options.query || options.q;
     const filters = options.filters;
-    const nofacets = options.nofacets;
     const from_date = options.from_date;
     const until_date = options.until_date;
-    return http.get("/datasets", { params: { page, rows, q, filters, nofacets, from_date, until_date } });
+    return http.get("/datasets", { params: { page, rows, q, filters, from_date, until_date } });
+  }
+
+  getFacets(options = {}) {
+    const q = options.query || options.q;
+    const filters = options.filters;
+    const from_date = options.from_date;
+    const until_date = options.until_date;
+    return http.get("/datasets/facets", { params: { q, filters, from_date, until_date } });
   }
 
   get(id) {

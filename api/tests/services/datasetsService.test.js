@@ -31,7 +31,7 @@ describe("searchLocalDatasets", () => {
       ],
     });
 
-    const results = await datasetsService.searchLocalDatasets({ nofacets: true });
+    const results = await datasetsService.searchLocalDatasets();
 
     expect(results).toEqual({
       totalResults: 1,
@@ -41,7 +41,6 @@ describe("searchLocalDatasets", () => {
         rows: 50,
       },
       items: [{ uid: "1", title: "Dataset A" }],
-      facets: null,
     });
 
     expect(mockFindAndCountAll).toHaveBeenCalledWith({
@@ -310,38 +309,52 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.where).not.toEqual({});
   });
 
-  it("runs facet query when facets are included", async () => {
-    db.sequelize.query.mockResolvedValue([
-      { facet: "brc", value: "JBEI", count: 2 },
-    ]);
-
+  it("does not include or query facets", async () => {
     const results = await datasetsService.searchLocalDatasets({});
-
-    expect(db.sequelize.query).toHaveBeenCalled();
-    expect(results.facets.brc).toEqual([{ value: "JBEI", count: 2 }]);
-  });
-
-  it("skips facet query when nofacets is true", async () => {
-    await datasetsService.searchLocalDatasets({ nofacets: true });
 
     expect(db.sequelize.query).not.toHaveBeenCalled();
+    expect(results).not.toHaveProperty("facets");
   });
 
-  it("returns empty facets when facet query fails", async () => {
+  it("returns facets from dedicated facet service", async () => {
+    db.sequelize.query.mockResolvedValue([
+      { facet: "brc", value: "JBEI", count: 2 },
+      { facet: "year", value: "2025", count: 1 },
+    ]);
+
+    const facets = await datasetsService.getLocalDatasetFacets({ textQueryTerm: "ethanol" });
+
+    expect(db.datasets.scope).toHaveBeenCalledWith("supportedOnly");
+    expect(db.sequelize.query).toHaveBeenCalled();
+    expect(facets.brc).toEqual([{ value: "JBEI", count: 2 }]);
+    expect(facets.year).toEqual([{ value: "2025", count: 1 }]);
+  });
+
+  it("throws from dedicated facet service when the facet query fails", async () => {
     db.sequelize.query.mockRejectedValue(new Error("facet query failed"));
 
-    const results = await datasetsService.searchLocalDatasets({});
+    await expect(
+      datasetsService.getLocalDatasetFacets({ textQueryTerm: "ethanol" })
+    ).rejects.toThrow("facet query failed");
+  });
 
-    expect(results.facets).toEqual({
-      year: [],
-      brc: [],
-      repository: [],
-      species: [],
-      analysisType: [],
-      personName: [],
-      topic: [],
-      theme: [],
+  it("applies filters in dedicated facet service", async () => {
+    await datasetsService.getLocalDatasetFacets({
+      filters: { brc: "JBEI", year: "2025" },
+      from_date: "2025-01-01",
+      until_date: "2025-12-31",
     });
+
+    expect(
+      db.sequelize.dialect.queryGenerator.selectQuery
+    ).toHaveBeenCalledWith(
+      "datasets",
+      expect.objectContaining({
+        where: expect.any(Object),
+        tableAs: "dataset",
+        attributes: ["uid"],
+      })
+    );
   });
 
   it("throws error when database query fails", async () => {
@@ -491,24 +504,6 @@ describe("searchLocalDatasets", () => {
     expect(callArgs.where).not.toEqual({});
   });
 
-  it("includes facets when nofacets is false string", async () => {
-    await datasetsService.searchLocalDatasets({ nofacets: "false" });
-
-    expect(db.sequelize.query).toHaveBeenCalled();
-  });
-
-  it("includes facets when nofacets is 0 string", async () => {
-    await datasetsService.searchLocalDatasets({ nofacets: "0" });
-
-    expect(db.sequelize.query).toHaveBeenCalled();
-  });
-
-  it("skips facets when nofacets is true string", async () => {
-    await datasetsService.searchLocalDatasets({ nofacets: "true" });
-
-    expect(db.sequelize.query).not.toHaveBeenCalled();
-  });
-
   it("adds from_date condition when from_date is provided", async () => {
     await datasetsService.searchLocalDatasets({
       from_date: "2025-01-01",
@@ -563,7 +558,7 @@ describe("searchLocalDatasets", () => {
   });
 
   it("generates facet SQL using the dataset alias for topic filters", async () => {
-    await datasetsService.searchLocalDatasets({
+    await datasetsService.getLocalDatasetFacets({
       topicQueryTerm: "Microbiology",
     });
 
@@ -581,7 +576,7 @@ describe("searchLocalDatasets", () => {
   it("normalizes HTML entities in topic facet values", async () => {
     db.sequelize.query.mockResolvedValue([]);
 
-    await datasetsService.searchLocalDatasets({});
+    await datasetsService.getLocalDatasetFacets({});
 
     const facetSql = db.sequelize.query.mock.calls[0][0];
 
@@ -591,7 +586,7 @@ describe("searchLocalDatasets", () => {
   });
 
   it("builds the personName facet against json.contributors, not json.contributor", async () => {
-    await datasetsService.searchLocalDatasets({});
+    await datasetsService.getLocalDatasetFacets({});
 
     const facetSql = db.sequelize.query.mock.calls[0][0];
 
