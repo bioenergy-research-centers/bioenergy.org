@@ -10,7 +10,7 @@
   function toggleDesc(idx) {
     expandedIndex.value = expandedIndex.value === idx ? null : idx;
   }
-  
+
   const updatedDate = computed(() => {
     const date = props.selectedResult?.updated_at
     if(!date) {return "";}
@@ -24,6 +24,22 @@
     const d = new Date(date)
     return d.toLocaleDateString(undefined, {dateStyle: "medium"})
   })
+
+  function themeClass(theme) {
+    const normalizedTheme = String(theme)
+      .replace(/&amp;/g, '&')
+      .trim()
+      .toLowerCase();
+
+    const themeClasses = {
+      'feedstock development': 'theme-feedstock',
+      'deconstruction and separation': 'theme-deconstruction',
+      conversion: 'theme-conversion',
+      sustainability: 'theme-sustainability',
+    };
+
+    return themeClasses[normalizedTheme] || '';
+  }
 </script>
 
 <template>
@@ -42,24 +58,21 @@
 
   <div class="row mt-4">
     <div class="col-12 col-md">
-      <h3 v-html="sanitizeHtml(selectedResult?.title, ALLOWED_HTML)"></h3>
+      <h3 class="subsection-header display-6" v-html="sanitizeHtml(selectedResult?.title, ALLOWED_HTML)"></h3>
       <AuthorList :creators="selectedResult.creator"/>
 
     </div>
   </div>
-  
-  <hr/>
 
-  <div class="row text-muted">
-  
-    <div class="col-12 col-md-4 text-break">
-      <small>Identifier: {{ selectedResult.identifier }}</small><br/>
+  <div class="row dataset-metadata">
+    <div class="col-12 col-md-4 text-break dataset-metadata-cell dataset-metadata-cell-first">
+      <small><span class="text-uppercase text-muted">Identifier:</span></small><br/><span class="fw-bolder">{{ selectedResult.identifier }}</span>
     </div>
-    <div class="col-12 col-md-4 text-md-center">
-      <small>Repository: {{ selectedResult.repository }}</small>
+    <div class="col-12 col-md-4 dataset-metadata-cell">
+      <small><span class="text-uppercase text-muted">Repository:</span></small><br/><span class="fw-bolder">{{ selectedResult.repository || '--' }}</span>
     </div>
-    <div class="col-12 col-md-4 text-md-end pe-md-4">
-      <small>BRC: {{ selectedResult.brc }}</small><br/>
+    <div class="col-12 col-md-4 dataset-metadata-cell dataset-metadata-cell-last">
+      <small><span class="text-uppercase text-muted">BRC:</span></small><br/><span class="fw-bolder">{{ selectedResult.brc }}</span>
     </div>
   </div>
   <div class="row text-muted">
@@ -68,97 +81,113 @@
     </div>
   </div>
 
-  <hr/>
-
-  <div v-if="selectedResult.description" class="row">
-    <div class="small text-uppercase fw-bold">Description</div>
-    <p v-html="sanitizeHtml(selectedResult.description, ALLOWED_HTML)"></p>
-  </div>
-
-
-        <div v-if="selectedResult.analysisType" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Analysis Type</div>
-          <div>{{ selectedResult.analysisType }}</div>
+  <div class="row gx-5 gy-2">
+    <aside class="col-12 col-md-3 order-2 order-md-2 dataset-sidebar">
+      <div v-if="selectedResult.theme && selectedResult.theme.length" class="mb-5">
+        <div class="fs-4 subsection-header">Theme</div>
+        <div class="d-flex flex-wrap gap-2">
+          <span
+            v-for="theme in selectedResult.theme"
+            :key="theme"
+            :class="['tag-badge', themeClass(theme)]"
+          >
+            {{ theme }}
+          </span>
         </div>
+      </div>
 
-
-        <div v-if="selectedResult.keywords && selectedResult.keywords.length" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Keywords</div>
-          {{ Array.from(selectedResult.keywords).join(', ') }}
+      <div v-if="selectedResult.keywords && selectedResult.keywords.length" class="mb-5">
+        <div class="fs-4 subsection-header">Keywords</div>
+        <div class="d-flex flex-wrap gap-2">
+          <span
+            v-for="keyword in selectedResult.keywords"
+            :key="keyword"
+            class="tag-badge keyword-badge"
+          >
+            {{ keyword }}
+          </span>
         </div>
+      </div>
 
-        <div v-if="selectedResult.theme && selectedResult.theme.length" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Research Theme</div>
-          {{ Array.from(selectedResult.theme).join(', ') }}
-        </div>
-
-        <div v-if="selectedResult.species && selectedResult.species.length" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Species</div>
-          <div class="d-flex justify-content-start">
-            <div v-for="species in selectedResult.species" :key="species.NCBITaxID">
-              <div class="me-5">
-                <OrganismLink :organism="species"/>
-              </div>
-            </div>
+      <div v-if="selectedResult.species && selectedResult.species.length" class="mb-5">
+        <div class="fs-4 subsection-header">Species</div>
+        <div class="d-flex flex-column gap-2">
+          <div v-for="species in selectedResult.species" :key="species.NCBITaxID">
+            <OrganismLink :organism="species"/>
           </div>
         </div>
+      </div>
 
-        <div v-if="selectedResult.plasmid_features && selectedResult.plasmid_features.length" class="mt-4">
-          <div class="small text-uppercase fw-bold mb-2">Plasmid Features</div>
-          <table class="table table-bordered">
-            <thead class="table-light">
-              <tr>
-                <th scope="col">Backbone</th>
-                <th scope="col">Selection Marker</th>
-                <th scope="col">Promoters</th>
-                <th scope="col">Origin of Replication</th>
-                <th scope="col">Replicates In</th>
-                <th scope="col" class="text-center">Description</th>
+      <div v-if="selectedResult.analysisType" class="mb-5">
+        <div class="fs-4 subsection-header">Analysis Type</div>
+        <div>{{ selectedResult.analysisType }}</div>
+      </div>
+    </aside>
+
+    <section class="col-12 col-md-9 order-1 order-md-1 dataset-content">
+      <div v-if="selectedResult.description" class="mb-5">
+        <h3 class="fs-4 subsection-header">Description</h3>
+        <p v-html="sanitizeHtml(selectedResult.description, ALLOWED_HTML)"></p>
+      </div>
+
+      <div v-if="selectedResult.plasmid_features && selectedResult.plasmid_features.length" class="mb-5">
+        <div class="fs-4 subsection-header mb-2">Plasmid Features</div>
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Backbone</th>
+              <th scope="col">Selection Marker</th>
+              <th scope="col">Promoters</th>
+              <th scope="col">Origin of Replication</th>
+              <th scope="col">Replicates In</th>
+              <th scope="col" class="text-center">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="(plasmid, idx) in selectedResult.plasmid_features" :key="plasmid.id ?? idx">
+              <tr :class="{ 'bg-light': expandedIndex === idx }">
+                <td>{{ plasmid.backbone }}</td>
+                <td>{{ Array.from(plasmid.selection_markers).join(', ') }}</td>
+                <td>{{ Array.from(plasmid.promoters).join(', ') }}</td>
+                <td>{{ plasmid.ori }}</td>
+                <td>
+                  <OrganismLink :organism="plasmid.replicates_in"/>
+                </td>
+                <td class="text-center">
+                  <!-- Toggle button: show/hide description -->
+                  <button v-if="plasmid.description && plasmid.description.length" class="btn btn-sm btn-outline-primary" @click="toggleDesc(idx)">
+                    <span v-if="expandedIndex === idx">– Hide</span>
+                    <span v-else>+ Show</span>
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              <template v-for="(plasmid, idx) in selectedResult.plasmid_features" :key="plasmid.id ?? idx">
-                <tr :class="{ 'bg-light': expandedIndex === idx }">
-                  <td>{{ plasmid.backbone }}</td>
-                  <td>{{ Array.from(plasmid.selection_markers).join(', ') }}</td>
-                  <td>{{ Array.from(plasmid.promoters).join(', ') }}</td>
-                  <td>{{ plasmid.ori }}</td>
-                  <td>
-                    <OrganismLink :organism="plasmid.replicates_in"/>
-                  </td>
-                  <td class="text-center">
-                    <!-- Toggle button: show/hide description -->
-                    <button v-if="plasmid.description && plasmid.description.length" class="btn btn-sm btn-outline-primary" @click="toggleDesc(idx)">
-                      <span v-if="expandedIndex === idx">– Hide</span>
-                      <span v-else>+ Show</span>
-                    </button>
-                  </td>
-                </tr>
-                <tr v-if="expandedIndex === idx" class="bg-light">
-                  <td colspan="6">
-                    <strong>Description:</strong>
-                    <div class="mt-1">
-                      {{ plasmid.description ?? 'No plasmid description available.' }}
-                    </div>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
+              <tr v-if="expandedIndex === idx" class="bg-light">
+                <td colspan="6">
+                  <strong>Description:</strong>
+                  <div class="mt-1">
+                    {{ plasmid.description ?? 'No plasmid description available.' }}
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
 
-        <div v-if="selectedResult.relatedItem && selectedResult.relatedItem.length" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Related Items</div>
-          <div v-for="item in selectedResult.relatedItem">
-            <div class="text-muted italic mt-2 fw-bold">
-              {{ item.relatedItemType }}
-              <i class="bi bi-box-arrow-up-right"></i>
-            </div>
-            <a :href="item.relatedItemIdentifier" target="_blank" rel="noopener noreferrer">
-              <span v-html="sanitizeHtml(item.title, ALLOWED_HTML)"/>
-            </a>
+      <div v-if="selectedResult.relatedItem && selectedResult.relatedItem.length" class="mb-5">
+        <div class="fs-4 subsection-header">Related Items</div>
+        <div v-for="item in selectedResult.relatedItem" class="related-item">
+          <div class="text-muted italic fw-bold">
+            {{ item.relatedItemType }}
+            <i class="bi bi-box-arrow-up-right"></i>
           </div>
+          <a :href="item.relatedItemIdentifier" target="_blank" rel="noopener noreferrer">
+            <span v-html="sanitizeHtml(item.title, ALLOWED_HTML)"/>
+          </a>
         </div>
+      </div>
+    </section>
+  </div>
 
         <hr/>
         <div class='row mt-3 float-end'>
