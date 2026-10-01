@@ -11,14 +11,12 @@
   function toggleDesc(idx) {
     expandedIndex.value = expandedIndex.value === idx ? null : idx;
   }
-
   const updatedDate = computed(() => {
     const date = props.selectedResult?.updated_at
     if(!date) {return "";}
     const d = new Date(date)
     return d.toLocaleDateString(undefined, {dateStyle: "medium"})
   })
-
   const publishedDate = computed(() => {
     const date = props.selectedResult?.date
     if(!date) {return "";}
@@ -65,7 +63,7 @@
 
   <div class="row mt-4">
     <div class="col-12 col-md">
-      <h3 class="subsection-header display-6" v-html="sanitizeDatasetHtml(selectedResult?.title)"></h3>
+      <h2 class="subsection-header display-6" v-html="sanitizeDatasetHtml(selectedResult?.title)"></h2>
       <AuthorList :creators="selectedResult.creator"/>
 
     </div>
@@ -91,7 +89,7 @@
   <div class="row gx-5 gy-2">
     <aside class="col-12 col-md-3 order-2 order-md-2 dataset-sidebar">
       <div v-if="selectedResult.theme && selectedResult.theme.length" class="mb-5">
-        <div class="fs-4 subsection-header">Theme</div>
+        <h3 class="subsection-header">Theme</h3>
         <div class="d-flex flex-wrap gap-2">
           <span
             v-for="theme in selectedResult.theme"
@@ -104,7 +102,7 @@
       </div>
 
       <div v-if="selectedResult.keywords && selectedResult.keywords.length" class="mb-5">
-        <div class="fs-4 subsection-header">Keywords</div>
+        <h3 class="subsection-header">Keywords</h3>
         <div class="d-flex flex-wrap gap-2">
           <span
             v-for="keyword in selectedResult.keywords"
@@ -117,7 +115,7 @@
       </div>
 
       <div v-if="selectedResult.species && selectedResult.species.length" class="mb-5">
-        <div class="fs-4 subsection-header">Species</div>
+        <h3 class="subsection-header">Species</h3>
         <div class="d-flex flex-column gap-2">
           <div v-for="species in selectedResult.species" :key="species.NCBITaxID">
             <OrganismLink :organism="species"/>
@@ -126,19 +124,19 @@
       </div>
 
       <div v-if="selectedResult.analysisType" class="mb-5">
-        <div class="fs-4 subsection-header">Analysis Type</div>
+        <h3 class="subsection-header">Analysis Type</h3>
         <div>{{ selectedResult.analysisType }}</div>
       </div>
     </aside>
 
     <section class="col-12 col-md-9 order-1 order-md-1 dataset-content">
       <div v-if="selectedResult.description" class="mb-5">
-        <h3 class="fs-4 subsection-header">Description</h3>
+        <h3 class="subsection-header">Description</h3>
         <p v-html="sanitizeDatasetHtml(selectedResult.description)"></p>
       </div>
 
       <div v-if="selectedResult.plasmid_features && selectedResult.plasmid_features.length" class="mb-5">
-        <div class="fs-4 subsection-header mb-2">Plasmid Features</div>
+        <h3 class="subsection-header mb-2">Plasmid Features</h3>
         <div class="table-responsive">
           <table class="table table-bordered">
             <thead class="table-light">
@@ -184,7 +182,7 @@
       </div>
 
       <div v-if="selectedResult.relatedItem?.length || displayableEnrichedIdentifiers.length" class="mb-5">
-        <div class="fs-4 subsection-header">Linked Resources</div>
+        <h3 class="subsection-header">Linked Resources</h3>
         <RelatedItems :items="selectedResult.relatedItem" />
         <RelatedIdentifiers :identifiers="displayableEnrichedIdentifiers" />
       </div>
