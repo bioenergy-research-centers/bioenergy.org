@@ -52,8 +52,8 @@ async function analyzeKeywords() {
     const keywordFrequency = {};
     const datasetCategories = {};
     
-    datasets.forEach(dataset => {
-      const data = dataset.toClientJSON();
+    for (const dataset of datasets) {
+      const data = await dataset.toClientJSON();
       const searchableText = extractSearchableText(data);
       const categories = categorizeDataset(searchableText);
       
@@ -65,7 +65,7 @@ async function analyzeKeywords() {
           keywordFrequency[category] = (keywordFrequency[category] || 0) + 1;
         });
       }
-    });
+    }
     
     // Sort categories by frequency
     const sortedCategories = Object.entries(keywordFrequency)

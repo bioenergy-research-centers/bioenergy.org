@@ -1,9 +1,7 @@
 <script setup>
 import AuthorList from '@/components/AuthorList.vue';
-import sanitizeHtml from 'sanitize-html';
 import { pluralizeAuthors } from '@/utils/pluralize';
-
-const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
+import { sanitizeDatasetHtml } from '@/utils/sanitizeDatasetHtml';
 
 const searchAuthorMaxVisible = 3;
 
@@ -21,7 +19,7 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
       <div class="col-md order-md-1 fs-6 fw-bold order-1">
         <router-link :to="{ name: 'datasetShow', params: { id: item.uid } }" class="pe-4">
           <span
-            v-html="sanitizeHtml(truncateMiddle(item.title || 'Untitled data set', 75, 50), ALLOWED_HTML)"
+            v-html="sanitizeDatasetHtml(truncateMiddle(item.title || 'Untitled data set', 75, 50))"
           ></span>
         </router-link>
       </div>
@@ -47,7 +45,7 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
       <div class="mt-2">
         <p>
           <small
-            v-html="sanitizeHtml(truncateMiddle(item.description || 'No description of this data set is available.', 150, 75), ALLOWED_HTML)"
+            v-html="sanitizeDatasetHtml(truncateMiddle(item.description || 'No description of this data set is available.', 150, 75))"
           ></small>
         </p>
       </div>

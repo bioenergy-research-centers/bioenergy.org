@@ -86,7 +86,9 @@ async function searchLocalDatasets(params = {}) {
 
     const totalResults = data.count;
     const totalPages = Math.ceil(totalResults / limit);
-    const items = data.rows.map((x) => serializeDatasetForClient(x, responseShape));
+    const items = await Promise.all(
+      data.rows.map((x) => serializeDatasetForClient(x, responseShape))
+    );
 
     return {
       totalResults,
