@@ -54,21 +54,23 @@ Tests use [Vitest](https://vitest.dev/) and run inside Docker containers. No dat
 
 ```bash
 # Run API tests
-docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run
+docker compose -f docker-compose.dev.yml run --build --rm --no-deps api npx vitest run
 
 # Run client tests
-docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest run
+docker compose -f docker-compose.dev.yml run --build --rm --no-deps client npx vitest run
 
 # Run a single test file
-docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run tests/services/githubService.test.js
-docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest run src/__tests__/components/AuthorList.test.js
+docker compose -f docker-compose.dev.yml run --build --rm --no-deps api npx vitest run tests/services/githubService.test.js
+docker compose -f docker-compose.dev.yml run --build --rm --no-deps client npx vitest run src/__tests__/components/AuthorList.test.js
 
 # Watch mode
-docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest
-docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest
+docker compose -f docker-compose.dev.yml run --build --rm --no-deps api npx vitest
+docker compose -f docker-compose.dev.yml run --build --rm --no-deps client npx vitest
 ```
 
 Some `stderr` output (e.g. "Error during search", "Turnstile error") is expected — these are `console.error` calls from the application code exercised by error-path tests.
+
+The `--build` flag ensures `docker compose run` uses an image built from the current source tree.
 
 #### API tests
 
@@ -123,8 +125,8 @@ client/src/__tests__/
 Run tests with a coverage report:
 
 ```bash
-docker compose -f docker-compose.dev.yml run --rm --no-deps api npx vitest run --coverage
-docker compose -f docker-compose.dev.yml run --rm --no-deps client npx vitest run --coverage
+docker compose -f docker-compose.dev.yml run --build --rm --no-deps api npx vitest run --coverage
+docker compose -f docker-compose.dev.yml run --build --rm --no-deps client npx vitest run --coverage
 ```
 
 Coverage is enforced at 80% for statements, branches, functions, and lines (configured in `api/vitest.config.js` and `client/vitest.config.js`). The CI workflow runs coverage on every pull request and will fail if thresholds are not met.

@@ -1,25 +1,18 @@
 <script setup lang="ts">
-import DatasetDataService from "../services/DatasetDataService";
-import {ref, watch, watchPostEffect, onMounted, nextTick, computed} from "vue";
-import { resolveComponentVersion } from './datasets/versionComponentMap';
-import AuthorList from '@/components/AuthorList.vue';
-import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
+import {ref, watch, computed} from "vue";
+import { useRoute } from 'vue-router';
 import Search from '@/components/Search.vue';
 import {useSearchStore} from '@/store/searchStore';
 import { storeToRefs } from 'pinia'
 
-import sanitizeHtml from 'sanitize-html';
 import {BPagination, BSpinner} from 'bootstrap-vue-next'
 import FacetCharts from '@/components/FacetCharts.vue';
 import FacetFilterChecks from '@/components/FacetFilterChecks.vue';
 import FacetFilterDatalist from '@/components/FacetFilterDatalist.vue';
-import { pluralizeAuthors } from '@/utils/pluralize';
+import DatasetListItem from '@/components/DatasetListItem.vue';
 
 const route = useRoute()
 const searchStore = useSearchStore();
-const searchAuthorMaxVisible = 3;
-
-const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
 
 // Creating a reactive value from the store requires destructuring with storeToRefs
 // https://pinia.vuejs.org/core-concepts/#Destructuring-from-a-Store
@@ -66,11 +59,6 @@ function handleChartClick({ value, chartType }) {
   }  
   // After setting the filter, execute a new search
   searchStore.runSearch();
-}
-
-const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
-  if (str.length <= maxStart + maxEnd) return str;
-  return str.slice(0, maxStart) + "…" + str.slice(-maxEnd);
 }
 
 const clearAll = async () => {
@@ -251,56 +239,7 @@ const onPageChange = (newPage) => {
             <div v-else>
             <ul id='search-results-list' class="list-group">
               <li class="list-group-item" v-for="result in results" :key="result.uid">
-                <div class="list-group-item-content py-2">
-
-                  <div class="row">
-                    <div class="col-md order-md-1 fs-6 fw-bold order-1">
-                      <router-link :to="{ name: 'datasetShow', params: { id: result.uid } }"
-                        class="pe-4">
-                        <span
-                          v-html="sanitizeHtml(truncateMiddle(result.title || 'Untitled data set', 75, 50), ALLOWED_HTML)"></span>
-                      </router-link>
-                    </div>
-                  </div>
-
-                  <div class="row">
-                    <div class="fs-6 fw-light">
-                      <AuthorList
-                        :creators="result.creator"
-                        :max-visible="searchAuthorMaxVisible"
-                      />
-                      <span
-                        v-if="Array.isArray(result.creator) && result.creator.length > searchAuthorMaxVisible"
-                        class="small text-muted"
-                      >
-                        +{{ result.creator.length - searchAuthorMaxVisible }} more
-                        {{ pluralizeAuthors(result.creator.length - searchAuthorMaxVisible) }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="row">
-                    <div class="mt-2">
-                      <p><small
-                          v-html="sanitizeHtml(truncateMiddle(result.description || 'No description of this data set is available.', 150, 75), ALLOWED_HTML)"></small>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div class="row mt-1 fs-6">
-                    <div class="col-12 col-md">
-                      <span v-if="result.analysisType && result.analysisType.toLowerCase() !== 'not specified'" class="text-muted fw-lighter">{{ result.analysisType }}</span>
-                    </div>
-                    <div class="col-12 col-md-auto text-md-end ps-md-3">
-                      <div
-                        class="d-inline-flex flex-row-reverse flex-md-row flex-wrap gap-1 justify-content-start justify-content-md-end">
-                        <span class="badge bg-light text-muted fw-light">{{ result.repository }}</span>
-                        <span class="badge bg-brc-light-blue fw-light text-muted">{{ result.date }}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
+                <DatasetListItem :item="result" />
               </li>
             </ul>
             </div>
