@@ -89,7 +89,7 @@
   </div>
 
   <div class="row gx-5 gy-2">
-    <aside class="col-12 col-md-3 order-md-2 dataset-sidebar">
+    <aside class="col-12 col-md-3 order-2 order-md-2 dataset-sidebar">
       <div v-if="selectedResult.theme && selectedResult.theme.length" class="mb-5">
         <div class="fs-4 subsection-header">Theme</div>
         <div class="d-flex flex-wrap gap-2">
@@ -131,7 +131,7 @@
       </div>
     </aside>
 
-    <section class="col-12 col-md-9 order-md-1 dataset-content">
+    <section class="col-12 col-md-9 order-1 order-md-1 dataset-content">
       <div v-if="selectedResult.description" class="mb-5">
         <h3 class="fs-4 subsection-header">Description</h3>
         <p v-html="sanitizeDatasetHtml(selectedResult.description)"></p>
