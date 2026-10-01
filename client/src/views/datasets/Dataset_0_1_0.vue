@@ -132,8 +132,9 @@
 
       <div v-if="selectedResult.plasmid_features && selectedResult.plasmid_features.length" class="mb-5">
         <div class="fs-4 subsection-header mb-2">Plasmid Features</div>
-        <table class="table table-bordered">
-          <thead class="table-light">
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead class="table-light">
             <tr>
               <th scope="col">Backbone</th>
               <th scope="col">Selection Marker</th>
@@ -142,8 +143,8 @@
               <th scope="col">Replicates In</th>
               <th scope="col" class="text-center">Description</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             <template v-for="(plasmid, idx) in selectedResult.plasmid_features" :key="plasmid.id ?? idx">
               <tr :class="{ 'bg-light': expandedIndex === idx }">
                 <td>{{ plasmid.backbone }}</td>
@@ -170,8 +171,9 @@
                 </td>
               </tr>
             </template>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div v-if="selectedResult.relatedItem && selectedResult.relatedItem.length" class="mb-5">
