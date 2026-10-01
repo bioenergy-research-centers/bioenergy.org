@@ -2,6 +2,7 @@ const supertest = require("supertest");
 const { createApp } = require("../helpers/createApp");
 
 const db = require("../../app/models");
+const Dataset = db.datasets;
 
 const mockFindByPk = vi.fn();
 const mockFindAll = vi.fn();
@@ -56,7 +57,7 @@ describe("dataset routes", () => {
   describe("GET /api/datasets", () => {
     it("passes query params to searchLocalDatasets", async () => {
       const res = await supertest(app).get(
-        "/api/datasets?q=ethanol&page=2&rows=25&filters[brc]=JBEI&nofacets=true&from_date=2025-01-01&until_date=2025-12-31"
+        "/api/datasets?q=ethanol&page=2&rows=25&filters[brc]=JBEI&nofacets=true&from_date=2025-01-01&until_date=2025-12-31&shape=list-item"
       );
 
       expect(res.status).toBe(200);
@@ -72,12 +73,13 @@ describe("dataset routes", () => {
         nofacets: "true",
         from_date: "2025-01-01",
         until_date: "2025-12-31",
+        shape: "list-item",
       });
     });
 
     it("passes multiple filter values to searchLocalDatasets", async () => {
       const res = await supertest(app).get(
-        "/api/datasets?filters[brc]=JBEI&filters[brc]=GLBRC&filters[year]=2024&filters[year]=2023"
+        "/api/datasets?filters[brc]=JBEI&filters[brc]=GLBRC&filters[year]=2024&filters[year]=2023&shape=list-item"
       );
 
       expect(res.status).toBe(200);
@@ -92,11 +94,14 @@ describe("dataset routes", () => {
         rows: undefined,
         limit: undefined,
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
     it("passes legacy limit to searchLocalDatasets", async () => {
-      const res = await supertest(app).get("/api/datasets?limit=25");
+      const res = await supertest(app).get("/api/datasets?limit=25&shape=list-item");
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(mockSearchResponse);
@@ -107,13 +112,16 @@ describe("dataset routes", () => {
         rows: undefined,
         limit: "25",
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
     it("returns 500 when dataset search fails", async () => {
       mockSearchLocalDatasets.mockRejectedValue(new Error("search failed"));
 
-      const res = await supertest(app).get("/api/datasets?q=test");
+      const res = await supertest(app).get("/api/datasets?q=test&shape=list-item");
 
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("search failed");
@@ -153,7 +161,7 @@ describe("dataset routes", () => {
         toClientJSON: () => ({ uid: "abc-123", title: "Test" }),
       });
 
-      const res = await supertest(app).get("/api/datasets/abc-123");
+      const res = await supertest(app).get("/api/datasets/abc-123?shape=detail");
 
       expect(res.status).toBe(200);
       expect(res.body.uid).toBe("abc-123");
@@ -162,7 +170,7 @@ describe("dataset routes", () => {
     it("returns 404 when dataset not found", async () => {
       mockFindByPk.mockResolvedValue(null);
 
-      const res = await supertest(app).get("/api/datasets/nonexistent");
+      const res = await supertest(app).get("/api/datasets/nonexistent?shape=detail");
 
       expect(res.status).toBe(404);
       expect(res.body.message).toContain("Cannot find Dataset");
@@ -171,7 +179,7 @@ describe("dataset routes", () => {
     it("returns 500 on database error", async () => {
       mockFindByPk.mockRejectedValue(new Error("db error"));
 
-      const res = await supertest(app).get("/api/datasets/abc-123");
+      const res = await supertest(app).get("/api/datasets/abc-123?shape=detail");
 
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("Error retrieving Dataset");
@@ -182,7 +190,7 @@ describe("dataset routes", () => {
     it("returns paginated local results when no sequence provided", async () => {
       const res = await supertest(app)
         .post("/api/datasets")
-        .send({ query: "test" });
+        .send({ query: "test", shape: "list-item" });
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual(mockSearchResponse);
@@ -193,6 +201,9 @@ describe("dataset routes", () => {
         limit: undefined,
         filters: undefined,
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
@@ -208,6 +219,7 @@ describe("dataset routes", () => {
             year: "2024",
           },
           nofacets: true,
+          shape: "list-item",
         });
 
       expect(res.status).toBe(200);
@@ -222,6 +234,9 @@ describe("dataset routes", () => {
           year: "2024",
         },
         nofacets: true,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
@@ -231,6 +246,7 @@ describe("dataset routes", () => {
         .send({
           query: "ethanol",
           limit: 25,
+          shape: "list-item",
         });
 
       expect(res.status).toBe(200);
@@ -242,6 +258,28 @@ describe("dataset routes", () => {
         limit: 25,
         filters: undefined,
         nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
+      });
+    });
+
+    it("passes response shape for local search", async () => {
+      const res = await supertest(app)
+        .post("/api/datasets")
+        .send({ query: "ethanol", shape: "list-item" });
+
+      expect(res.status).toBe(200);
+      expect(mockSearchLocalDatasets).toHaveBeenCalledWith({
+        textQueryTerm: "ethanol",
+        page: undefined,
+        rows: undefined,
+        limit: undefined,
+        filters: undefined,
+        nofacets: undefined,
+        from_date: undefined,
+        until_date: undefined,
+        shape: "list-item",
       });
     });
 
@@ -250,7 +288,7 @@ describe("dataset routes", () => {
 
       const res = await supertest(app)
         .post("/api/datasets")
-        .send({ query: "test", sequence: "ATCGATCG" });
+        .send({ query: "test", sequence: "ATCGATCG", shape: "list-item" });
 
       expect(res.status).toBe(200);
       expect(res.body).toEqual([{ title: "ICE Result" }]);
@@ -263,7 +301,7 @@ describe("dataset routes", () => {
 
       const res = await supertest(app)
         .post("/api/datasets")
-        .send({ query: "test" });
+        .send({ query: "test", shape: "list-item" });
 
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("Search failed");
@@ -274,7 +312,7 @@ describe("dataset routes", () => {
 
       const res = await supertest(app)
         .post("/api/datasets")
-        .send({ query: "test", sequence: "ATCGATCG" });
+        .send({ query: "test", sequence: "ATCGATCG", shape: "list-item" });
 
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("Search failed");
@@ -282,6 +320,12 @@ describe("dataset routes", () => {
   });
 
   describe("GET /api/datasets/lookup/:uid", () => {
+
+    beforeEach(() => {
+      // mock related item queries to empty array by default
+      mockQuery.mockResolvedValue([]);
+    });
+
     it("returns related datasets for a source dataset uid", async () => {
       mockFindByPk.mockResolvedValue({
         uid: "GLBRC_GSE218642",
@@ -321,6 +365,7 @@ describe("dataset routes", () => {
         identifier: "GSE218642",
         dataset_url: null,
         count: 2,
+        shared_related_item_datasets: [],
         datasets: [
           {
             uid: "CABBI_GSE218642",
@@ -352,12 +397,13 @@ describe("dataset routes", () => {
       expect(res.body.message).toContain("Dataset not found");
     });
 
-    it("returns 400 when source dataset has neither identifier nor dataset_url", async () => {
+    it("returns 400 when source dataset has no identifier, dataset_url, or related_items", async () => {
       mockFindByPk.mockResolvedValue({
         uid: "EMPTY_SOURCE",
         json: {
           identifier: "",
           dataset_url: "",
+          related_item: []
         },
       });
 
@@ -366,7 +412,113 @@ describe("dataset routes", () => {
       );
 
       expect(res.status).toBe(400);
-      expect(res.body.message).toContain("identifier or dataset_url");
+      expect(res.body.message).toContain("dentifier, dataset_url, or related item identifier");
+    });
+
+    it("returns shared related item dataset matches", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "BRC_1234",
+        json: {
+          identifier: "1234",
+          dataset_url: "",
+          relatedItem: [
+            {
+              title: "Shared article",
+              relatedItemType: "JournalArticle",
+              relatedItemIdentifier: "https://example.org/article"
+            }
+          ]
+        },
+      });
+
+      mockFindAll.mockResolvedValue([
+        {
+          uid: "BRC_1234",
+          json: {
+            brc: "GLBRC",
+            identifier: "1234",
+            dataset_url: null,
+          },
+        },
+      ]);
+
+      mockQuery.mockResolvedValue([
+        Dataset.build({
+          uid: "RELATED_A",
+          json: {
+            brc: "CABBI",
+            identifier: "A",
+            dataset_url: "https://repo.org/a",
+          },
+          related_item_identifier: "https://example.org/article",
+        }),
+        Dataset.build({
+          uid: "RELATED_B",
+          json: {
+            brc: "JBEI",
+            identifier: "B",
+            dataset_url: "https://repo.org/b",
+          },
+          related_item_identifier: "https://example.org/article",
+        }),
+      ]);
+
+      const res = await supertest(app).get("/api/datasets/lookup/BRC_1234");
+
+      expect(res.status).toBe(200);
+      expect(res.body.shared_related_item_datasets).toEqual([
+        expect.objectContaining({
+          uid: "RELATED_A",
+          brc: "CABBI",
+          identifier: "A",
+          dataset_url: "https://repo.org/a"
+        }),
+        expect.objectContaining({
+          uid: "RELATED_B",
+          brc: "JBEI",
+          identifier: "B",
+          dataset_url: "https://repo.org/b"
+        }),
+      ]);
+      expect(mockQuery).toHaveBeenCalled();
+    });
+
+    it("returns empty shared related item matches when source relatedItem is empty", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "SOURCE_UID",
+        json: {
+          identifier: "SOURCE_IDENTIFIER",
+          dataset_url: "",
+          relatedItem: [],
+        },
+      });
+
+      mockFindAll.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets/lookup/SOURCE_UID");
+
+      expect(res.status).toBe(200);
+      expect(res.body.shared_related_item_datasets).toEqual([]);
+      expect(mockQuery).not.toHaveBeenCalled();
+    });
+
+    it("returns empty shared related item matches when source relatedItem is invalid", async () => {
+      mockFindByPk.mockResolvedValue({
+        uid: "SOURCE_UID",
+        json: {
+          identifier: "SOURCE_IDENTIFIER",
+          dataset_url: "",
+          relatedItem: "invalidstring",
+        },
+      });
+
+      mockFindAll.mockResolvedValue([]);
+
+      const res = await supertest(app).get("/api/datasets/lookup/SOURCE_UID");
+
+      expect(res.status).toBe(200);
+      expect(res.body.shared_related_item_datasets).toEqual([]);
+      expect(mockQuery).not.toHaveBeenCalled();
     });
 
     it("returns 500 when source dataset lookup fails", async () => {
@@ -428,6 +580,7 @@ describe("dataset routes", () => {
       identifier: null,
       dataset_url: "https://example.org/dataset",
       count: 1,
+      shared_related_item_datasets: [],
       datasets: [
         {
           uid: "SOURCE_UID",
@@ -444,7 +597,7 @@ describe("dataset routes", () => {
 
   it("passes date range query params to searchLocalDatasets", async () => {
     const res = await supertest(app).get(
-      "/api/datasets?q=ethanol&from_date=2025-01-01&until_date=2025-12-31"
+      "/api/datasets?q=ethanol&from_date=2025-01-01&until_date=2025-12-31&shape=list-item"
     );
 
     expect(res.status).toBe(200);
@@ -457,6 +610,7 @@ describe("dataset routes", () => {
       nofacets: undefined,
       from_date: "2025-01-01",
       until_date: "2025-12-31",
+      shape: "list-item",
     });
   });
 

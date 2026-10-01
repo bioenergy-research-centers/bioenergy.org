@@ -155,7 +155,9 @@ function createServer(getActiveSessionId = () => null) {
     },
     async ({ uid }) => {
       try {
-        const response = await api.get(`/api/datasets/${encodeURIComponent(uid)}`);
+        const response = await api.get(`/api/datasets/${encodeURIComponent(uid)}`, {
+          params: { shape: "detail" }
+        });
         const data = response.data;
 
         return {
@@ -193,7 +195,7 @@ function createServer(getActiveSessionId = () => null) {
     },
     async ({ page, rows }, extra) => {
       try {
-        const params = { page, rows };
+        const params = { page, rows, shape: "list-item" };
         const { data, result } = await fetchDatasetPage(params);
 
         saveDatasetSearchSession(
@@ -251,7 +253,8 @@ function createServer(getActiveSessionId = () => null) {
         const params = {
           q,
           page,
-          rows
+          rows,
+          shape: "list-item"
         };
 
         if (analysisType) {
