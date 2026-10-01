@@ -23,9 +23,10 @@
 - Search and filter behavior usually spans both tiers:
   - API query handling under `api/app/routes/` and related services/controllers.
   - Client state and URL sync in `client/src/store/searchStore.js` and `client/src/router/`.
-- Dataset schema support typically requires coordinated updates to both:
+- Dataset schema support typically requires coordinated updates to:
   - API schema allowlist and snapshots under `api/app/schemas/`.
   - Client dataset-version mapping in `client/src/views/datasets/versionComponentMap.js`.
+  - The free-text search index, **only if** the new version adds, renames, or retypes a field that should be searchable. The indexed field list is the `search_tsv` expression in `api/migrations/2026.08.11T00.10.00.search-tsvector-and-index.js`, asserted in `api/tests/migrations/search-tsvector-and-index.test.js`. Changing it requires a *new* migration that drops and recreates the column and index — an applied migration file must not be edited. While two versions are both supported, index a renamed field under both names.
 - Dataset persistence and response shaping belong in the API model layer, especially `api/app/models/dataset.model.js`. Model attribute changes are applied by `sequelize.sync({ alter })` at boot; anything the model cannot express (generated columns, GIN or expression indexes, SQL functions) is a migration in `api/migrations/`. Declaring the same column in both leaves an environment stuck: `sync` creates it at boot, the migration then fails with `column already exists` and stays pending, and the server refuses to start until someone intervenes.
 - Contact form and issue-sync behavior spans `client/src/views/ContactView.vue` plus the `/api/messages` route and its supporting services.
 - MCP changes should usually be thin API-adapter changes in `mcp/src/`; business logic should stay in the API.
@@ -37,7 +38,8 @@
 - Treat schema snapshots under `api/app/schemas/` as pinned runtime assets. Update them deliberately and keep supported-version metadata aligned with client rendering support.
 - Imported BRC feeds come from external JSON endpoints and may contain inconsistent data. Prefer defensive handling over assuming stable source formatting.
 - Migrations run against live data. Prefer additive, reversible changes, and treat any migration that drops or rewrites a column as a change requiring explicit review.
--Schema changes reach the database in two ways. Model attributes are applied by `sequelize.sync({ alter })` at boot, which reaches every environment automatically and never drops anything. Anything the model cannot express (generated columns, GIN or expression indexes, SQL functions) should be a file in api/migrations/, applied on demand with `npm run migrate` and recorded in SequelizeMeta; the server refuses to start while any are pending. Do not put DDL anywhere else — not in application code, not in scripts, and not as SQL in documentation or a PR for someone to run by hand. If a change needs DDL the model cannot express, it is a migration file.
+- Schema drift never errors in the search path. A key the index does not name simply returns no matches — no exception, no rejected import. That makes a stale index silent: records on a new schema version quietly stop matching while older records still do. Treat the indexed field list as part of the schema-update checklist, not something to notice later.
+- Schema changes reach the database in two ways. Model attributes are applied by `sequelize.sync({ alter })` at boot, which reaches every environment automatically and never drops anything. Anything the model cannot express (generated columns, GIN or expression indexes, SQL functions) should be a file in api/migrations/, applied on demand with `npm run migrate` and recorded in SequelizeMeta; the server refuses to start while any are pending. Do not put DDL anywhere else — not in application code, not in scripts, and not as SQL in documentation or a PR for someone to run by hand. If a change needs DDL the model cannot express, it is a migration file.
 
 ## Build, test, and lint commands
 
