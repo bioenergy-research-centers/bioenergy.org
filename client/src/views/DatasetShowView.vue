@@ -83,7 +83,7 @@ const lastUpdateDate = computed(() => {
         <div class="card mt-4">
           <div class="card-body">
             <div v-if="relatedDatasets.length > 0" class="mb-3 small">
-              <span class="text-muted">This dataset is also catalogued as:</span>
+              <span class="text-muted">This dataset is also catalogued as: </span>
               <span v-for="(item, index) in relatedDatasets" :key="item.uid">
                 <span v-if="index > 0">, </span>
                 <router-link :to="{ name: 'datasetShow', params: { id: item.uid } }">
@@ -95,7 +95,7 @@ const lastUpdateDate = computed(() => {
             <component :is="resolveComponentVersion(dataset)"  :selectedResult="dataset"></component>
 
             <div v-if="sharedRelatedItemDatasets.length" class="related-datasets-section mt-4">
-              <div class="small text-uppercase mt-5 fw-bold">Related Datasets</div>
+              <h4 class="mt-5">Related Datasets</h4>
               <ul class="list-group mt-2">
                 <li v-for="item in sharedRelatedItemDatasets" :key="item.uid" class="list-group-item">
                   <DatasetListItem :item="item" />
