@@ -43,7 +43,7 @@ function itemTitle(item) {
       :data-related-item-type="group.type"
     >
       <div class="d-flex align-items-baseline gap-1 italic fw-bold">
-        <h4 class="fs-5">{{ group.type }}</h4>
+        <h4 class="subsection-header fs-5">{{ group.type }}</h4>
         <span v-if="group.items.length > visibleCount">
           (
           <button

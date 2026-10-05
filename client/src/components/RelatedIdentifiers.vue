@@ -43,7 +43,7 @@ function toggleGroup(prefix) {
       :data-related-identifier-prefix="group.prefix"
     >
       <div class="d-flex align-items-baseline gap-1 italic fw-bold">
-        <h4 class="fs-5">{{ group.registry.name }}</h4>
+        <h4 class="subsection-header fs-5">{{ group.registry.name }}</h4>
         <span v-if="group.identifiers.length > visibleCount">
           (
           <button
