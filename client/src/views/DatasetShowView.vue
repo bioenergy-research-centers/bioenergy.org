@@ -2,7 +2,6 @@
 import HeaderView from "@/views/HeaderView.vue";
 import DatasetDataService from "../services/DatasetDataService";
 import { resolveComponentVersion } from './datasets/versionComponentMap';
-import DatasetListItem from '@/components/DatasetListItem.vue';
 import { computed, ref, watch, watchEffect} from "vue"
 import {useSearchStore} from '@/store/searchStore';
 
@@ -92,16 +91,11 @@ const lastUpdateDate = computed(() => {
               </span>
             </div>
 
-            <component :is="resolveComponentVersion(dataset)"  :selectedResult="dataset"></component>
-
-            <div v-if="sharedRelatedItemDatasets.length" class="related-datasets-section mt-4">
-              <h4 class="mt-5">Related Datasets</h4>
-              <ul class="list-group mt-2">
-                <li v-for="item in sharedRelatedItemDatasets" :key="item.uid" class="list-group-item">
-                  <DatasetListItem :item="item" />
-                </li>
-              </ul>
-            </div>
+            <component
+              :is="resolveComponentVersion(dataset)"
+              :selectedResult="dataset"
+              :sharedRelatedItemDatasets="sharedRelatedItemDatasets"
+            ></component>
 
             <hr/>
 

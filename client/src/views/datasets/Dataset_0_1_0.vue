@@ -4,9 +4,16 @@
   import AuthorList from '@/components/AuthorList.vue';
   import RelatedIdentifiers from '@/components/RelatedIdentifiers.vue';
   import RelatedItems from '@/components/RelatedItems.vue';
+  import RelatedDatasets from '@/components/RelatedDatasets.vue';
   import { sanitizeDatasetHtml } from '@/utils/sanitizeDatasetHtml';
 
-  const props = defineProps(['selectedResult']);
+  const props = defineProps({
+    selectedResult: Object,
+    sharedRelatedItemDatasets: {
+      type: Array,
+      default: () => [],
+    },
+  });
   const expandedIndex=ref(null);
   function toggleDesc(idx) {
     expandedIndex.value = expandedIndex.value === idx ? null : idx;
@@ -186,16 +193,9 @@
         <RelatedItems :items="selectedResult.relatedItem" />
         <RelatedIdentifiers :identifiers="displayableEnrichedIdentifiers" />
       </div>
+
+      <RelatedDatasets :items="sharedRelatedItemDatasets" />
     </section>
   </div>
-
-        <hr/>
-        <div class='row mt-3 float-end'>
-          <div class='text-end text-muted small'>
-              Schema Version: <router-link :to="`/schema/${selectedResult.schema_version}`" class="link-primary text-decoration-underline">{{ selectedResult.schema_version }}</router-link>
-              <br/>
-              Record Updated: {{ updatedDate }}
-          </div>
-        </div>
 
 </template>
