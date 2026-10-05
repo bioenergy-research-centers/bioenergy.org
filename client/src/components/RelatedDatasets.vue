@@ -12,8 +12,8 @@ defineProps({
 <template>
   <div v-if="items.length" class="related-datasets-section mb-5">
     <h3 class="subsection-header mt-5">Related Datasets</h3>
-    <ul class="list-unstyled mb-0">
-      <li v-for="item in items" :key="item.uid" class="related-item">
+    <ul class="list-group mt-2">
+      <li v-for="item in items" :key="item.uid" class="list-group-item">
         <DatasetListItem :item="item" />
       </li>
     </ul>
