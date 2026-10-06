@@ -107,4 +107,26 @@ describe.each(datasetViews)('$name linked resources', ({ component }) => {
     expect(relatedIdentifiersText.includes('NCBI BioSample')).toBe(showsEnrichedIdentifier);
     expect(relatedIdentifiersText.includes('SAMN1234')).toBe(showsEnrichedIdentifier);
   });
+
+  it('applies the matching classes to dataset themes', () => {
+    const wrapper = mount(component, {
+      props: {
+        selectedResult: {
+          title: 'Dataset title',
+          creator: [],
+          theme: [
+            'Feedstock Development',
+            'Deconstruction and Separation',
+            'Conversion',
+            'Sustainability',
+          ],
+        },
+      },
+    });
+
+    expect(wrapper.find('.theme-feedstock').text()).toContain('Feedstock Development');
+    expect(wrapper.find('.theme-deconstruction').text()).toContain('Deconstruction and Separation');
+    expect(wrapper.find('.theme-conversion').text()).toContain('Conversion');
+    expect(wrapper.find('.theme-sustainability').text()).toContain('Sustainability');
+  });
 });
