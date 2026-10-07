@@ -28,6 +28,7 @@ export const useSearchStore = defineStore('searchStore', () => {
   const facetsError = ref(null);
   const lastFacetCriteriaKey = ref(null);
   const activeFacetCriteriaKey = ref(null);
+  let resultRequestId = 0;
   let facetRequestId = 0;
   const filterChanges = ref(false);
 
@@ -83,9 +84,12 @@ export const useSearchStore = defineStore('searchStore', () => {
     facetsError.value = null;
     lastFacetCriteriaKey.value = null;
     activeFacetCriteriaKey.value = null;
+    resultRequestId += 1;
     facetRequestId += 1;
     totalResults.value = 0;
     searchResults.value = [];
+    searchResultsLoading.value = false;
+    searchResultsError.value = null;
     filterChanges.value = true;
     resultPage.value = 1;
     fromDate.value = '';
@@ -95,6 +99,7 @@ export const useSearchStore = defineStore('searchStore', () => {
   // Retrieve results matching current search filters and store in searchResults
   // pass updateURL false to skip syncing changes to URL and potential route navigation
   async function runSearch(updateURL = true) {
+    const requestId = ++resultRequestId;
     searchResultsLoading.value = true;
     searchResultsError.value = null;
     let currentFacetCriteriaKey = null;
@@ -104,6 +109,7 @@ export const useSearchStore = defineStore('searchStore', () => {
 
     // Update the query url to match the current search
     if (updateURL) { await this.applySearchToURL(); }
+    if (requestId !== resultRequestId) return;
 
     // track latest url params after any search changes
     // this value is used to re-apply url query state when routing back to search results.
@@ -114,6 +120,7 @@ export const useSearchStore = defineStore('searchStore', () => {
       if (dnaSequence.value) {
         // TODO setup pagination for Advanced search
         response = await DatasetDataService.runAdvancedSearch(searchTerm.value, this.dnaSequence);
+        if (requestId !== resultRequestId) return;
         facets.value = {};
         lastFacetCriteriaKey.value = null;
         activeFacetCriteriaKey.value = null;
@@ -145,6 +152,7 @@ export const useSearchStore = defineStore('searchStore', () => {
         }
 
         response = await resultsRequest;
+        if (requestId !== resultRequestId) return;
       }
       // Handle paginated response shape
       if (response.data && Array.isArray(response.data.items)) {
@@ -167,12 +175,15 @@ export const useSearchStore = defineStore('searchStore', () => {
         totalResults.value = response.data.length;
       }
     } catch (err) {
+      if (requestId !== resultRequestId) return;
       this.searchResults = [];
       console.error('error', err);
       searchResultsError.value = 'Failed to fetch search results.';
     } finally {
-      searchResultsLoading.value = false;
-       filterChanges.value = false;
+      if (requestId === resultRequestId) {
+        searchResultsLoading.value = false;
+        filterChanges.value = false;
+      }
     }
   }
 

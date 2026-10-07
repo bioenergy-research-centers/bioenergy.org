@@ -293,15 +293,15 @@ describe('searchStore', () => {
     expect(store.searchResultsError).toBeNull();
   });
 
-  it('does not let a stale result failure cancel a newer facet request', async () => {
-    let rejectFirstResults;
+  it('does not let stale results overwrite newer results and facets', async () => {
+    let resolveFirstResults;
     let resolveSecondFacets;
 
     mockGetAll
-      .mockReturnValueOnce(new Promise((_, reject) => { rejectFirstResults = reject; }))
+      .mockReturnValueOnce(new Promise((resolve) => { resolveFirstResults = resolve; }))
       .mockResolvedValueOnce({
         data: {
-          items: [{ uid: '2' }],
+          items: [{ uid: 'second' }],
           totalPages: 1,
           totalResults: 1,
           query: { page: 1 },
@@ -320,15 +320,25 @@ describe('searchStore', () => {
     const secondSearch = store.runSearch(false);
     await flushPromises();
 
-    rejectFirstResults(new Error('stale failure'));
-    await firstSearch;
-
     resolveSecondFacets({ data: { brc: [{ value: 'GLBRC', count: 5 }] } });
     await secondSearch;
     await flushPromises();
 
+    resolveFirstResults({
+      data: {
+        items: [{ uid: 'first' }],
+        totalPages: 1,
+        totalResults: 1,
+        query: { page: 1 },
+      },
+    });
+    await firstSearch;
+
+    expect(store.searchResults).toEqual([{ uid: 'second' }]);
     expect(store.facets).toEqual({ brc: [{ value: 'GLBRC', count: 5 }] });
     expect(store.facetsLoading).toBe(false);
+    expect(store.searchResultsLoading).toBe(false);
+    expect(store.searchResultsError).toBeNull();
   });
 
   describe('importFromURLQuery', () => {
