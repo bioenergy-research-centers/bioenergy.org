@@ -3,6 +3,18 @@ const { getPaginationParams } = require("../utils/pagination");
 const Dataset = db.datasets;
 const {Op, where} = db.Sequelize;
 
+// Selects the client-facing JSON representation for a dataset.
+function serializeDatasetForClient(dataset, shape){
+    const normalizedShape = typeof shape === "string" ? shape.trim().toLowerCase() : "";
+    switch(normalizedShape) {
+      case "list-item":
+        return dataset.toClientListItemJSON();
+      case "detail":
+        return dataset.toClientJSON();
+      default:
+        throw new Error(`Unsupported dataset response shape: ${shape}`);
+    }
+}
 async function searchLocalDatasets(params = {}) {
   console.log("datasetservice: searching local datasets", params);
 
@@ -19,7 +31,9 @@ async function searchLocalDatasets(params = {}) {
 
     const totalResults = data.count;
     const totalPages = Math.ceil(totalResults / limit);
-    const items = data.rows.map((x) => x.toClientJSON());
+    const items = await Promise.all(
+      data.rows.map((x) => serializeDatasetForClient(x, params.shape))
+    );
 
     return {
       totalResults,
@@ -458,4 +472,4 @@ function buildStoredTopicWhere(topicName) {
   );
 }
 
-module.exports = {searchLocalDatasets, getLocalDatasetFacets};
+module.exports = { searchLocalDatasets, getLocalDatasetFacets, serializeDatasetForClient };

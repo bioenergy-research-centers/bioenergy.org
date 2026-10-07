@@ -2,7 +2,7 @@ const strategyManager = require('../services/strategyManager');
 const datasetsService = require("../services/datasetsService");
 
 async function search(req, res) {
-    const { query, sequence, page, rows, limit, filters, from_date, until_date } = req.body;
+    const { query, sequence, page, rows, limit, filters, from_date, until_date, shape } = req.body;
     console.log('running search', query, sequence, page, rows, limit, filters, from_date, until_date);
 
     try {
@@ -21,6 +21,7 @@ async function search(req, res) {
           filters,
           from_date,
           until_date,
+          shape
         });
 
         return res.json(localResults);

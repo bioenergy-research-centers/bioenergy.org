@@ -2,21 +2,15 @@
   import { ref, computed } from 'vue';
   import OrganismLink from '@/components/OrganismLink.vue';
   import AuthorList from '@/components/AuthorList.vue';
-  import sanitizeHtml from 'sanitize-html';
-  const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
+  import RelatedIdentifiers from '@/components/RelatedIdentifiers.vue';
+  import RelatedItems from '@/components/RelatedItems.vue';
+  import { sanitizeDatasetHtml } from '@/utils/sanitizeDatasetHtml';
 
   const props = defineProps(['selectedResult']);
   const expandedIndex=ref(null);
   function toggleDesc(idx) {
     expandedIndex.value = expandedIndex.value === idx ? null : idx;
   }
-  
-  const updatedDate = computed(() => {
-    const date = props.selectedResult?.updated_at
-    if(!date) {return "";}
-    const d = new Date(date)
-    return d.toLocaleDateString(undefined, {dateStyle: "medium"})
-  })
 
   const publishedDate = computed(() => {
     const date = props.selectedResult?.date
@@ -24,6 +18,13 @@
     const d = new Date(date)
     return d.toLocaleDateString(undefined, {dateStyle: "medium"})
   })
+
+  const displayableEnrichedIdentifiers = computed(() =>
+    props.selectedResult?.bioregistry_enriched_ids?.filter(
+      identifier => identifier?.registry && identifier?.url
+    ) || []
+  )
+
 </script>
 
 <template>
@@ -42,7 +43,7 @@
 
   <div class="row mt-4">
     <div class="col-12 col-md">
-      <h3 v-html="sanitizeHtml(selectedResult?.title, ALLOWED_HTML)"></h3>
+      <h3 v-html="sanitizeDatasetHtml(selectedResult?.title)"></h3>
       <AuthorList :creators="selectedResult.creator"/>
 
     </div>
@@ -72,7 +73,7 @@
 
   <div v-if="selectedResult.description" class="row">
     <div class="small text-uppercase fw-bold">Description</div>
-    <p v-html="sanitizeHtml(selectedResult.description, ALLOWED_HTML)"></p>
+    <p v-html="sanitizeDatasetHtml(selectedResult.description)"></p>
   </div>
 
 
@@ -147,26 +148,12 @@
           </table>
         </div>
 
-        <div v-if="selectedResult.relatedItem && selectedResult.relatedItem.length" class="mt-4">
-          <div class="small text-uppercase mt-5 fw-bold">Related Items</div>
-          <div v-for="item in selectedResult.relatedItem">
-            <div class="text-muted italic mt-2 fw-bold">
-              {{ item.relatedItemType }}
-              <i class="bi bi-box-arrow-up-right"></i>
-            </div>
-            <a :href="item.relatedItemIdentifier" target="_blank" rel="noopener noreferrer">
-              <span v-html="sanitizeHtml(item.title, ALLOWED_HTML)"/>
-            </a>
+        <div v-if="selectedResult.relatedItem?.length || displayableEnrichedIdentifiers.length" class="mt-4">
+          <div class="small text-uppercase mt-5 fw-bold">
+            Linked Resources
           </div>
-        </div>
-
-        <hr/>
-        <div class='row mt-3 float-end'>
-          <div class='text-end text-muted small'>
-              Schema Version: <router-link :to="`/schema/${selectedResult.schema_version}`" class="link-primary text-decoration-underline">{{ selectedResult.schema_version }}</router-link>
-              <br/>
-              Record Updated: {{ updatedDate }}
-          </div>
+          <RelatedItems :items="selectedResult.relatedItem" />
+          <RelatedIdentifiers :identifiers="displayableEnrichedIdentifiers" />
         </div>
 
 </template>

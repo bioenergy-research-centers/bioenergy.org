@@ -1,18 +1,38 @@
 const { Model, DataTypes } = require("sequelize");
 const sanitizeHtml = require('sanitize-html');
+const { enrichIds } = require("../services/identifierEnrichment");
 const ALLOWED_HTML = { allowedTags: [ 'b', 'i', 'sub', 'sup'], allowedAttributes: {} };
 
 module.exports = (sequelize, Sequelize) => {
   class Dataset extends Model {
     // return json data representing the dataset for use by clients
-    toClientJSON() {
-      const jsonData = this.json;
+    async toClientJSON() {
+      const jsonData = { ...(this.json ?? {}) };
       jsonData.schema_version = this.schema_version;
       jsonData.uid = this.uid;
       jsonData.created_at = this.createdAt;
       jsonData.updated_at = this.updatedAt;
+      jsonData.bioregistry_enriched_ids = await enrichIds(jsonData.has_related_ids);
       return jsonData;
     }
+    // return json data representing the subset of dataset fields required for list items.
+    // list item views are not versioned. Ensure any changes are mirrored in client component.
+    toClientListItemJSON() {
+      const jsonData = this.json ?? {};
+      return {
+        uid: this.uid,
+        brc: jsonData.brc ?? null,
+        title: jsonData.title ?? null,
+        creator: jsonData.creator ?? [],
+        description: jsonData.description ?? null,
+        analysisType: jsonData.analysisType ?? null,
+        repository: jsonData.repository ?? null,
+        date: jsonData.date ?? null,
+        identifier: jsonData.identifier ?? null,
+        dataset_url: jsonData.dataset_url ?? null
+      };
+    }
+
   }
 
   Dataset.init(
