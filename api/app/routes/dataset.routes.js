@@ -36,6 +36,8 @@
  *         identifier:
  *           type: string
  *           nullable: true
+ *         highlights:
+ *           $ref: '#/components/schemas/SearchHighlights'
  *       example:
  *         uid: GLBRC_GSE218642
  *         brc: GLBRC
@@ -46,6 +48,38 @@
  *         repository: NCBI GEO
  *         date: 2025-01-01
  *         identifier: GSE218642
+ *     SearchHighlights:
+ *       type: object
+ *       description: >-
+ *         Present on list items only when highlight=true and a text query is given. Matched words are
+ *         wrapped in <mark>…</mark>. Only fields that matched are present; an empty object means the
+ *         match was in a field that is not shown, such as keywords or species.
+ *       properties:
+ *         title:
+ *           type: string
+ *           description: The full title with matched words marked.
+ *         snippet:
+ *           type: string
+ *           description: Up to two passages around the matches, with … where text was cut.
+ *         snippetField:
+ *           type: string
+ *           enum: [description, abstract]
+ *           description: Field the snippet comes from. The abstract is used only when the description has no match.
+ *         creators:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: Names of creators that matched the query.
+ *         contributors:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: Names of contributors that matched the query.
+ *       example:
+ *         title: <mark>Lignin</mark> degradation in switchgrass
+ *         snippet: … enzymatic breakdown of <mark>lignin</mark> polymers …
+ *         snippetField: description
+ *         creators: [Alex Creator]
  *     DatasetSearchResponse:
  *       type: object
  *       properties:
@@ -145,6 +179,11 @@
  *           type: integer
  *           maximum: 500
  *         description: Legacy alias for rows
+ *       - in: query
+ *         name: highlight
+ *         schema:
+ *           type: boolean
+ *         description: Add a highlights object to each list item marking what matched the text query (q). Applies only with shape=list-item and a non-empty q.
  *       - in: query
  *         name: shape
  *         required: true
@@ -294,6 +333,9 @@
  *                 type: integer
  *                 maximum: 500
  *                 description: Legacy alias for rows
+ *               highlight:
+ *                 type: boolean
+ *                 description: Add a highlights object to each list item marking what matched the query. Applies only with shape=list-item and a non-empty query.
  *               shape:
  *                 type: string
  *                 enum: [detail, list-item]

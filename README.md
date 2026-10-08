@@ -102,6 +102,8 @@ Two behaviors changed with the move to PostgreSQL's `websearch_to_tsquery`:
 - Parentheses no longer group sub-expressions. `(a OR b) c` is read as `a OR (b AND c)`.
 - Terms are stemmed, so `fermentations` also matches `fermentation`.
 
+**Highlighting matches.** With `highlight=true` (and `shape=list-item` and a text query), each result carries a `highlights` object marking what matched, with matched words wrapped in `<mark>`. It is built with PostgreSQL's `ts_headline`, using the same query as the search, so stemmed and prefix matches are marked too. It contains the title, up to two passages of the description (or of the abstract when only the abstract matched), and the names of matching creators and contributors. The results list uses these to mark the title, show the matching passage instead of the start of the description, show a matching author even when the author list is trimmed, and name a matching contributor, who is otherwise not shown. Only fields that matched are present. A match in a field the list does not show, such as keywords or species, leaves the object empty. `ts_headline` re-reads each document rather than using the index, so it runs only on the page of results returned; on the current catalogue it adds about 3–11 ms to a 50-result page. Excluded terms (`-corn`) are never marked. In a quoted phrase each word is marked wherever it appears, not only where the words are adjacent.
+
 The searchable field list is fixed in the migration that defines the column. Making a new field searchable requires a migration, so the index cannot drift from the query layer silently.
 
 ### Testing

@@ -14,7 +14,8 @@ exports.findAll = async (req, res) => {
       limit: req.query.limit,
       from_date: req.query.from_date,
       until_date: req.query.until_date,
-      shape: req.query.shape
+      shape: req.query.shape,
+      highlight: req.query.highlight
     });
 
     res.json(results);

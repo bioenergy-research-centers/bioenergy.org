@@ -53,6 +53,17 @@ const RECORDS = [
     datasetName: "Prairie soil series",
     journal_name: "Pedobiologia",
   }],
+  ["MANY_AUTHORS", {
+    // The matching author is fifth, past the three the results list shows, and the only
+    // description match is mid-text, so its snippet is cut at both ends.
+    title: "Miscanthus field trials",
+    date: "2019-01-01",
+    description:
+      "Plots were planted in spring and harvested in autumn across four sites in the upper " +
+      "Midwest over three seasons. Yields of miscanthus were recorded weekly. Soil samples " +
+      "were taken monthly and stored frozen for later analysis by the partner laboratories.",
+    creator: ["Ana Ames", "Ben Bose", "Cy Chu", "Di Diaz", "Quillon Vasquez"].map((name) => ({ name })),
+  }],
   // Unsupported schema version: excluded from every search by the supportedOnly scope.
   ["LEGACY_LIGNIN", { title: "Lignin legacy record", date: "2020-01-01" }, "0.0.8"],
 ];
@@ -215,6 +226,90 @@ describe("browsing and scope", () => {
   });
 });
 
+describe("highlights", () => {
+  // Highlights for each result of a text query, keyed by uid.
+  async function highlights(textQueryTerm, params = {}) {
+    const result = await datasetsService.searchLocalDatasets({
+      textQueryTerm,
+      shape: "list-item",
+      highlight: true,
+      ...params,
+    });
+    return Object.fromEntries(result.items.map((item) => [item.uid, item.highlights]));
+  }
+
+  it("mark matched words in the title, including prefix matches", async () => {
+    const found = await highlights("ligni");
+
+    expect(found.LIGNIN_TITLE.title).toBe("<mark>Lignin</mark> degradation in switchgrass");
+    // Its title does not match, so only the abstract passage is returned.
+    expect(found.LIGNIN_ABSTRACT).not.toHaveProperty("title");
+    expect(found.LIGNIN_ABSTRACT.snippetField).toBe("abstract");
+    expect(found.LIGNIN_ABSTRACT.snippet).toContain("<mark>lignin</mark>");
+  });
+
+  it("mark stemmed matches", async () => {
+    const found = await highlights("fermentations");
+
+    expect(found.ETHANOL_CORN.title).toBe("Ethanol <mark>fermentation</mark> from corn stover");
+  });
+
+  it("do not mark excluded terms", async () => {
+    // ETHANOL_CORN matches through "ethanol"; "corn" is excluded and must stay unmarked.
+    const found = await highlights("ethanol OR biomass -corn");
+
+    expect(found.ETHANOL_CORN.title).toBe("<mark>Ethanol</mark> fermentation from corn stover");
+  });
+
+  it("name a matching author even when the list would hide them", async () => {
+    const found = await highlights("vasquez");
+
+    expect(found.MANY_AUTHORS).toEqual({ creators: ["Quillon Vasquez"] });
+  });
+
+  it("name a matching contributor, who is not otherwise shown in the list", async () => {
+    const found = await highlights("dana");
+
+    expect(found.ETHANOL_BIOMASS.contributors).toEqual(["Dana Contributor"]);
+  });
+
+  it("mark each field's part of a query whose terms match in different fields", async () => {
+    const found = await highlights("lignin alex");
+
+    expect(found.LIGNIN_TITLE.title).toBe("<mark>Lignin</mark> degradation in switchgrass");
+    expect(found.LIGNIN_TITLE.creators).toEqual(["Alex Creator"]);
+  });
+
+  it("cut a long description to the passage around the match, with ellipses", async () => {
+    const { snippet, snippetField } = (await highlights("miscanthus")).MANY_AUTHORS;
+
+    expect(snippetField).toBe("description");
+    expect(snippet).toContain("<mark>miscanthus</mark>");
+    expect(snippet.startsWith("… ")).toBe(true);
+    expect(snippet.endsWith(" …")).toBe(true);
+  });
+
+  it("are empty when the match is in a field the list does not show", async () => {
+    // MG1655 is a species strain: searchable, but not part of a list item.
+    expect((await highlights("MG1655")).LIGNIN_TITLE).toEqual({});
+  });
+
+  it("are left out unless requested, and for the detail shape", async () => {
+    const plain = await datasetsService.searchLocalDatasets({
+      textQueryTerm: "lignin",
+      shape: "list-item",
+    });
+    expect(plain.items[0]).not.toHaveProperty("highlights");
+
+    const detail = await datasetsService.searchLocalDatasets({
+      textQueryTerm: "lignin",
+      shape: "detail",
+      highlight: true,
+    });
+    expect(detail.items[0]).not.toHaveProperty("highlights");
+  });
+});
+
 describe("GET /api/datasets", () => {
   it("returns 200 for the inputs that used to return 500", async () => {
     for (const q of ["(cellulose", "1:1"]) {
@@ -231,6 +326,15 @@ describe("GET /api/datasets", () => {
     expect(response.status).toBe(200);
     expect(response.body.totalResults).toBe(2);
     expect(response.body.items.map((item) => item.uid)).toEqual(["LIGNIN_TITLE", "LIGNIN_ABSTRACT"]);
+  });
+
+  it("returns highlights when asked for them", async () => {
+    const response = await request(app)
+      .get("/api/datasets")
+      .query({ q: "lignin", shape: "list-item", highlight: true });
+
+    expect(response.status).toBe(200);
+    expect(response.body.items[0].highlights.title).toBe("<mark>Lignin</mark> degradation in switchgrass");
   });
 
   it("returns no results for a schema key name", async () => {

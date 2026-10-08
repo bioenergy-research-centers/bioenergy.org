@@ -1,5 +1,6 @@
 const db = require("../models");
 const { getPaginationParams } = require("../utils/pagination");
+const { fetchSearchHighlights } = require("./searchHighlights");
 const Dataset = db.datasets;
 const {Op, where} = db.Sequelize;
 
@@ -35,6 +36,22 @@ function buildTextSearchQuery(textQueryTerm) {
     return db.Sequelize.fn("brc_prefix_tsquery", trimmedQueryTerm);
 }
 
+// The query used to mark matched words in results (see searchHighlights.js). It is the
+// search query minus any excluded terms: "ethanol -corn" excludes corn, so corn did not
+// match anything and must not be marked, but ts_headline would mark it if it stayed in.
+function buildHighlightQuery(textQueryTerm) {
+    const trimmedQueryTerm = textQueryTerm.trim();
+
+    if (WEBSEARCH_OPERATORS.test(trimmedQueryTerm)) {
+        const withoutExclusions = toWebsearchSyntax(trimmedQueryTerm)
+            .replace(/(^|\s)-("[^"]*"?|\S+)/g, "$1")
+            .trim();
+        return { fn: "websearch_to_tsquery", text: withoutExclusions };
+    }
+
+    return { fn: "brc_prefix_tsquery", text: trimmedQueryTerm };
+}
+
 // Free-text searches are ordered by relevance; browsing without a search term keeps the
 // newest-first ordering the catalogue has always used.
 function buildSearchOrder(textQueryTerm) {
@@ -51,6 +68,20 @@ function buildSearchOrder(textQueryTerm) {
     );
 
     return [[relevance, "DESC"], ...dateOrder];
+}
+
+function parseBooleanParam(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value !== "string") return false;
+
+  return ["true", "1", "yes"].includes(value.trim().toLowerCase());
+}
+
+// Highlights are opt-in (highlight=true) and only decorate list items of a text search.
+function shouldHighlight(params) {
+  return parseBooleanParam(params.highlight)
+    && Boolean(params.textQueryTerm?.trim())
+    && String(params.shape).trim().toLowerCase() === "list-item";
 }
 
 // Selects the client-facing JSON representation for a dataset.
@@ -84,6 +115,10 @@ async function searchLocalDatasets(params = {}) {
     const items = await Promise.all(
       data.rows.map((x) => serializeDatasetForClient(x, params.shape))
     );
+
+    if (shouldHighlight(params)) {
+      await addHighlights(items, params.textQueryTerm);
+    }
 
     return {
       totalResults,
@@ -144,6 +179,21 @@ function buildDatasetSearchWhere(params = {}) {
   });
 
   return conditions.length > 0 ? { [Op.and]: conditions } : {};
+}
+
+// Adds a `highlights` object to each list item. Highlights only decorate results that were
+// already found, so a failure here is logged and the results are returned without them.
+async function addHighlights(items, textQueryTerm) {
+  try {
+    const highlights = await fetchSearchHighlights(
+      db.sequelize,
+      buildHighlightQuery(textQueryTerm),
+      items.map((item) => item.uid)
+    );
+    for (const item of items) item.highlights = highlights.get(item.uid) ?? {};
+  } catch (err) {
+    console.error("Error highlighting search results:", err);
+  }
 }
 
 function buildDatasetSearchConditions({
@@ -476,4 +526,4 @@ function buildStoredTopicWhere(topicName) {
   );
 }
 
-module.exports = { searchLocalDatasets, getLocalDatasetFacets, serializeDatasetForClient };
+module.exports = { searchLocalDatasets, getLocalDatasetFacets, serializeDatasetForClient, buildHighlightQuery };

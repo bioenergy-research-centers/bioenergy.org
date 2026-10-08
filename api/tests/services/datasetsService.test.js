@@ -724,3 +724,80 @@ describe("searchLocalDatasets", () => {
     expect(facetSql).toContain(`jsonb_typeof(d."json"->'contributors') = 'array'`);
   });
 });
+
+describe("buildHighlightQuery", () => {
+  const { buildHighlightQuery } = datasetsService;
+
+  it("uses the prefix query for plain terms, like the search", () => {
+    expect(buildHighlightQuery("  ligni corn ")).toEqual({ fn: "brc_prefix_tsquery", text: "ligni corn" });
+  });
+
+  it("keeps phrases and OR for operator queries", () => {
+    expect(buildHighlightQuery('"cell wall" OR biomass')).toEqual({
+      fn: "websearch_to_tsquery",
+      text: '"cell wall" OR biomass',
+    });
+  });
+
+  it.each([
+    ["ethanol -corn", "ethanol"],
+    ["ethanol NOT corn", "ethanol"],
+    ["ethanol ! corn", "ethanol"],
+    ['ethanol -"corn stover" biomass', "ethanol  biomass"],
+    ["co-culture -yeast", "co-culture"],
+  ])("drops excluded terms from %j", (query, text) => {
+    expect(buildHighlightQuery(query)).toEqual({ fn: "websearch_to_tsquery", text });
+  });
+});
+
+describe("searchLocalDatasets highlights", () => {
+  const listRow = (uid) => ({ uid, toClientListItemJSON: () => ({ uid, title: `Dataset ${uid}` }) });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFindAndCountAll.mockResolvedValue({ count: 2, rows: [listRow("A"), listRow("B")] });
+    db.sequelize.query.mockResolvedValue([
+      { uid: "A", title: "<mark>Dataset</mark> A", description: null, abstract: null, creators: null, contributors: null },
+    ]);
+  });
+
+  const search = (params) =>
+    datasetsService.searchLocalDatasets({ shape: "list-item", textQueryTerm: "dataset", ...params });
+
+  it("adds highlights to each list item when asked", async () => {
+    const result = await search({ highlight: "true" });
+
+    expect(result.items).toEqual([
+      { uid: "A", title: "Dataset A", highlights: { title: "<mark>Dataset</mark> A" } },
+      { uid: "B", title: "Dataset B", highlights: {} },
+    ]);
+    expect(db.sequelize.query.mock.calls[0][1].replacements).toEqual({ text: "dataset", uids: ["A", "B"] });
+  });
+
+  it.each([
+    ["not asked for", { highlight: undefined }],
+    ["there is no text query", { highlight: true, textQueryTerm: "  " }],
+    ["the detail shape is requested", { highlight: true, shape: "detail" }],
+  ])("adds nothing when %s", async (_case, params) => {
+    mockFindAndCountAll.mockResolvedValue({
+      count: 1,
+      rows: [{ uid: "A", toClientJSON: () => ({ uid: "A" }), toClientListItemJSON: () => ({ uid: "A" }) }],
+    });
+
+    const result = await search(params);
+
+    expect(result.items[0]).not.toHaveProperty("highlights");
+    expect(db.sequelize.query).not.toHaveBeenCalled();
+  });
+
+  it("returns the results without highlights if highlighting fails", async () => {
+    db.sequelize.query.mockRejectedValue(new Error("ts_headline failed"));
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const result = await search({ highlight: true });
+
+    expect(result.items).toEqual([{ uid: "A", title: "Dataset A" }, { uid: "B", title: "Dataset B" }]);
+    expect(error).toHaveBeenCalledWith("Error highlighting search results:", expect.any(Error));
+    error.mockRestore();
+  });
+});

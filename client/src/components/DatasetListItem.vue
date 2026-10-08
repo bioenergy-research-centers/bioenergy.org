@@ -1,11 +1,24 @@
 <script setup>
+import { computed } from 'vue';
 import AuthorList from '@/components/AuthorList.vue';
 import { pluralizeAuthors } from '@/utils/pluralize';
 import { sanitizeDatasetHtml } from '@/utils/sanitizeDatasetHtml';
+import { selectVisibleCreators } from '@/utils/visibleCreators';
 
 const searchAuthorMaxVisible = 3;
 
-defineProps(['item']);
+const props = defineProps(['item']);
+
+// What matched a text search (see SearchHighlights in the API docs). Empty when browsing.
+const highlights = computed(() => props.item.highlights ?? {});
+
+// Creators not shown in the trimmed author list. A matched author past the first three is
+// shown, so is not counted here.
+const hiddenAuthorCount = computed(() => {
+  const creators = props.item.creator;
+  if (!Array.isArray(creators)) return 0;
+  return creators.length - selectVisibleCreators(creators, searchAuthorMaxVisible, highlights.value.creators).length;
+});
 
 const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
   if (str.length <= maxStart + maxEnd) return str;
@@ -19,6 +32,11 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
       <div class="col-md order-md-1 fs-6 fw-bold order-1">
         <router-link :to="{ name: 'datasetShow', params: { id: item.uid } }" class="pe-4">
           <span
+            v-if="highlights.title"
+            v-html="sanitizeDatasetHtml(highlights.title)"
+          ></span>
+          <span
+            v-else
             v-html="sanitizeDatasetHtml(truncateMiddle(item.title || 'Untitled data set', 75, 50))"
           ></span>
         </router-link>
@@ -30,21 +48,37 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
         <AuthorList
           :creators="item.creator"
           :max-visible="searchAuthorMaxVisible"
+          :highlighted-names="highlights.creators"
         />
         <span
-          v-if="Array.isArray(item.creator) && item.creator.length > searchAuthorMaxVisible"
+          v-if="hiddenAuthorCount > 0"
           class="small text-muted"
         >
-          +{{ item.creator.length - searchAuthorMaxVisible }} more
-          {{ pluralizeAuthors(item.creator.length - searchAuthorMaxVisible) }}
+          +{{ hiddenAuthorCount }} more
+          {{ pluralizeAuthors(hiddenAuthorCount) }}
         </span>
+      </div>
+    </div>
+
+    <!-- Contributors are not listed in results, so a match on one is shown here. -->
+    <div v-if="highlights.contributors?.length" class="row">
+      <div class="small text-muted contributor-matches">
+        Contributor:
+        <template v-for="(name, index) in highlights.contributors" :key="name + index">
+          <mark>{{ name }}</mark><span v-if="index !== highlights.contributors.length - 1">; </span>
+        </template>
       </div>
     </div>
 
     <div class="row">
       <div class="mt-2">
         <p>
+          <small v-if="highlights.snippet" class="snippet">
+            <span v-if="highlights.snippetField === 'abstract'" class="text-muted">From the abstract: </span>
+            <span v-html="sanitizeDatasetHtml(highlights.snippet)"></span>
+          </small>
           <small
+            v-else
             v-html="sanitizeDatasetHtml(truncateMiddle(item.description || 'No description of this data set is available.', 150, 75))"
           ></small>
         </p>
@@ -71,5 +105,10 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
 .list-group-item-content {
   overflow: hidden;
   overflow-wrap: anywhere;
+}
+
+/* Search matches. Bootstrap's default mark padding spreads marked words apart. */
+.list-group-item-content :deep(mark) {
+  padding: 0 0.1em;
 }
 </style>
