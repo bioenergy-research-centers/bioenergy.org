@@ -10,8 +10,12 @@ module.exports = defineConfig({
     environment: "node",
     root: ".",
     include: ["tests/integration/**/*.test.js"],
+    // Wipes the test database and applies the migrations once per run; each file then loads
+    // its own records. See tests/integration/support/database.js.
+    globalSetup: ["tests/integration/support/globalSetup.js"],
     // No tests/setup.js here: that file points the database at an unreachable host so unit
     // tests can never touch a real one. These tests read the BIOENERGY_ORG_DB_* variables.
+    // The files share one database, so they run one at a time.
     fileParallelism: false,
     testTimeout: 30_000,
     hookTimeout: 60_000,

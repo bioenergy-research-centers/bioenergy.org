@@ -50,26 +50,32 @@ The following command will run a postgres container with the password `mysecretp
 
 ### Database migrations
 
-At startup the API runs `sequelize.sync({ alter: { drop: false } })`, which keeps the columns declared in `api/app/models/` aligned with the table and never removes anything. Schema changes the model cannot express — generated columns, GIN or expression indexes, SQL functions — live in `api/migrations/` and are applied on demand:
+The database schema is defined by the migration files in `api/migrations/`, applied by [Umzug](https://github.com/sequelize/umzug) in filename order. Both compose files include a one-shot `migrate` service that applies any pending migrations and exits. The `api` and `api-cron-sidecar` services wait for it to finish successfully, so `docker compose up` always migrates before new code starts. The API also checks at startup that nothing is pending, and exits naming the pending migrations if anything is.
+
+Each migration runs in a single transaction, so a failure part-way leaves the schema unchanged and the migration still pending. Applied migrations are recorded in the `SequelizeMeta` table, so the `migrate` service is a no-op when nothing is pending. Runs take a PostgreSQL advisory lock, so two runs that overlap apply each migration once.
+
+**Deploying.** `docker compose up -d --build` migrates and starts everything. Compose replaces the running `api` container before the migration finishes, so if a migration fails, the API stays down until it is fixed. To keep the current version serving if a migration fails, migrate first:
 
 ```bash
-# Build the image so the container has the current migration files, then apply them
-docker compose build api
-docker compose run api npm run migrate
-
-# List pending / applied migrations
-docker compose run api npm run migrate:pending
-docker compose run api npm run migrate:executed
-
-# Revert the most recent migration
-docker compose run api npm run migrate:down
+docker compose build
+docker compose run --rm migrate   # stops here, old api still serving, if a migration fails
+docker compose up -d
 ```
 
-Migration files run in filename order and each runs inside a single transaction, so a failure part-way leaves the schema unchanged. Applied migrations are recorded in the `SequelizeMeta` table, so `npm run migrate` is safe to run on every deploy whether or not anything is pending.
+Other migration commands:
 
-**Deploying a change that includes a migration:** build, migrate, then start — `docker compose build api && docker compose run api npm run migrate && docker compose up -d api`. The server checks for pending migrations at startup and exits with a message naming them rather than serving against a schema the code does not expect.
+```bash
+# List pending / applied migrations
+docker compose run --rm migrate npm run migrate:pending
+docker compose run --rm migrate npm run migrate:executed
 
-Which goes where: a change to a model attribute goes in the model and `sync` applies it everywhere; anything the model cannot express goes in a migration. Declaring the same column in both breaks any environment that starts the server before migrating: `sync` creates the column from the model, `npm run migrate` then fails with `column already exists`, and the migration stays pending so the server keeps refusing to start until someone intervenes. New migration files should be named with a sortable timestamp prefix, following the existing baseline file.
+# Revert the most recent migration
+docker compose run --rm migrate npm run migrate:down
+```
+
+**Writing a migration.** Every schema change is a migration, including adding or changing an attribute in `api/app/models/`. The server no longer runs `sequelize.sync()`. `api/tests/integration/migrations.test.js` fails if the model and the migrated table disagree. Name new files with a sortable timestamp prefix, following the existing files. Migrations run while the previous version of the API is still serving, so make them changes the running code can tolerate: add a column before the code reads it, and drop one only in a later release.
+
+In development, `docker compose -f docker-compose.dev.yml up --build --watch` migrates on startup. After adding a migration while the stack is running, apply it with `docker compose -f docker-compose.dev.yml run --rm --build migrate`.
 
 ### Dataset text search
 
@@ -97,17 +103,19 @@ The searchable field list is fixed in the migration that defines the column. Mak
 
 Tests use [Vitest](https://vitest.dev/) and run inside Docker containers. The unit suites need no database connection.
 
-The API also has an integration suite, `api/tests/integration/`, that runs the real migrations, model, search service and HTTP route against a real PostgreSQL and asserts on the results that come back. It is what proves search behaviour (prefix matching, phrases, stemming, ranking, exclusion) actually works, since that logic lives in PostgreSQL where the mocked unit tests cannot reach it. CI runs it against a `postgres:16` service container. Locally:
+The API also has an integration suite, `api/tests/integration/`, that runs the real migrations, model, search service and HTTP route against a real PostgreSQL and asserts on the results that come back. It is what proves search behaviour (prefix matching, phrases, stemming, ranking, exclusion) actually works, since that logic lives in PostgreSQL where the mocked unit tests cannot reach it. It also checks that the migrated table matches the model. CI runs it against a `postgres:16` service container.
+
+To run it locally against a test database next to your dev database, copy `.env.test.sample` to `.env.test.local` (git-ignored), create the database it names, and layer it over `.env`:
 
 ```bash
-docker run --rm -d --name bioenergy-test-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=bioenergy_test -p 5432:5432 postgres:16
+cp .env.test.sample .env.test.local
+createdb -O bioenergy bioenergy_org_test
 
-cd api && BIOENERGY_ORG_DB_HOST=localhost BIOENERGY_ORG_DB_LOCAL_PORT=5432 \
-  BIOENERGY_ORG_DB_USER=postgres BIOENERGY_ORG_DB_PASSWORD=postgres \
-  BIOENERGY_ORG_DB_NAME=bioenergy_test npm run test:integration
+docker compose --env-file .env --env-file .env.test.local -f docker-compose.dev.yml \
+  run --rm --build --no-deps api npm run test:integration
 ```
 
-The suite drops and recreates the `datasets` table, so it refuses to run unless the database name ends in `_test`.
+Each run wipes the test database and applies every migration once (`api/tests/integration/support/globalSetup.js`). Each test file then loads its own records with `loadDatasets()` from `support/database.js` and closes the connection with `closeDatabase()`. Because the database is wiped, the suite refuses to run unless the database name ends in `_test`, and the test user must own the database.
 
 ```bash
 # Run API tests

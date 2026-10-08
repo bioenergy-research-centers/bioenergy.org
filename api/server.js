@@ -96,13 +96,10 @@ app.use(
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 
-// Keep the model's columns aligned with the table. `alter` without `drop` never removes
-// anything, so the columns, indexes and functions owned by migrations/ are left untouched.
-// Schema changes the model cannot express live in migrations/ and are applied with
-// `npm run migrate` before deploying; the server refuses to start while any are pending.
-db.sequelize
-  .sync({ alter: { drop: false } })
-  .then(() => assertNoPendingMigrations(db.sequelize))
+// The schema is owned by api/migrations/, which the migrate service applies before this
+// server starts (see docker-compose.yml). The server does not change the schema itself; it
+// only refuses to start if a migration is still pending.
+assertNoPendingMigrations(db.sequelize)
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}.`);

@@ -3,27 +3,16 @@
 // The unit tests mock the database, so they can assert which query is sent but never what
 // comes back. Search behaviour now lives in PostgreSQL (the generated search_tsv column,
 // websearch_to_tsquery, brc_prefix_tsquery, ts_rank_cd), which is exactly the part a mock
-// cannot reach. These tests apply the migrations, boot the schema the way server.js does,
-// load a handful of records through the real model, and assert on the results that come
-// back from the real service and the real HTTP route.
-//
-// The suite drops and recreates the datasets table, so it refuses to run unless
-// BIOENERGY_ORG_DB_NAME ends in "_test". See README.md "Testing" for how to run it.
-
-const DB_NAME = process.env.BIOENERGY_ORG_DB_NAME || "";
-if (!DB_NAME.endsWith("_test")) {
-  throw new Error(
-    `Refusing to run integration tests against database "${DB_NAME}": ` +
-      `BIOENERGY_ORG_DB_NAME must end in "_test" because this suite drops the datasets table.`
-  );
-}
+// cannot reach. These tests load a handful of records through the real model into a
+// migrated database (see support/database.js) and assert on the results that come back
+// from the real service and the real HTTP route. See README.md "Testing" for how to run it.
 
 const request = require("supertest");
 const db = require("../../app/models");
-const { createMigrator, assertNoPendingMigrations } = require("../../app/db/migrator");
 const datasetsService = require("../../app/services/datasetsService");
 const datasetRoutes = require("../../app/routes/dataset.routes");
 const { createApp } = require("../helpers/createApp");
+const { loadDatasets, closeDatabase } = require("./support/database");
 
 // Every record has a creator with a primaryContact key, so the key name is present in
 // every document. "primaryContact" must still match nothing.
@@ -78,18 +67,7 @@ async function search(params) {
 let app;
 
 beforeAll(async () => {
-  await db.sequelize.authenticate();
-
-  // Start from nothing so the run does not depend on what a previous one left behind.
-  await db.sequelize.query('DROP TABLE IF EXISTS datasets, "SequelizeMeta" CASCADE');
-  await db.sequelize.query("DROP FUNCTION IF EXISTS brc_prefix_tsquery(text)");
-
-  // The documented deploy sequence: migrate, then what server.js does at boot.
-  await createMigrator(db.sequelize).up();
-  await db.sequelize.sync({ alter: { drop: false } });
-  await assertNoPendingMigrations(db.sequelize);
-
-  await db.datasets.bulkCreate(
+  await loadDatasets(
     RECORDS.map(([uid, json, schema_version = "0.2.0"]) => ({
       uid,
       schema_version,
@@ -101,11 +79,9 @@ beforeAll(async () => {
   app.use("/api/datasets", datasetRoutes);
 });
 
-afterAll(async () => {
-  await db.sequelize.close();
-});
+afterAll(closeDatabase);
 
-describe("schema after migrate + sync", () => {
+describe("search schema", () => {
   it("has the generated search column, its GIN index and the prefix function", async () => {
     const columns = await db.sequelize.getQueryInterface().describeTable("datasets");
     expect(columns).toHaveProperty("search_tsv");
@@ -119,13 +95,6 @@ describe("schema after migrate + sync", () => {
       "SELECT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'brc_prefix_tsquery') AS exists"
     );
     expect(exists).toBe(true);
-  });
-
-  it("survives another sync({ alter }) at boot untouched", async () => {
-    await db.sequelize.sync({ alter: { drop: false } });
-
-    const columns = await db.sequelize.getQueryInterface().describeTable("datasets");
-    expect(columns).toHaveProperty("search_tsv");
   });
 
   it("computed the search column for a record with null species and contributors", async () => {
@@ -269,19 +238,5 @@ describe("GET /api/datasets", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.totalResults).toBe(0);
-  });
-});
-
-describe("startup check", () => {
-  it("refuses to start while a migration is pending, and passes once it is applied", async () => {
-    const migrator = createMigrator(db.sequelize);
-
-    await migrator.down();
-    await expect(assertNoPendingMigrations(db.sequelize)).rejects.toThrow(
-      /search-tsvector-and-index.*npm run migrate/
-    );
-
-    await migrator.up();
-    await expect(assertNoPendingMigrations(db.sequelize)).resolves.toBeUndefined();
   });
 });

@@ -20,8 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-schema support for views and data ingest / validation to support schema migration.
 - API endpoints for schema listing and retrieval with pagination.
 - MCP server for Agentic AI access.
-- Database migrations via Umzug for schema changes the model cannot express.
-- Integration test suite that runs migrations, search and the HTTP route.
+- Database migrations via Umzug, applied on every deploy by a one-shot `migrate` compose
+  service before the API starts. Migrations replace `sequelize.sync()` at boot.
+- Integration test suite that runs migrations, search and the HTTP route, with shared
+  database setup and a `.env.test.sample` for a local test database.
 - Full text search index GIN indexing covering dataset fields.
 
 ### Fixed
