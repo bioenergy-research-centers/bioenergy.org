@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP server for Agentic AI access.
 - Database migrations via Umzug, applied on every deploy by a one-shot `migrate` compose
   service before the API starts. Migrations replace `sequelize.sync()` at boot.
+- `deploy.sh`: builds, migrates, then restarts, so a failed migration leaves the running
+  API serving.
 - Integration test suite that runs migrations, search and the HTTP route, with shared
   database setup and a `.env.test.sample` for a local test database.
 - Full text search index GIN indexing covering dataset fields.

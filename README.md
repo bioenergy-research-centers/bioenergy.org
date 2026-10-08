@@ -47,6 +47,7 @@ The following command will run a postgres container with the password `mysecretp
   - To run the application in development mode, run `docker compose -f docker-compose.dev.yml up --build --watch`. This will start the client and API in development mode with hot reloading.
   - You can run `docker-compose down` to stop the application and destroy the containers and volumes.
   - Running `docker-compose up --build` will rebuild the containers and restart the application.
+  - To deploy a new version, run `./deploy.sh` from the root directory. It builds the images, applies database migrations, then restarts the application; see [Database migrations](#database-migrations).
 
 ### Database migrations
 
@@ -54,13 +55,17 @@ The database schema is defined by the migration files in `api/migrations/`, appl
 
 Each migration runs in a single transaction, so a failure part-way leaves the schema unchanged and the migration still pending. Applied migrations are recorded in the `SequelizeMeta` table, so the `migrate` service is a no-op when nothing is pending. Runs take a PostgreSQL advisory lock, so two runs that overlap apply each migration once.
 
-**Deploying.** `docker compose up -d --build` migrates and starts everything. Compose replaces the running `api` container before the migration finishes, so if a migration fails, the API stays down until it is fixed. To keep the current version serving if a migration fails, migrate first:
+**Deploying.** Run `./deploy.sh` from the repository root. It runs three steps, stopping at the first that fails:
 
 ```bash
-docker compose build
-docker compose run --rm migrate   # stops here, old api still serving, if a migration fails
-docker compose up -d
+docker compose build              # build the new images; the running containers are untouched
+docker compose run --rm migrate   # apply pending migrations
+docker compose up -d              # replace the containers with the new version
 ```
+
+If a migration fails, the deploy stops before `up`, and the API that was already running keeps serving the previous version against the unchanged schema. Fix the migration and run `./deploy.sh` again.
+
+`docker compose up -d --build` on its own also migrates before starting the new API, but compose stops the running `api` container first. If a migration fails that way, the API stays down until the migration is fixed.
 
 Other migration commands:
 
