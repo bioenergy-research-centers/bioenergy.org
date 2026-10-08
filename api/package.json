@@ -8,7 +8,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.js",
-    "migrate": "node scripts/migrate.js up",
+    "migrate": "node scripts/migrate.js",
     "migrate:down": "node scripts/migrate.js down",
     "migrate:pending": "node scripts/migrate.js pending",
     "migrate:executed": "node scripts/migrate.js executed"
