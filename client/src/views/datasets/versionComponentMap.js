@@ -7,7 +7,7 @@ import Dataset_0_2_0 from "./Dataset_0_2_0.vue";
 // Any non-matching version will fallback to the default version
 const versionMappings = [
   { versions: ['default', '0.1.12', '0.1.15'], component: Dataset_0_1_0 },
-  { versions: ['0.2.0'], component: Dataset_0_2_0 },
+  { versions: ['0.2.0', '0.2.1'], component: Dataset_0_2_0 },
 ];
 
 // Build lookup table from version mappings
