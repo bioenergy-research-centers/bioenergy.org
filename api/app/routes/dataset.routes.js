@@ -52,8 +52,8 @@
  *       type: object
  *       description: >-
  *         Present on list items only when highlight=true and a text query is given. Matched words are
- *         wrapped in <mark>…</mark>. Only fields that matched are present; an empty object means the
- *         match was in a field that is not shown, such as keywords or species.
+ *         wrapped in <mark>…</mark>. Only fields that matched are present. Every indexed field is covered,
+ *         so each result explains its match.
  *       properties:
  *         title:
  *           type: string
@@ -75,11 +75,23 @@
  *           items:
  *             type: string
  *           description: Names of contributors that matched the query.
+ *         matchedIn:
+ *           type: object
+ *           description: >-
+ *             Matches in the other indexed fields, as field name to a list of distinct matching values with
+ *             matched words marked. Keys appear only when they matched: datasetName, identifier, keywords,
+ *             species, strains, topic, theme, journal_name, brc, repository, analysisType.
+ *           additionalProperties:
+ *             type: array
+ *             items:
+ *               type: string
  *       example:
  *         title: <mark>Lignin</mark> degradation in switchgrass
  *         snippet: … enzymatic breakdown of <mark>lignin</mark> polymers …
  *         snippetField: description
  *         creators: [Alex Creator]
+ *         matchedIn:
+ *           keywords: [<mark>lignin</mark> modification]
  *     DatasetSearchResponse:
  *       type: object
  *       properties:

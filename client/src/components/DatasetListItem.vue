@@ -12,6 +12,51 @@ const props = defineProps(['item']);
 // What matched a text search (see SearchHighlights in the API docs). Empty when browsing.
 const highlights = computed(() => props.item.highlights ?? {});
 
+// Indexed fields a list item does not show, in display order. When nothing the item shows
+// is marked, a match in one of them is listed on an "Also matched" line so the result still
+// says why it was found. Analysis type and repository are shown, so they are marked in place.
+const ALSO_MATCHED_FIELDS = [
+  ['datasetName', 'Dataset name'],
+  ['identifier', 'Identifier'],
+  ['keywords', 'Keywords'],
+  ['species', 'Species'],
+  ['strains', 'Strains'],
+  ['topic', 'Topic'],
+  ['theme', 'Theme'],
+  ['journal_name', 'Journal'],
+  ['brc', 'BRC'],
+];
+const ALSO_MATCHED_MAX_VALUES = 3;
+
+// A value identical to the title (often the case for datasetName) would only repeat it.
+const unmarked = (html) => html.replace(/<\/?mark>/g, '');
+
+const markedAnalysisType = computed(() => highlights.value.matchedIn?.analysisType?.[0]);
+const markedRepository = computed(() => highlights.value.matchedIn?.repository?.[0]);
+
+// Whether something already on screen is marked, which explains the match by itself.
+const hasVisibleMatch = computed(() => {
+  const h = highlights.value;
+  return Boolean(
+    h.title || h.snippet || h.creators?.length || h.contributors?.length ||
+    markedAnalysisType.value || markedRepository.value
+  );
+});
+
+const alsoMatched = computed(() => hasVisibleMatch.value ? [] :
+  ALSO_MATCHED_FIELDS.flatMap(([key, label]) => {
+    const values = (highlights.value.matchedIn?.[key] ?? [])
+      .filter((value) => unmarked(value) !== props.item.title);
+    if (values.length === 0) return [];
+    return [{
+      key,
+      label,
+      shown: values.slice(0, ALSO_MATCHED_MAX_VALUES),
+      more: values.length - ALSO_MATCHED_MAX_VALUES,
+    }];
+  })
+);
+
 // Creators not shown in the trimmed author list. A matched author past the first three is
 // shown, so is not counted here.
 const hiddenAuthorCount = computed(() => {
@@ -85,15 +130,31 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
       </div>
     </div>
 
+    <div v-if="alsoMatched.length" class="row">
+      <div class="small text-muted also-matched mb-2">
+        Also matched —
+        <template v-for="(field, fieldIndex) in alsoMatched" :key="field.key">
+          <span v-if="fieldIndex > 0"> · </span>
+          {{ field.label }}:
+          <template v-for="(value, valueIndex) in field.shown" :key="field.key + valueIndex">
+            <span v-if="valueIndex > 0">, </span><span v-html="sanitizeDatasetHtml(value)"></span>
+          </template>
+          <span v-if="field.more > 0"> +{{ field.more }} more</span>
+        </template>
+      </div>
+    </div>
+
     <div class="row mt-1 fs-6">
       <div class="col-12 col-md">
-        <span v-if="item.analysisType && item.analysisType.toLowerCase() !== 'not specified'" class="text-muted fw-lighter">
+        <span v-if="markedAnalysisType" class="text-muted fw-lighter" v-html="sanitizeDatasetHtml(markedAnalysisType)"></span>
+        <span v-else-if="item.analysisType && item.analysisType.toLowerCase() !== 'not specified'" class="text-muted fw-lighter">
           {{ item.analysisType }}
         </span>
       </div>
       <div class="col-12 col-md-auto text-md-end ps-md-3">
         <div class="d-inline-flex flex-row-reverse flex-md-row flex-wrap gap-1 justify-content-start justify-content-md-end">
-          <span class="badge bg-light text-muted fw-light">{{ item.repository }}</span>
+          <span v-if="markedRepository" class="badge bg-light text-muted fw-light" v-html="sanitizeDatasetHtml(markedRepository)"></span>
+          <span v-else class="badge bg-light text-muted fw-light">{{ item.repository }}</span>
           <span class="badge bg-brc-light-blue fw-light text-muted">{{ item.date }}</span>
         </div>
       </div>

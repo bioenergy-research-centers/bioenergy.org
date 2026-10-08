@@ -3,6 +3,7 @@ const {
   toHighlights,
   withEllipses,
   buildHighlightSql,
+  MATCHED_IN_FIELDS,
 } = require("../../app/services/searchHighlights");
 
 // What ts_headline returns for a field with no match: the text, unmarked.
@@ -15,6 +16,7 @@ const row = (overrides = {}) => ({
   abstract_source: null,
   creators: null,
   contributors: null,
+  matched_in: {},
   ...overrides,
 });
 
@@ -58,6 +60,16 @@ describe("toHighlights", () => {
   it("leaves out empty name lists", () => {
     expect(toHighlights(row({ creators: [], contributors: [] }))).toEqual({});
   });
+
+  it("reports matches in fields the list item does not show", () => {
+    const matched = { keywords: ["<mark>lignin</mark> degradation"], identifier: ["<mark>GSE1</mark>"] };
+
+    expect(toHighlights(row({ matched_in: matched }))).toEqual({ matchedIn: matched });
+  });
+
+  it("leaves out matchedIn when nothing else matched", () => {
+    expect(toHighlights(row({ matched_in: null }))).toEqual({});
+  });
 });
 
 describe("withEllipses", () => {
@@ -82,6 +94,15 @@ describe("buildHighlightSql", () => {
   it("calls the tsquery function the search used", () => {
     expect(buildHighlightSql("brc_prefix_tsquery")).toContain("brc_prefix_tsquery(:text)");
     expect(buildHighlightSql("websearch_to_tsquery")).toContain("websearch_to_tsquery('english', :text)");
+  });
+
+  it("reports every matchedIn field by its indexed path", () => {
+    const sql = buildHighlightSql("brc_prefix_tsquery");
+
+    for (const [key, path] of MATCHED_IN_FIELDS) {
+      expect(sql).toContain(`'${key}',`);
+      expect(sql).toContain(`jsonb_path_query(d."json", '${path}')`);
+    }
   });
 
   it("refuses any other function name, since it is placed in the SQL", () => {

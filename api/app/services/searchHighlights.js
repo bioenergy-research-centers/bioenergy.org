@@ -6,6 +6,10 @@
 // same 'english' configuration and query as the search itself, so stemmed and prefix
 // matches are marked ("fermentations" marks "fermentation", "ligni" marks "lignin").
 //
+// Every field the search index reads is covered: the list item's own fields (title,
+// description, creators) and, under `matchedIn`, the rest, so a result always says why it
+// matched. tests/integration/search.test.js checks this against the live index definition.
+//
 // A field counts as matched when ts_headline marked at least one word in it. That is looser
 // than `@@`, deliberately: in "lignin myers" the title matches "lignin" and the author
 // matches "myers", and neither field matches both words on its own.
@@ -37,6 +41,38 @@ const matchedNames = (path) => `
    WHERE jsonb_typeof(person) = 'object'
      AND ts_headline('english', person->>'name', q.query, '${WHOLE_FIELD}') LIKE '%${START}%')`;
 
+// Indexed fields reported under `matchedIn`, as [key, jsonpath]. The paths are the ones the
+// search_tsv column indexes (see the search migration). jsonpath's default lax mode skips
+// values whose shape does not fit the path instead of raising, as the index does.
+const MATCHED_IN_FIELDS = [
+  ["datasetName", "$.datasetName"],
+  ["identifier", "$.identifier"],
+  ["keywords", "$.keywords[*]"],
+  ["species", "$.species[*].scientificName"],
+  ["strains", "$.species[*].strains[*]"],
+  ["topic", "$.topic[*]"],
+  ["theme", "$.theme[*]"],
+  ["journal_name", "$.journal_name"],
+  ["brc", "$.brc"],
+  ["repository", "$.repository"],
+  ["analysisType", "$.analysisType"],
+];
+
+// The distinct values at `path` that contain a match, each with its matched words marked.
+const matchedValues = (path) => `
+  (SELECT jsonb_agg(DISTINCT marked)
+   FROM (
+     SELECT ts_headline('english', item #>> '{}', q.query, '${WHOLE_FIELD}') AS marked
+     FROM jsonb_path_query(d."json", '${path}') AS item
+     WHERE jsonb_typeof(item) IN ('string', 'number')
+   ) AS values_at_path
+   WHERE marked LIKE '%${START}%')`;
+
+// One object of field -> marked values; fields with no match are dropped.
+const matchedIn = () => `jsonb_strip_nulls(jsonb_build_object(${
+  MATCHED_IN_FIELDS.map(([key, path]) => `'${key}', ${matchedValues(path)}`).join(",")
+}))`;
+
 function buildHighlightSql(queryFunction) {
   const querySql = QUERY_FUNCTIONS[queryFunction];
   if (!querySql) throw new Error(`Unsupported highlight query function: ${queryFunction}`);
@@ -49,7 +85,8 @@ function buildHighlightSql(queryFunction) {
       ts_headline('english', d."json"->>'abstract', q.query, '${PASSAGES}') AS abstract,
       d."json"->>'abstract' AS abstract_source,
       ${matchedNames("creator")} AS creators,
-      ${matchedNames("contributors")} AS contributors
+      ${matchedNames("contributors")} AS contributors,
+      ${matchedIn()} AS matched_in
     FROM datasets d
     CROSS JOIN (SELECT ${querySql} AS query) q
     WHERE d.uid IN (:uids)`;
@@ -70,8 +107,7 @@ function withEllipses(passages, source) {
 }
 
 // Turns one result row into the `highlights` object for that dataset. Only fields that
-// matched are present, so an empty object means nothing visible matched (for example a
-// match in keywords or species only).
+// matched are present.
 function toHighlights(row) {
   const highlights = {};
 
@@ -88,6 +124,7 @@ function toHighlights(row) {
 
   if (row.creators?.length) highlights.creators = row.creators;
   if (row.contributors?.length) highlights.contributors = row.contributors;
+  if (row.matched_in && Object.keys(row.matched_in).length > 0) highlights.matchedIn = row.matched_in;
 
   return highlights;
 }
@@ -105,4 +142,4 @@ async function fetchSearchHighlights(sequelize, query, uids) {
   return new Map(rows.map((row) => [row.uid, toHighlights(row)]));
 }
 
-module.exports = { fetchSearchHighlights, toHighlights, withEllipses, buildHighlightSql };
+module.exports = { fetchSearchHighlights, toHighlights, withEllipses, buildHighlightSql, MATCHED_IN_FIELDS };

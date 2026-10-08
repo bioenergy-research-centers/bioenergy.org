@@ -64,6 +64,25 @@ const RECORDS = [
       "were taken monthly and stored frozen for later analysis by the partner laboratories.",
     creator: ["Ana Ames", "Ben Bose", "Cy Chu", "Di Diaz", "Quillon Vasquez"].map((name) => ({ name })),
   }],
+  ["EVERY_FIELD", {
+    // One made-up word per indexed field, so each query below matches this record through
+    // exactly one field. The abstract differs from the description on purpose.
+    title: "Quollfield survey",
+    date: "2018-01-01",
+    datasetName: "Quokkaset series",
+    description: "Tarsierdesc measurements.",
+    abstract: "Possumabstract measurements.",
+    keywords: ["wombatword"],
+    species: [{ scientificName: "Numbatus fakeus", strains: ["dingostrain"] }],
+    creator: [{ name: "Cuscus Creatorson" }],
+    contributors: [{ name: "Bandicoot Helper" }],
+    identifier: "GSE999001",
+    journal_name: "Echidna Letters",
+    repository: "Wallaby Archive",
+    analysisType: "Bilbyomics",
+    topic: ["Kookatopic"],
+    theme: ["Emutheme"],
+  }],
   // Unsupported schema version: excluded from every search by the supportedOnly scope.
   ["LEGACY_LIGNIN", { title: "Lignin legacy record", date: "2020-01-01" }, "0.0.8"],
 ];
@@ -289,9 +308,56 @@ describe("highlights", () => {
     expect(snippet.endsWith(" …")).toBe(true);
   });
 
-  it("are empty when the match is in a field the list does not show", async () => {
-    // MG1655 is a species strain: searchable, but not part of a list item.
-    expect((await highlights("MG1655")).LIGNIN_TITLE).toEqual({});
+  // For each indexed field: a query that matches EVERY_FIELD only through that field, and the
+  // highlights key that must explain the match.
+  const FIELD_CASES = {
+    title: ["quollfield", (h) => h.title],
+    description: ["tarsierdesc", (h) => h.snippetField === "description" && h.snippet],
+    abstract: ["possumabstract", (h) => h.snippetField === "abstract" && h.snippet],
+    "creator.name": ["cuscus", (h) => h.creators],
+    "contributors.name": ["bandicoot", (h) => h.contributors],
+    datasetName: ["quokkaset", (h) => h.matchedIn?.datasetName],
+    keywords: ["wombatword", (h) => h.matchedIn?.keywords],
+    "species.scientificName": ["numbatus", (h) => h.matchedIn?.species],
+    "species.strains": ["dingostrain", (h) => h.matchedIn?.strains],
+    identifier: ["GSE999001", (h) => h.matchedIn?.identifier],
+    journal_name: ["echidna", (h) => h.matchedIn?.journal_name],
+    brc: ["JBEI", (h) => h.matchedIn?.brc],
+    repository: ["wallaby", (h) => h.matchedIn?.repository],
+    analysisType: ["bilbyomics", (h) => h.matchedIn?.analysisType],
+    topic: ["kookatopic", (h) => h.matchedIn?.topic],
+    theme: ["emutheme", (h) => h.matchedIn?.theme],
+  };
+
+  it("cover every field the search index reads", async () => {
+    // Read the field list from the live generated column, so a field added to the index by
+    // any migration fails here until highlighting covers it.
+    const [[{ expression }]] = await db.sequelize.query(`
+      SELECT pg_get_expr(d.adbin, d.adrelid) AS expression
+      FROM pg_attrdef d
+      JOIN pg_attribute a ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+      WHERE a.attrelid = 'datasets'::regclass AND a.attname = 'search_tsv'`);
+    const scalarFields = [...expression.matchAll(/->> '(\w+)'/g)].map((m) => m[1]);
+    const pathFields = [...expression.matchAll(/'\$\.([^']*)'::jsonpath/g)]
+      .map((m) => m[1].replaceAll('"', "").replaceAll("[*]", ""));
+
+    expect([...new Set([...scalarFields, ...pathFields])].sort()).toEqual(Object.keys(FIELD_CASES).sort());
+  });
+
+  it.each(Object.entries(FIELD_CASES))("explain a match through %s", async (_field, [query, explained]) => {
+    const found = await highlights(query);
+
+    expect(found).toHaveProperty("EVERY_FIELD");
+    expect(explained(found.EVERY_FIELD), JSON.stringify(found.EVERY_FIELD)).toBeTruthy();
+  });
+
+  it("list each matched value once, marked", async () => {
+    const found = await highlights("wombatword OR kookatopic");
+
+    expect(found.EVERY_FIELD.matchedIn).toEqual({
+      keywords: ["<mark>wombatword</mark>"],
+      topic: ["<mark>Kookatopic</mark>"],
+    });
   });
 
   it("are left out unless requested, and for the detail shape", async () => {

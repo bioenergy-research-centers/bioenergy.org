@@ -28,7 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   database setup and a `.env.test.sample` for a local test database.
 - Full text search index GIN indexing covering dataset fields.
 - Search results mark what matched the query: title words, a passage of the description,
-  matching authors (even when the author list is trimmed) and matching contributors (#268).
+  matching authors (even when the author list is trimmed), matching contributors, and an
+  "Also matched" line for every other indexed field, so each result says why it matched (#268).
 
 ### Fixed
 
