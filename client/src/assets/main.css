@@ -1,6 +1,12 @@
 @import url("bootstrap/dist/css/bootstrap.min.css");
 @import url("bootstrap-icons/font/bootstrap-icons.css");
 
+:root {
+  /* Background for <mark> and .mark, which Bootstrap colours from this variable.
+     Search results use it to mark what matched a query. */
+  --bs-highlight-bg: #ffdc73;
+}
+
 body {
   background-color: #f7f7f7;
   font-family: helvetica, arial, sans-serif;

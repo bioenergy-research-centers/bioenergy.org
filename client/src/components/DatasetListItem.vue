@@ -168,8 +168,9 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
   overflow-wrap: anywhere;
 }
 
-/* Search matches. Bootstrap's default mark padding spreads marked words apart. */
+/* Search matches, including names marked inside AuthorList. The colour is set site-wide
+   in assets/main.css. */
 .list-group-item-content :deep(mark) {
-  padding: 0 0.1em;
+  padding: 0.2rem 0.1em;
 }
 </style>
