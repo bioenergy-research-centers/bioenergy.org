@@ -48,13 +48,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // use sequelize
 const db = require("./app/models");
-// TODO: replace/update with migrations
-//db.sequelize.sync();
-db.sequelize.sync({ alter: { drop: false } });
-// For development
-// db.sequelize.sync({ force: true }).then(() => {
-//   console.log("Drop and re-sync db.");
-// });
+const { assertNoPendingMigrations } = require("./app/db/migrator");
 
 // register routes after global middleware
 // simple route
@@ -102,6 +96,16 @@ app.use(
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-});
+// The schema is owned by api/migrations/, which the migrate service applies before this
+// server starts (see docker-compose.yml). The server does not change the schema itself; it
+// only refuses to start if a migration is still pending.
+assertNoPendingMigrations(db.sequelize)
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}.`);
+    });
+  })
+  .catch((err) => {
+    console.error("Database not ready; not starting server.", err);
+    process.exit(1);
+  });

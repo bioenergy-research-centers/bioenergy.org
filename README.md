@@ -47,10 +47,80 @@ The following command will run a postgres container with the password `mysecretp
   - To run the application in development mode, run `docker compose -f docker-compose.dev.yml up --build --watch`. This will start the client and API in development mode with hot reloading.
   - You can run `docker-compose down` to stop the application and destroy the containers and volumes.
   - Running `docker-compose up --build` will rebuild the containers and restart the application.
+  - To deploy a new version, run `./deploy.sh` from the root directory. It builds the images, applies database migrations, then restarts the application; see [Database migrations](#database-migrations).
+
+### Database migrations
+
+The database schema is defined by the migration files in `api/migrations/`, applied by [Umzug](https://github.com/sequelize/umzug) in filename order. Both compose files include a one-shot `migrate` service that applies any pending migrations and exits. The `api` and `api-cron-sidecar` services wait for it to finish successfully, so `docker compose up` always migrates before new code starts. The API also checks at startup that nothing is pending, and exits naming the pending migrations if anything is.
+
+Each migration runs in a single transaction, so a failure part-way leaves the schema unchanged and the migration still pending. Applied migrations are recorded in the `SequelizeMeta` table, so the `migrate` service is a no-op when nothing is pending. Runs take a PostgreSQL advisory lock, so two runs that overlap apply each migration once.
+
+**Deploying.** Run `./deploy.sh` from the repository root. It runs three steps, stopping at the first that fails:
+
+```bash
+docker compose build              # build the new images; the running containers are untouched
+docker compose run --rm migrate   # apply pending migrations
+docker compose up -d              # replace the containers with the new version
+```
+
+If a migration fails, the deploy stops before `up`, and the API that was already running keeps serving the previous version against the unchanged schema. Fix the migration and run `./deploy.sh` again.
+
+`docker compose up -d --build` on its own also migrates before starting the new API, but compose stops the running `api` container first. If a migration fails that way, the API stays down until the migration is fixed.
+
+Other migration commands:
+
+```bash
+# List pending / applied migrations
+docker compose run --rm migrate npm run migrate:pending
+docker compose run --rm migrate npm run migrate:executed
+
+# Revert the most recent migration
+docker compose run --rm migrate npm run migrate:down
+```
+
+**Writing a migration.** Every schema change is a migration, including adding or changing an attribute in `api/app/models/`. The server no longer runs `sequelize.sync()`. `api/tests/integration/migrations.test.js` fails if the model and the migrated table disagree. Name new files with a sortable timestamp prefix, following the existing files. Migrations run while the previous version of the API is still serving, so make them changes the running code can tolerate: add a column before the code reads it, and drop one only in a later release.
+
+In development, `docker compose -f docker-compose.dev.yml up --build --watch` migrates on startup. After adding a migration while the stack is running, apply it with `docker compose -f docker-compose.dev.yml run --rm --build migrate`.
+
+### Dataset text search
+
+Free-text search runs against `search_tsv`, a generated `tsvector` column maintained by PostgreSQL and backed by a GIN index. It indexes named fields rather than the whole JSON document, so schema key names are no longer matched as content.
+
+Supported query syntax:
+
+| Query | Behavior |
+| --- | --- |
+| `lignin degradation` | All terms must match. Partial words match as prefixes, so `ligni` finds `lignin`. |
+| `"cell wall"` | Quoted text matches the exact phrase. |
+| `ethanol OR biomass` | Either term matches. |
+| `ethanol NOT corn`, `ethanol -corn`, `ethanol ! corn` | Excludes the second term. |
+
+Results are ordered by relevance (`ts_rank_cd`) when a search term is present, and by date when browsing without one. Matches in a dataset title rank above matches in its description or abstract.
+
+Two behaviors changed with the move to PostgreSQL's `websearch_to_tsquery`:
+
+- Parentheses no longer group sub-expressions. `(a OR b) c` is read as `a OR (b AND c)`.
+- Terms are stemmed, so `fermentations` also matches `fermentation`.
+
+The searchable field list is fixed in the migration that defines the column. Making a new field searchable requires a migration, so the index cannot drift from the query layer silently.
 
 ### Testing
 
-Tests use [Vitest](https://vitest.dev/) and run inside Docker containers. No database connection is required.
+Tests use [Vitest](https://vitest.dev/) and run inside Docker containers. The unit suites need no database connection.
+
+The API also has an integration suite, `api/tests/integration/`, that runs the real migrations, model, search service and HTTP route against a real PostgreSQL and asserts on the results that come back. It is what proves search behaviour (prefix matching, phrases, stemming, ranking, exclusion) actually works, since that logic lives in PostgreSQL where the mocked unit tests cannot reach it. It also checks that the migrated table matches the model. CI runs it against a `postgres:16` service container.
+
+To run it locally against a test database next to your dev database, copy `.env.test.sample` to `.env.test.local` (git-ignored), create the database it names, and layer it over `.env`:
+
+```bash
+cp .env.test.sample .env.test.local
+createdb -O bioenergy bioenergy_org_test
+
+docker compose --env-file .env --env-file .env.test.local -f docker-compose.dev.yml \
+  run --rm --build --no-deps api npm run test:integration
+```
+
+Each run wipes the test database and applies every migration once (`api/tests/integration/support/globalSetup.js`). Each test file then loads its own records with `loadDatasets()` from `support/database.js` and closes the connection with `closeDatabase()`. Because the database is wiped, the suite refuses to run unless the database name ends in `_test`, and the test user must own the database.
 
 ```bash
 # Run API tests

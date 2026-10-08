@@ -1,4 +1,4 @@
-const { defineConfig } = require("vitest/config");
+const { defineConfig, configDefaults } = require("vitest/config");
 
 module.exports = defineConfig({
   test: {
@@ -7,6 +7,8 @@ module.exports = defineConfig({
     root: ".",
     // Add new test files under tests/ following the *.test.js convention
     include: ["tests/**/*.test.js"],
+    // Integration tests need a real database; see vitest.integration.config.js
+    exclude: [...configDefaults.exclude, "tests/integration/**"],
     // Runs before each test file — sets environment variables and other global test state
     setupFiles: ["tests/setup.js"],
     coverage: {

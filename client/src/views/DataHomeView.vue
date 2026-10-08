@@ -469,8 +469,8 @@ const applySuggestedQuery = () => {
                 <div>
                   <h5 class="subsection-header">Advanced Searching with Boolean Logic</h5>
                   <p>
-                    Instantly pinpoint relevant studies using powerful AND/OR/NOT filters,
-                    turning complex queries into precise results.
+                    Instantly pinpoint relevant studies using powerful AND/OR/NOT filters
+                    and "quoted phrases", turning complex queries into precise results.
                   </p>
                 </div>
               </div>

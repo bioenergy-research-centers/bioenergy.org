@@ -1,6 +1,20 @@
 services:
+  # Applies pending database migrations (api/migrations/), then exits. The api and the cron
+  # sidecar wait for it to succeed, so new code never starts against an unmigrated schema.
+  # `docker compose up` replaces the running api before this finishes, so a failed migration
+  # leaves the api stopped. To keep the current api serving if a migration fails, run this
+  # step on its own first; see README.md "Deploying".
+  migrate:
+    build: ./api
+    command: ["npm", "run", "migrate"]
+    restart: "no"
+    env_file:
+      - .env
   api:
     build: ./api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
     env_file:
       - .env
@@ -10,6 +24,9 @@ services:
     tty: true
   api-cron-sidecar:
     build: ./api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
     command: ["sh", "scripts/start_cron.sh"]
     env_file:

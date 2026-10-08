@@ -23,10 +23,11 @@
 - Search and filter behavior usually spans both tiers:
   - API query handling under `api/app/routes/` and related services/controllers.
   - Client state and URL sync in `client/src/store/searchStore.js` and `client/src/router/`.
-- Dataset schema support typically requires coordinated updates to both:
+- Dataset schema support typically requires coordinated updates to:
   - API schema allowlist and snapshots under `api/app/schemas/`.
   - Client dataset-version mapping in `client/src/views/datasets/versionComponentMap.js`.
-- Dataset persistence and response shaping belong in the API model layer, especially `api/app/models/dataset.model.js`.
+  - The free-text search index, **only if** the new version adds, renames, or retypes a field that should be searchable. The indexed field list is the `search_tsv` expression in `api/migrations/2026.08.11T00.10.00.search-tsvector-and-index.js`, asserted in `api/tests/migrations/search-tsvector-and-index.test.js`. Changing it requires a *new* migration that drops and recreates the column and index — an applied migration file must not be edited. While two versions are both supported, index a renamed field under both names.
+- Dataset persistence and response shaping belong in the API model layer, especially `api/app/models/dataset.model.js`. Every schema change, including adding or changing a model attribute, needs a migration in `api/migrations/`; the server does not run `sequelize.sync()`. `api/tests/integration/migrations.test.js` fails when the model and the migrated table disagree.
 - Contact form and issue-sync behavior spans `client/src/views/ContactView.vue` plus the `/api/messages` route and its supporting services.
 - MCP changes should usually be thin API-adapter changes in `mcp/src/`; business logic should stay in the API.
 
@@ -36,6 +37,10 @@
 - Do not bypass dataset model sanitization or change dataset response shape casually; downstream client rendering depends on `toClientJSON()` output.
 - Treat schema snapshots under `api/app/schemas/` as pinned runtime assets. Update them deliberately and keep supported-version metadata aligned with client rendering support.
 - Imported BRC feeds come from external JSON endpoints and may contain inconsistent data. Prefer defensive handling over assuming stable source formatting.
+- Migrations run against live data. Prefer additive, reversible changes, and treat any migration that drops or rewrites a column as a change requiring explicit review.
+- Schema drift never errors in the search path. A key the index does not name simply returns no matches — no exception, no rejected import. That makes a stale index silent: records on a new schema version quietly stop matching while older records still do. Treat the indexed field list as part of the schema-update checklist, not something to notice later.
+- Migrations are the only way the schema changes. They run on every deploy, before the new api starts, so a migration ships with the code that needs it. Do not put DDL anywhere else: not in application code, not in scripts, and not as SQL in documentation or a PR for someone to run by hand.
+- The previous api keeps serving while a migration runs and, if the deploy follows the README, after one fails. Write migrations the running code can tolerate: add a column before the code reads it, and remove one only in a later release after the code has stopped using it.
 
 ## Build, test, and lint commands
 
@@ -88,6 +93,16 @@
 - For client-only changes, start with the affected Vitest file or client suite from `client/`.
 - Use Docker-based commands when the change depends on container behavior, Compose wiring, or the documented team workflow.
 - When changing schema support, import behavior, or validation workflow, also update the relevant documentation in `README.md` or adjacent docs if user-facing guidance changed.
+
+### Database migrations
+
+- Migrations live in `api/migrations/`. The one-shot `migrate` service in both compose files applies them, and the api and cron sidecar wait for it to succeed, so `docker compose up` migrates before starting new code. At startup the API also checks that none are pending and exits naming them if so.
+- Apply manually: `docker compose run --rm --build migrate`
+- Inspect state: `docker compose run --rm migrate npm run migrate:pending` / `npm run migrate:executed`
+- Revert the most recent migration: `docker compose run --rm migrate npm run migrate:down`
+- Each migration runs in one transaction; a failure rolls back the whole file. Applied migrations are tracked in the `SequelizeMeta` table. Runs take a PostgreSQL advisory lock, so overlapping runs apply each migration once. Name new files with a sortable timestamp prefix so they run in order.
+- The runner is configured in `api/app/db/migrator.js`; `api/scripts/migrate.js` is the CLI entry point.
+- Migration files are unit-tested with a mocked `queryInterface` (statement shape) and exercised for real by `api/tests/integration/`, which runs them against PostgreSQL. A change to search behaviour or to a migration should update both. Integration test files share the database setup in `api/tests/integration/support/database.js`: the schema is wiped and migrated once per run, and each file loads its own records with `loadDatasets()`.
 
 ### Data operations
 

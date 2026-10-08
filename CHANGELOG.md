@@ -20,6 +20,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-schema support for views and data ingest / validation to support schema migration.
 - API endpoints for schema listing and retrieval with pagination.
 - MCP server for Agentic AI access.
+- Database migrations via Umzug, applied on every deploy by a one-shot `migrate` compose
+  service before the API starts. Migrations replace `sequelize.sync()` at boot.
+- `deploy.sh`: builds, migrates, then restarts, so a failed migration leaves the running
+  API serving.
+- Integration test suite that runs migrations, search and the HTTP route, with shared
+  database setup and a `.env.test.sample` for a local test database.
+- Full text search index GIN indexing covering dataset fields.
+
+### Fixed
+
+- Text searches containing unbalanced parentheses, colons, or other punctuation returned
+  HTTP 500. Such queries are now parsed safely.
 
 [unreleased]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.2...HEAD
 [0.0.2]: https://github.com/bioenergy-research-centers/bioenergy.org/compare/v0.0.1...v0.0.2
