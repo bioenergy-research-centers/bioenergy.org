@@ -24,6 +24,12 @@ export const useSearchStore = defineStore('searchStore', () => {
   const pageSize = ref(defaultPageSize);
   const totalPages = ref(1);
   const facets = ref({});
+  const facetsLoading = ref(false);
+  const facetsError = ref(null);
+  const lastFacetCriteriaKey = ref(null);
+  const activeFacetCriteriaKey = ref(null);
+  let resultRequestId = 0;
+  let facetRequestId = 0;
   const filterChanges = ref(false);
 
   // Helper Function - reduce boilerplate for filter terms
@@ -74,8 +80,16 @@ export const useSearchStore = defineStore('searchStore', () => {
     pageSize.value = defaultPageSize;
     totalPages.value = 1;
     facets.value = {};
+    facetsLoading.value = false;
+    facetsError.value = null;
+    lastFacetCriteriaKey.value = null;
+    activeFacetCriteriaKey.value = null;
+    resultRequestId += 1;
+    facetRequestId += 1;
     totalResults.value = 0;
     searchResults.value = [];
+    searchResultsLoading.value = false;
+    searchResultsError.value = null;
     filterChanges.value = true;
     resultPage.value = 1;
     fromDate.value = '';
@@ -85,14 +99,17 @@ export const useSearchStore = defineStore('searchStore', () => {
   // Retrieve results matching current search filters and store in searchResults
   // pass updateURL false to skip syncing changes to URL and potential route navigation
   async function runSearch(updateURL = true) {
+    const requestId = ++resultRequestId;
     searchResultsLoading.value = true;
     searchResultsError.value = null;
+    let currentFacetCriteriaKey = null;
 
     // reset page to 1 if there are pending filter changes
     if (filterChanges.value) { currentPage.value = 1; }
 
     // Update the query url to match the current search
     if (updateURL) { await this.applySearchToURL(); }
+    if (requestId !== resultRequestId) return;
 
     // track latest url params after any search changes
     // this value is used to re-apply url query state when routing back to search results.
@@ -103,8 +120,19 @@ export const useSearchStore = defineStore('searchStore', () => {
       if (dnaSequence.value) {
         // TODO setup pagination for Advanced search
         response = await DatasetDataService.runAdvancedSearch(searchTerm.value, this.dnaSequence);
+        if (requestId !== resultRequestId) return;
+        facets.value = {};
+        lastFacetCriteriaKey.value = null;
+        activeFacetCriteriaKey.value = null;
+        facetRequestId += 1;
+        facetsLoading.value = false;
       } else {
-        response = await DatasetDataService.getAll({
+        currentFacetCriteriaKey = facetCriteriaKey();
+        const shouldFetchFacets = (
+          currentFacetCriteriaKey !== lastFacetCriteriaKey.value &&
+          currentFacetCriteriaKey !== activeFacetCriteriaKey.value
+        );
+        const resultsRequest = DatasetDataService.getAll({
           page: currentPage.value,
           rows: pageSize.value,
           query: searchTerm.value,
@@ -112,6 +140,19 @@ export const useSearchStore = defineStore('searchStore', () => {
           from_date: fromDate.value || undefined,
           until_date: untilDate.value || undefined,
         });
+
+        if (shouldFetchFacets) {
+          fetchFacets({
+            criteriaKey: currentFacetCriteriaKey,
+            query: searchTerm.value,
+            filters: filters.value,
+            from_date: fromDate.value || undefined,
+            until_date: untilDate.value || undefined,
+          });
+        }
+
+        response = await resultsRequest;
+        if (requestId !== resultRequestId) return;
       }
       // Handle paginated response shape
       if (response.data && Array.isArray(response.data.items)) {
@@ -119,7 +160,6 @@ export const useSearchStore = defineStore('searchStore', () => {
         totalPages.value = response.data.totalPages || 1;
         resultPage.value = response.data.query.page;
         currentPage.value = response.data.query.page || currentPage.value;
-        facets.value = response.data.facets || {};
         totalResults.value = response.data.totalResults||0;
       } else {
         // Fallback for responses that return raw arrays
@@ -127,16 +167,61 @@ export const useSearchStore = defineStore('searchStore', () => {
         totalPages.value = 1;
         currentPage.value = 1;
         facets.value = {};
+        facetsLoading.value = false;
+        facetsError.value = null;
+        lastFacetCriteriaKey.value = null;
+        activeFacetCriteriaKey.value = null;
+        facetRequestId += 1;
         totalResults.value = response.data.length;
       }
     } catch (err) {
+      if (requestId !== resultRequestId) return;
       this.searchResults = [];
       console.error('error', err);
       searchResultsError.value = 'Failed to fetch search results.';
     } finally {
-      searchResultsLoading.value = false;
-       filterChanges.value = false;
+      if (requestId === resultRequestId) {
+        searchResultsLoading.value = false;
+        filterChanges.value = false;
+      }
     }
+  }
+
+  function fetchFacets({ criteriaKey, query, filters, from_date, until_date }) {
+    const requestId = ++facetRequestId;
+    facetsLoading.value = true;
+    facetsError.value = null;
+    activeFacetCriteriaKey.value = criteriaKey;
+
+    DatasetDataService.getFacets({
+      query,
+      filters,
+      from_date,
+      until_date,
+    }).then((facetResponse) => {
+      if (requestId !== facetRequestId) return;
+      facets.value = facetResponse.data || {};
+      lastFacetCriteriaKey.value = criteriaKey;
+    }).catch((err) => {
+      if (requestId !== facetRequestId) return;
+      console.error('facet error', err);
+      facetsError.value = 'Failed to fetch search facets.';
+      facets.value = {};
+      lastFacetCriteriaKey.value = null;
+    }).finally(() => {
+      if (requestId !== facetRequestId) return;
+      facetsLoading.value = false;
+      activeFacetCriteriaKey.value = null;
+    });
+  }
+
+  function facetCriteriaKey() {
+    return JSON.stringify({
+      q: searchTerm.value || '',
+      filters: filters.value || {},
+      from_date: fromDate.value || '',
+      until_date: untilDate.value || '',
+    });
   }
 
   // Update the URL to match the current state of this store
@@ -238,6 +323,8 @@ export const useSearchStore = defineStore('searchStore', () => {
     totalPages,
     totalResults,
     facets,
+    facetsLoading,
+    facetsError,
     fromDate,
     untilDate,
     // actions
