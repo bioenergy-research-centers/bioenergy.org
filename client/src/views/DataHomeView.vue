@@ -547,7 +547,6 @@ const applySuggestedQuery = () => {
   font-size: 2.85em;
 }
 .subsection-header {
-  color: #04652F;
   font-weight: 700;
 }
 .herospace {
