@@ -59,8 +59,9 @@ const RECORDS = [
 
 const SUPPORTED_COUNT = RECORDS.filter(([, , version]) => version !== "0.0.8").length;
 
+// Every search names a response shape (required since #264); list items carry the uid.
 async function search(params) {
-  const result = await datasetsService.searchLocalDatasets({ nofacets: true, ...params });
+  const result = await datasetsService.searchLocalDatasets({ shape: "list-item", ...params });
   return result.items.map((item) => item.uid);
 }
 
@@ -139,7 +140,7 @@ describe("plain terms", () => {
   it("do not match JSON key names", async () => {
     const result = await datasetsService.searchLocalDatasets({
       textQueryTerm: "primaryContact",
-      nofacets: true,
+      shape: "list-item",
     });
     expect(result.totalResults).toBe(0);
     expect(result.items).toEqual([]);
@@ -205,9 +206,10 @@ describe("browsing and scope", () => {
   });
 
   it("builds facets from the filtered set, including contributor-only names", async () => {
-    const result = await datasetsService.searchLocalDatasets({ textQueryTerm: "ethanol" });
+    // Facets are fetched separately from search results since #269.
+    const facets = await datasetsService.getLocalDatasetFacets({ textQueryTerm: "ethanol" });
 
-    const names = result.facets.personName.map((facet) => facet.value);
+    const names = facets.personName.map((facet) => facet.value);
     expect(names).toContain("Dana Contributor");
     expect(names).toContain("Alex Creator");
   });
@@ -216,7 +218,7 @@ describe("browsing and scope", () => {
 describe("GET /api/datasets", () => {
   it("returns 200 for the inputs that used to return 500", async () => {
     for (const q of ["(cellulose", "1:1"]) {
-      const response = await request(app).get("/api/datasets").query({ q, nofacets: true });
+      const response = await request(app).get("/api/datasets").query({ q, shape: "list-item" });
       expect(response.status, q).toBe(200);
     }
   });
@@ -224,7 +226,7 @@ describe("GET /api/datasets", () => {
   it("returns ranked results for a text query", async () => {
     const response = await request(app)
       .get("/api/datasets")
-      .query({ q: "lignin", nofacets: true });
+      .query({ q: "lignin", shape: "list-item" });
 
     expect(response.status).toBe(200);
     expect(response.body.totalResults).toBe(2);
@@ -234,7 +236,7 @@ describe("GET /api/datasets", () => {
   it("returns no results for a schema key name", async () => {
     const response = await request(app)
       .get("/api/datasets")
-      .query({ q: "primaryContact", nofacets: true });
+      .query({ q: "primaryContact", shape: "list-item" });
 
     expect(response.status).toBe(200);
     expect(response.body.totalResults).toBe(0);
