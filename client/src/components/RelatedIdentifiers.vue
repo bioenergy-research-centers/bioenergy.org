@@ -42,8 +42,8 @@ function toggleGroup(prefix) {
       class="mt-3"
       :data-related-identifier-prefix="group.prefix"
     >
-      <div class="text-muted italic mt-2 fw-bold">
-        <span>{{ group.registry.name }}</span>
+      <div class="d-flex align-items-baseline gap-1 italic fw-bold">
+        <h4 class="subsection-header fs-5">{{ group.registry.name }}</h4>
         <span v-if="group.identifiers.length > visibleCount">
           (
           <button
@@ -58,8 +58,8 @@ function toggleGroup(prefix) {
         </span>
       </div>
 
-      <ul class="mb-0 ps-3">
-        <li v-for="identifier in (expandedGroups[group.prefix] ? group.identifiers : group.identifiers.slice(0, visibleCount))" :key="identifier.id">
+      <ul class="list-unstyled mb-0">
+        <li v-for="identifier in (expandedGroups[group.prefix] ? group.identifiers : group.identifiers.slice(0, visibleCount))" :key="identifier.id" class="related-item">
           <a :href="identifier.url" target="_blank" rel="noopener noreferrer">{{ identifier.local_id }}</a>
         </li>
       </ul>

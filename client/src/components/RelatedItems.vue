@@ -42,8 +42,8 @@ function itemTitle(item) {
       class="mt-3"
       :data-related-item-type="group.type"
     >
-      <div class="text-muted italic fw-bold">
-        <span>{{ group.type }}</span>
+      <div class="d-flex align-items-baseline gap-1 italic fw-bold">
+        <h4 class="subsection-header fs-5">{{ group.type }}</h4>
         <span v-if="group.items.length > visibleCount">
           (
           <button
@@ -57,10 +57,11 @@ function itemTitle(item) {
           )
         </span>
       </div>
-      <ul class="mb-0 ps-3">
+      <ul class="list-unstyled mb-0">
         <li
           v-for="(item, index) in (expandedGroups[group.type] ? group.items : group.items.slice(0, visibleCount))"
           :key="`${item?.relatedItemIdentifier || item?.title || group.type}-${index}`"
+          class="related-item"
         >
           <a
             v-if="item?.relatedItemIdentifier"

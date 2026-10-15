@@ -6,10 +6,10 @@
   <div v-if="organism">
     <div v-if="organism.scientificName && organism.NCBITaxID">
       <a :href="'https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=' + organism.NCBITaxID" target="_blank" rel="noopener noreferrer">
-        <nobr>
+        <span class="text-break">
           {{ organism.scientificName }}
           <i class="bi bi-box-arrow-up-right"></i>
-        </nobr>
+        </span>
       </a>
     </div>
     <div v-else-if="organism.scientificName">
