@@ -39,7 +39,7 @@ async function loadRecentData() {
   try {
     // Todo replace with query for distinct values
     ['CABBI','CBI','GLBRC','JBEI'].forEach(async function(brc){
-      const res = await DatasetDataService.getAll( { rows: 1, filters: {brc: brc}, nofacets: true} );
+      const res = await DatasetDataService.getAll({ rows: 1, filters: { brc } });
       recentDatasets.value.push(...res.data.items)
     })
   } catch (e) {

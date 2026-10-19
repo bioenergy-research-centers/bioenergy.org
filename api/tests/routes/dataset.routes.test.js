@@ -23,9 +23,11 @@ const datasetsService = require("../../app/services/datasetsService");
 const strategyManager = require("../../app/services/strategyManager");
 
 const mockSearchLocalDatasets = vi.fn();
+const mockGetLocalDatasetFacets = vi.fn();
 const mockRunSearch = vi.fn();
 
 datasetsService.searchLocalDatasets = mockSearchLocalDatasets;
+datasetsService.getLocalDatasetFacets = mockGetLocalDatasetFacets;
 strategyManager.runSearch = mockRunSearch;
 
 const mockSearchResponse = {
@@ -36,7 +38,6 @@ const mockSearchResponse = {
     rows: 50,
   },
   items: [{ uid: "1", title: "Local" }],
-  facets: null,
 };
 
 describe("dataset routes", () => {
@@ -46,6 +47,16 @@ describe("dataset routes", () => {
     vi.clearAllMocks();
 
     mockSearchLocalDatasets.mockResolvedValue(mockSearchResponse);
+    mockGetLocalDatasetFacets.mockResolvedValue({
+      year: [],
+      brc: [{ value: "JBEI", count: 2 }],
+      repository: [],
+      species: [],
+      analysisType: [],
+      personName: [],
+      topic: [],
+      theme: [],
+    });
     mockRunSearch.mockResolvedValue([]);
 
     app = createApp();
@@ -57,7 +68,7 @@ describe("dataset routes", () => {
   describe("GET /api/datasets", () => {
     it("passes query params to searchLocalDatasets", async () => {
       const res = await supertest(app).get(
-        "/api/datasets?q=ethanol&page=2&rows=25&filters[brc]=JBEI&nofacets=true&from_date=2025-01-01&until_date=2025-12-31&shape=list-item"
+        "/api/datasets?q=ethanol&page=2&rows=25&filters[brc]=JBEI&from_date=2025-01-01&until_date=2025-12-31&shape=list-item"
       );
 
       expect(res.status).toBe(200);
@@ -70,7 +81,6 @@ describe("dataset routes", () => {
         page: "2",
         rows: "25",
         limit: undefined,
-        nofacets: "true",
         from_date: "2025-01-01",
         until_date: "2025-12-31",
         shape: "list-item",
@@ -93,7 +103,6 @@ describe("dataset routes", () => {
         page: undefined,
         rows: undefined,
         limit: undefined,
-        nofacets: undefined,
         from_date: undefined,
         until_date: undefined,
         shape: "list-item",
@@ -111,7 +120,6 @@ describe("dataset routes", () => {
         page: undefined,
         rows: undefined,
         limit: "25",
-        nofacets: undefined,
         from_date: undefined,
         until_date: undefined,
         shape: "list-item",
@@ -152,6 +160,37 @@ describe("dataset routes", () => {
 
       expect(res.status).toBe(500);
       expect(res.body.message).toContain("Error retrieving Dataset metrics");
+    });
+  });
+
+  describe("GET /api/datasets/facets", () => {
+    it("passes facet query params to getLocalDatasetFacets", async () => {
+      const res = await supertest(app).get(
+        "/api/datasets/facets?q=ethanol&filters[brc]=JBEI&from_date=2025-01-01&until_date=2025-12-31"
+      );
+
+      expect(res.status).toBe(200);
+      expect(res.body.brc).toEqual([{ value: "JBEI", count: 2 }]);
+      expect(mockGetLocalDatasetFacets).toHaveBeenCalledWith({
+        textQueryTerm: "ethanol",
+        filters: {
+          brc: "JBEI",
+        },
+        from_date: "2025-01-01",
+        until_date: "2025-12-31",
+      });
+      expect(mockFindByPk).not.toHaveBeenCalled();
+    });
+
+    it("returns 500 when facet retrieval fails", async () => {
+      mockGetLocalDatasetFacets.mockRejectedValue(new Error("facet failed"));
+
+      const res = await supertest(app).get("/api/datasets/facets?q=test");
+
+      expect(res.status).toBe(500);
+      expect(res.body.message).toBe(
+        "Some error occurred while retrieving Dataset facets."
+      );
     });
   });
 
@@ -200,7 +239,6 @@ describe("dataset routes", () => {
         rows: undefined,
         limit: undefined,
         filters: undefined,
-        nofacets: undefined,
         from_date: undefined,
         until_date: undefined,
         shape: "list-item",
@@ -218,7 +256,6 @@ describe("dataset routes", () => {
             brc: ["JBEI", "GLBRC"],
             year: "2024",
           },
-          nofacets: true,
           shape: "list-item",
         });
 
@@ -233,7 +270,6 @@ describe("dataset routes", () => {
           brc: ["JBEI", "GLBRC"],
           year: "2024",
         },
-        nofacets: true,
         from_date: undefined,
         until_date: undefined,
         shape: "list-item",
@@ -257,7 +293,6 @@ describe("dataset routes", () => {
         rows: undefined,
         limit: 25,
         filters: undefined,
-        nofacets: undefined,
         from_date: undefined,
         until_date: undefined,
         shape: "list-item",
@@ -276,7 +311,6 @@ describe("dataset routes", () => {
         rows: undefined,
         limit: undefined,
         filters: undefined,
-        nofacets: undefined,
         from_date: undefined,
         until_date: undefined,
         shape: "list-item",
@@ -607,7 +641,6 @@ describe("dataset routes", () => {
       page: undefined,
       rows: undefined,
       limit: undefined,
-      nofacets: undefined,
       from_date: "2025-01-01",
       until_date: "2025-12-31",
       shape: "list-item",

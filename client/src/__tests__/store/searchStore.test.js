@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useSearchStore } from '@/store/searchStore';
 
+const flushPromises = () => new Promise((resolve) => setTimeout(resolve, 0));
+
 // Mock vue-router
 const mockPush = vi.fn();
 const mockRoute = { query: {} };
@@ -12,10 +14,12 @@ vi.mock('vue-router', () => ({
 
 // Mock DatasetDataService
 const mockGetAll = vi.fn();
+const mockGetFacets = vi.fn();
 const mockRunAdvancedSearch = vi.fn();
 vi.mock('@/services/DatasetDataService', () => ({
   default: {
     getAll: (...args) => mockGetAll(...args),
+    getFacets: (...args) => mockGetFacets(...args),
     runAdvancedSearch: (...args) => mockRunAdvancedSearch(...args),
   },
 }));
@@ -25,6 +29,7 @@ describe('searchStore', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetFacets.mockResolvedValue({ data: {} });
     setActivePinia(createPinia());
     store = useSearchStore();
     mockRoute.query = {};
@@ -109,12 +114,16 @@ describe('searchStore', () => {
           totalPages: 3,
           totalResults: 25,
           query: { page: 1 },
-          facets: { brc: [{ value: 'JBEI', count: 10 }] },
+          facets: null,
         },
+      });
+      mockGetFacets.mockResolvedValue({
+        data: { brc: [{ value: 'JBEI', count: 10 }] },
       });
 
       store.searchTerm = 'ethanol';
       await store.runSearch(false);
+      await flushPromises();
 
       expect(mockGetAll).toHaveBeenCalledWith({
         page: 1,
@@ -124,9 +133,16 @@ describe('searchStore', () => {
         from_date: undefined,
         until_date: undefined,
       });
+      expect(mockGetFacets).toHaveBeenCalledWith({
+        query: 'ethanol',
+        filters: {},
+        from_date: undefined,
+        until_date: undefined,
+      });
       expect(store.searchResults).toEqual([{ uid: '1', title: 'Dataset A' }]);
       expect(store.totalPages).toBe(3);
       expect(store.totalResults).toBe(25);
+      expect(store.facets).toEqual({ brc: [{ value: 'JBEI', count: 10 }] });
       expect(store.searchResultsLoading).toBe(false);
     });
 
@@ -152,6 +168,7 @@ describe('searchStore', () => {
       await store.runSearch(false);
 
       expect(mockRunAdvancedSearch).toHaveBeenCalledWith('query', 'ATCGATCG');
+      expect(mockGetFacets).not.toHaveBeenCalled();
     });
 
     it('sets error on failure', async () => {
@@ -175,6 +192,153 @@ describe('searchStore', () => {
 
       expect(store.currentPage).toBe(1);
     });
+  });
+
+  it('does not refetch facets on page-only searches', async () => {
+    mockGetAll.mockResolvedValue({
+      data: { items: [], totalPages: 5, totalResults: 100, query: { page: 1 }, facets: null },
+    });
+    mockGetFacets.mockResolvedValue({
+      data: { brc: [{ value: 'JBEI', count: 10 }] },
+    });
+
+    store.searchTerm = 'ethanol';
+    await store.runSearch(false);
+    await flushPromises();
+
+    mockGetAll.mockResolvedValueOnce({
+      data: { items: [], totalPages: 5, totalResults: 100, query: { page: 2 }, facets: null },
+    });
+    store.currentPage = 2;
+    await store.runSearch(false);
+    await flushPromises();
+
+    expect(mockGetFacets).toHaveBeenCalledTimes(1);
+    expect(mockGetAll).toHaveBeenLastCalledWith({
+      page: 2,
+      rows: 50,
+      query: 'ethanol',
+      filters: {},
+      from_date: undefined,
+      until_date: undefined,
+    });
+    expect(store.facets).toEqual({ brc: [{ value: 'JBEI', count: 10 }] });
+  });
+
+  it('does not duplicate an in-flight facet request on page-only searches', async () => {
+    let resolveFacets;
+    mockGetAll.mockResolvedValue({
+      data: { items: [], totalPages: 5, totalResults: 100, query: { page: 1 } },
+    });
+    mockGetFacets.mockReturnValue(new Promise((resolve) => { resolveFacets = resolve; }));
+
+    store.searchTerm = 'ethanol';
+    await store.runSearch(false);
+
+    store.currentPage = 2;
+    await store.runSearch(false);
+
+    expect(mockGetFacets).toHaveBeenCalledTimes(1);
+    expect(store.facetsLoading).toBe(true);
+
+    resolveFacets({ data: { brc: [{ value: 'JBEI', count: 10 }] } });
+    await flushPromises();
+
+    expect(store.facets).toEqual({ brc: [{ value: 'JBEI', count: 10 }] });
+    expect(store.facetsLoading).toBe(false);
+  });
+
+  it('refetches facets when filters change', async () => {
+    mockGetAll.mockResolvedValue({
+      data: { items: [], totalPages: 1, totalResults: 0, query: { page: 1 }, facets: null },
+    });
+    mockGetFacets
+      .mockResolvedValueOnce({ data: { brc: [{ value: 'JBEI', count: 10 }] } })
+      .mockResolvedValueOnce({ data: { brc: [{ value: 'GLBRC', count: 5 }] } });
+
+    await store.runSearch(false);
+    await flushPromises();
+    store.brc = ['GLBRC'];
+    await store.runSearch(false);
+    await flushPromises();
+
+    expect(mockGetFacets).toHaveBeenCalledTimes(2);
+    expect(mockGetFacets).toHaveBeenLastCalledWith({
+      query: '',
+      filters: { brc: ['GLBRC'] },
+      from_date: undefined,
+      until_date: undefined,
+    });
+    expect(store.facets).toEqual({ brc: [{ value: 'GLBRC', count: 5 }] });
+  });
+
+  it('keeps search results when facet request fails', async () => {
+    mockGetAll.mockResolvedValue({
+      data: {
+        items: [{ uid: '1' }],
+        totalPages: 1,
+        totalResults: 1,
+        query: { page: 1 },
+        facets: null,
+      },
+    });
+    mockGetFacets.mockRejectedValue(new Error('facet failed'));
+
+    await store.runSearch(false);
+    await flushPromises();
+
+    expect(store.searchResults).toEqual([{ uid: '1' }]);
+    expect(store.facets).toEqual({});
+    expect(store.facetsError).toBe('Failed to fetch search facets.');
+    expect(store.searchResultsError).toBeNull();
+  });
+
+  it('does not let stale results overwrite newer results and facets', async () => {
+    let resolveFirstResults;
+    let resolveSecondFacets;
+
+    mockGetAll
+      .mockReturnValueOnce(new Promise((resolve) => { resolveFirstResults = resolve; }))
+      .mockResolvedValueOnce({
+        data: {
+          items: [{ uid: 'second' }],
+          totalPages: 1,
+          totalResults: 1,
+          query: { page: 1 },
+          facets: null,
+        },
+      });
+    mockGetFacets
+      .mockResolvedValueOnce({ data: { brc: [{ value: 'JBEI', count: 10 }] } })
+      .mockReturnValueOnce(new Promise((resolve) => { resolveSecondFacets = resolve; }));
+
+    store.searchTerm = 'first';
+    const firstSearch = store.runSearch(false);
+    await flushPromises();
+
+    store.searchTerm = 'second';
+    const secondSearch = store.runSearch(false);
+    await flushPromises();
+
+    resolveSecondFacets({ data: { brc: [{ value: 'GLBRC', count: 5 }] } });
+    await secondSearch;
+    await flushPromises();
+
+    resolveFirstResults({
+      data: {
+        items: [{ uid: 'first' }],
+        totalPages: 1,
+        totalResults: 1,
+        query: { page: 1 },
+      },
+    });
+    await firstSearch;
+
+    expect(store.searchResults).toEqual([{ uid: 'second' }]);
+    expect(store.facets).toEqual({ brc: [{ value: 'GLBRC', count: 5 }] });
+    expect(store.facetsLoading).toBe(false);
+    expect(store.searchResultsLoading).toBe(false);
+    expect(store.searchResultsError).toBeNull();
   });
 
   describe('importFromURLQuery', () => {
