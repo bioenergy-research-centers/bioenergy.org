@@ -11,10 +11,10 @@ const { runMigrations } = require("../../../app/db/migrator");
 // prepareDatabase() drops everything in the database, so it only runs against a database
 // whose name says it is for tests.
 function assertTestDatabase(name = process.env.BIOENERGY_ORG_DB_NAME || "") {
-  if (!name.endsWith("_test")) {
+  if (!name.toLowerCase().endsWith("_test")) {
     throw new Error(
       `Refusing to run integration tests against database "${name}": ` +
-        `BIOENERGY_ORG_DB_NAME must end in "_test" because the suite drops everything in it.`
+        `BIOENERGY_ORG_DB_NAME must end in "_test" (any case) because the suite drops everything in it.`
     );
   }
 }
