@@ -3,7 +3,7 @@ FROM node:20
 RUN apt-get update && apt-get install -y cron
 RUN ["mkdir", "/install"]
 WORKDIR /install
-COPY package*.json .
+COPY package*.json ./
 RUN npm install
 
 WORKDIR /api
