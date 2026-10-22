@@ -1,6 +1,8 @@
 FROM node:24
 
 RUN apt-get update && apt-get install -y cron
+# scripts/start_cron.sh keeps the cron job's environment in /install/.env.
+RUN mkdir /install
 
 WORKDIR /api
 # Install dependencies first so this layer is cached until package*.json changes.
