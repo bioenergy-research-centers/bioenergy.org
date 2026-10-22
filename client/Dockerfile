@@ -2,7 +2,7 @@
 # Copied from https://v2.vuejs.org/v2/cookbook/dockerize-vuejs-app
 
 # build stage
-FROM node:20 as build-stage
+FROM node:24 as build-stage
 ARG VITE_BIOENERGY_ORG_API_URI
 ARG VITE_TURNSTILE_SITEKEY
 ARG VITE_RYBBIT_URL
