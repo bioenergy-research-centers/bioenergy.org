@@ -83,6 +83,13 @@ const RECORDS = [
     topic: ["Kookatopic"],
     theme: ["Emutheme"],
   }],
+  ["LONG_TITLE", {
+    // Some feeds put a whole abstract in the title; a marked title is cut like a snippet.
+    title: `${"Samples were collected and stored before analysis. ".repeat(4)}` +
+      "Platypusine content rose sharply in the treated plots. " +
+      `${"Results were compared across all sites and seasons. ".repeat(4)}`,
+    date: "2017-01-01",
+  }],
   // Unsupported schema version: excluded from every search by the supportedOnly scope.
   ["LEGACY_LIGNIN", { title: "Lignin legacy record", date: "2020-01-01" }, "0.0.8"],
 ];
@@ -278,6 +285,14 @@ describe("highlights", () => {
     const found = await highlights("ethanol OR biomass -corn");
 
     expect(found.ETHANOL_CORN.title).toBe("<mark>Ethanol</mark> fermentation from corn stover");
+  });
+
+  it("cut a title too long for the list to one passage around the match", async () => {
+    const found = await highlights("platypusine");
+    const title = found.LONG_TITLE.title;
+
+    expect(title).toMatch(/^… .*<mark>Platypusine<\/mark>.* …$/);
+    expect(title.replace(/<\/?mark>/g, "").length).toBeLessThan(160);
   });
 
   it("name a matching author even when the list would hide them", async () => {

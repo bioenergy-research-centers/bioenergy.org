@@ -23,6 +23,10 @@ const WHOLE_FIELD = `HighlightAll=true, ${MARKERS}`;
 // Descriptions and abstracts are cut to up to two passages around the matches.
 const FRAGMENT_DELIMITER = " … ";
 const PASSAGES = `MaxFragments=2, MaxWords=20, MinWords=10, FragmentDelimiter="${FRAGMENT_DELIMITER}", ${MARKERS}`;
+// Some feeds put a whole abstract in the title. The result list cuts unmarked titles to
+// 125 characters (DatasetListItem.vue), so a longer marked title is cut to one passage.
+const TITLE_MAX_LENGTH = 125;
+const TITLE_PASSAGE = `MaxFragments=1, MaxWords=15, MinWords=8, ${MARKERS}`;
 
 // The tsquery functions a highlight query may use, with the SQL that calls each one.
 const QUERY_FUNCTIONS = {
@@ -80,6 +84,8 @@ function buildHighlightSql(queryFunction) {
   return `
     SELECT d.uid,
       ts_headline('english', d."json"->>'title', q.query, '${WHOLE_FIELD}') AS title,
+      ts_headline('english', d."json"->>'title', q.query, '${TITLE_PASSAGE}') AS title_passage,
+      d."json"->>'title' AS title_source,
       ts_headline('english', d."json"->>'description', q.query, '${PASSAGES}') AS description,
       d."json"->>'description' AS description_source,
       ts_headline('english', d."json"->>'abstract', q.query, '${PASSAGES}') AS abstract,
@@ -111,7 +117,11 @@ function withEllipses(passages, source) {
 function toHighlights(row) {
   const highlights = {};
 
-  if (hasMatch(row.title)) highlights.title = row.title;
+  if (hasMatch(row.title)) {
+    highlights.title = row.title_source?.length > TITLE_MAX_LENGTH && hasMatch(row.title_passage)
+      ? withEllipses(row.title_passage, row.title_source)
+      : row.title;
+  }
 
   // The description is preferred; the abstract is used only when the description has no match.
   if (hasMatch(row.description)) {
@@ -142,4 +152,4 @@ async function fetchSearchHighlights(sequelize, query, uids) {
   return new Map(rows.map((row) => [row.uid, toHighlights(row)]));
 }
 
-module.exports = { fetchSearchHighlights, toHighlights, withEllipses, buildHighlightSql, MATCHED_IN_FIELDS };
+module.exports = { fetchSearchHighlights, toHighlights, withEllipses, buildHighlightSql, MATCHED_IN_FIELDS, TITLE_MAX_LENGTH };

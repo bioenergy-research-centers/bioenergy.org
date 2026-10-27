@@ -4,12 +4,15 @@ const {
   withEllipses,
   buildHighlightSql,
   MATCHED_IN_FIELDS,
+  TITLE_MAX_LENGTH,
 } = require("../../app/services/searchHighlights");
 
 // What ts_headline returns for a field with no match: the text, unmarked.
 const row = (overrides = {}) => ({
   uid: "JBEI_1",
   title: "Switchgrass yields",
+  title_passage: "Switchgrass yields",
+  title_source: "Switchgrass yields",
   description: "Plain description",
   description_source: "Plain description",
   abstract: null,
@@ -29,6 +32,19 @@ describe("toHighlights", () => {
     expect(toHighlights(row({ title: "<mark>Switchgrass</mark> yields" }))).toEqual({
       title: "<mark>Switchgrass</mark> yields",
     });
+  });
+
+  it("cuts a title longer than the list shows to one passage around the match", () => {
+    const longTitle = `${"Introductory words. ".repeat(8)}Lignin is degraded here. ${"Closing words. ".repeat(8)}`;
+    expect(longTitle.length).toBeGreaterThan(TITLE_MAX_LENGTH);
+
+    const highlights = toHighlights(row({
+      title: longTitle.replace("Lignin", "<mark>Lignin</mark>"),
+      title_passage: "words. <mark>Lignin</mark> is degraded here. Closing",
+      title_source: longTitle,
+    }));
+
+    expect(highlights.title).toBe("… words. <mark>Lignin</mark> is degraded here. Closing …");
   });
 
   it("prefers a description match over an abstract match", () => {
