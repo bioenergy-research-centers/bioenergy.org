@@ -60,8 +60,8 @@ describe('DatasetListItem', () => {
       keywords: ['<mark>lignin</mark> degradation'],
       species: ['<mark>Panicum</mark> virgatum'],
     } } });
-    const line = wrapper.find('.also-matched');
-    expect(line.text().replace(/\s+/g, ' ')).toBe('Also matched — Keywords: lignin degradation · Species: Panicum virgatum');
+    const line = wrapper.find('.matching-fields');
+    expect(line.text().replace(/\s+/g, ' ')).toBe('Matching fields — Keywords: lignin degradation · Species: Panicum virgatum');
     expect(line.findAll('mark').map((m) => m.text())).toEqual(['lignin', 'Panicum']);
   });
 
@@ -70,12 +70,12 @@ describe('DatasetListItem', () => {
       datasetName: ['<mark>Lignin</mark> degradation in switchgrass'],
       keywords: ['<mark>lignin</mark>'],
     } } });
-    expect(wrapper.find('.also-matched').text().replace(/\s+/g, ' ')).toBe('Also matched — Keywords: lignin');
+    expect(wrapper.find('.matching-fields').text().replace(/\s+/g, ' ')).toBe('Matching fields — Keywords: lignin');
   });
 
   it('shows at most three values per field', () => {
     const wrapper = render({ highlights: { matchedIn: { keywords: ['a', 'b', 'c', 'd', 'e'].map((k) => `<mark>${k}</mark>`) } } });
-    expect(wrapper.find('.also-matched').text().replace(/\s+/g, ' ')).toBe('Also matched — Keywords: a, b, c +2 more');
+    expect(wrapper.find('.matching-fields').text().replace(/\s+/g, ' ')).toBe('Matching fields — Keywords: a, b, c +2 more');
   });
 
   it('marks analysis type and repository in place rather than repeating them', () => {
@@ -83,12 +83,12 @@ describe('DatasetListItem', () => {
       analysisType: 'Transcriptomics',
       highlights: { matchedIn: { analysisType: ['<mark>Transcriptomics</mark>'], repository: ['<mark>NCBI</mark>'] } },
     });
-    expect(wrapper.find('.also-matched').exists()).toBe(false);
+    expect(wrapper.find('.matching-fields').exists()).toBe(false);
     expect(wrapper.findAll('mark').map((m) => m.text())).toEqual(['Transcriptomics', 'NCBI']);
   });
 
-  it('has no also-matched line without such matches', () => {
-    expect(render({ highlights: { title: '<mark>Lignin</mark>' } }).find('.also-matched').exists()).toBe(false);
+  it('has no matching-fields line without such matches', () => {
+    expect(render({ highlights: { title: '<mark>Lignin</mark>' } }).find('.matching-fields').exists()).toBe(false);
   });
 
   it.each([
@@ -97,9 +97,9 @@ describe('DatasetListItem', () => {
     ['author', { creators: ['Ana'] }],
     ['contributor', { contributors: ['Dana'] }],
     ['repository', { matchedIn: { repository: ['<mark>NCBI</mark>'] } }],
-  ])('leaves out the also-matched line when the %s is already marked', (_field, shown) => {
+  ])('leaves out the matching-fields line when the %s is already marked', (_field, shown) => {
     const wrapper = render({ highlights: { ...shown, matchedIn: { ...shown.matchedIn, keywords: ['<mark>lignin</mark>'] } } });
-    expect(wrapper.find('.also-matched').exists()).toBe(false);
+    expect(wrapper.find('.matching-fields').exists()).toBe(false);
   });
 
   it('keeps marks but strips other markup from highlights', () => {

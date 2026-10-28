@@ -13,9 +13,9 @@ const props = defineProps(['item']);
 const highlights = computed(() => props.item.highlights ?? {});
 
 // Indexed fields a list item does not show, in display order. When nothing the item shows
-// is marked, a match in one of them is listed on an "Also matched" line so the result still
+// is marked, a match in one of them is listed on a "Matching fields" line so the result still
 // says why it was found. Analysis type and repository are shown, so they are marked in place.
-const ALSO_MATCHED_FIELDS = [
+const MATCHING_FIELDS = [
   ['datasetName', 'Dataset name'],
   ['identifier', 'Identifier'],
   ['keywords', 'Keywords'],
@@ -26,7 +26,7 @@ const ALSO_MATCHED_FIELDS = [
   ['journal_name', 'Journal'],
   ['brc', 'BRC'],
 ];
-const ALSO_MATCHED_MAX_VALUES = 3;
+const MATCHING_FIELDS_MAX_VALUES = 3;
 
 // A value identical to the title (often the case for datasetName) would only repeat it.
 const unmarked = (html) => html.replace(/<\/?mark>/g, '');
@@ -43,16 +43,16 @@ const hasVisibleMatch = computed(() => {
   );
 });
 
-const alsoMatched = computed(() => hasVisibleMatch.value ? [] :
-  ALSO_MATCHED_FIELDS.flatMap(([key, label]) => {
+const matchingFields = computed(() => hasVisibleMatch.value ? [] :
+  MATCHING_FIELDS.flatMap(([key, label]) => {
     const values = (highlights.value.matchedIn?.[key] ?? [])
       .filter((value) => unmarked(value) !== props.item.title);
     if (values.length === 0) return [];
     return [{
       key,
       label,
-      shown: values.slice(0, ALSO_MATCHED_MAX_VALUES),
-      more: values.length - ALSO_MATCHED_MAX_VALUES,
+      shown: values.slice(0, MATCHING_FIELDS_MAX_VALUES),
+      more: values.length - MATCHING_FIELDS_MAX_VALUES,
     }];
   })
 );
@@ -130,10 +130,10 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
       </div>
     </div>
 
-    <div v-if="alsoMatched.length" class="row">
-      <div class="small text-muted also-matched mb-2">
+    <div v-if="matchingFields.length" class="row">
+      <div class="small text-muted matching-fields mb-2">
         <strong>Matching fields</strong> —
-        <template v-for="(field, fieldIndex) in alsoMatched" :key="field.key">
+        <template v-for="(field, fieldIndex) in matchingFields" :key="field.key">
           <span v-if="fieldIndex > 0"> · </span>
           {{ field.label }}:
           <template v-for="(value, valueIndex) in field.shown" :key="field.key + valueIndex">
