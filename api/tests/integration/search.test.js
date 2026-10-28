@@ -53,6 +53,43 @@ const RECORDS = [
     datasetName: "Prairie soil series",
     journal_name: "Pedobiologia",
   }],
+  ["MANY_AUTHORS", {
+    // The matching author is fifth, past the three the results list shows, and the only
+    // description match is mid-text, so its snippet is cut at both ends.
+    title: "Miscanthus field trials",
+    date: "2019-01-01",
+    description:
+      "Plots were planted in spring and harvested in autumn across four sites in the upper " +
+      "Midwest over three seasons. Yields of miscanthus were recorded weekly. Soil samples " +
+      "were taken monthly and stored frozen for later analysis by the partner laboratories.",
+    creator: ["Ana Ames", "Ben Bose", "Cy Chu", "Di Diaz", "Quillon Vasquez"].map((name) => ({ name })),
+  }],
+  ["EVERY_FIELD", {
+    // One made-up word per indexed field, so each query below matches this record through
+    // exactly one field. The abstract differs from the description on purpose.
+    title: "Quollfield survey",
+    date: "2018-01-01",
+    datasetName: "Quokkaset series",
+    description: "Tarsierdesc measurements.",
+    abstract: "Possumabstract measurements.",
+    keywords: ["wombatword"],
+    species: [{ scientificName: "Numbatus fakeus", strains: ["dingostrain"] }],
+    creator: [{ name: "Cuscus Creatorson" }],
+    contributors: [{ name: "Bandicoot Helper" }],
+    identifier: "GSE999001",
+    journal_name: "Echidna Letters",
+    repository: "Wallaby Archive",
+    analysisType: "Bilbyomics",
+    topic: ["Kookatopic"],
+    theme: ["Emutheme"],
+  }],
+  ["LONG_TITLE", {
+    // Some feeds put a whole abstract in the title; a marked title is cut like a snippet.
+    title: `${"Samples were collected and stored before analysis. ".repeat(4)}` +
+      "Platypusine content rose sharply in the treated plots. " +
+      `${"Results were compared across all sites and seasons. ".repeat(4)}`,
+    date: "2017-01-01",
+  }],
   // Unsupported schema version: excluded from every search by the supportedOnly scope.
   ["LEGACY_LIGNIN", { title: "Lignin legacy record", date: "2020-01-01" }, "0.0.8"],
 ];
@@ -215,6 +252,145 @@ describe("browsing and scope", () => {
   });
 });
 
+describe("highlights", () => {
+  // Highlights for each result of a text query, keyed by uid.
+  async function highlights(textQueryTerm, params = {}) {
+    const result = await datasetsService.searchLocalDatasets({
+      textQueryTerm,
+      shape: "list-item",
+      highlight: true,
+      ...params,
+    });
+    return Object.fromEntries(result.items.map((item) => [item.uid, item.highlights]));
+  }
+
+  it("mark matched words in the title, including prefix matches", async () => {
+    const found = await highlights("ligni");
+
+    expect(found.LIGNIN_TITLE.title).toBe("<mark>Lignin</mark> degradation in switchgrass");
+    // Its title does not match, so only the abstract passage is returned.
+    expect(found.LIGNIN_ABSTRACT).not.toHaveProperty("title");
+    expect(found.LIGNIN_ABSTRACT.snippetField).toBe("abstract");
+    expect(found.LIGNIN_ABSTRACT.snippet).toContain("<mark>lignin</mark>");
+  });
+
+  it("mark stemmed matches", async () => {
+    const found = await highlights("fermentations");
+
+    expect(found.ETHANOL_CORN.title).toBe("Ethanol <mark>fermentation</mark> from corn stover");
+  });
+
+  it("do not mark excluded terms", async () => {
+    // ETHANOL_CORN matches through "ethanol"; "corn" is excluded and must stay unmarked.
+    const found = await highlights("ethanol OR biomass -corn");
+
+    expect(found.ETHANOL_CORN.title).toBe("<mark>Ethanol</mark> fermentation from corn stover");
+  });
+
+  it("cut a title too long for the list to one passage around the match", async () => {
+    const found = await highlights("platypusine");
+    const title = found.LONG_TITLE.title;
+
+    expect(title).toMatch(/^… .*<mark>Platypusine<\/mark>.* …$/);
+    expect(title.replace(/<\/?mark>/g, "").length).toBeLessThan(160);
+  });
+
+  it("name a matching author even when the list would hide them", async () => {
+    const found = await highlights("vasquez");
+
+    expect(found.MANY_AUTHORS).toEqual({ creators: ["Quillon Vasquez"] });
+  });
+
+  it("name a matching contributor, who is not otherwise shown in the list", async () => {
+    const found = await highlights("dana");
+
+    expect(found.ETHANOL_BIOMASS.contributors).toEqual(["Dana Contributor"]);
+  });
+
+  it("mark each field's part of a query whose terms match in different fields", async () => {
+    const found = await highlights("lignin alex");
+
+    expect(found.LIGNIN_TITLE.title).toBe("<mark>Lignin</mark> degradation in switchgrass");
+    expect(found.LIGNIN_TITLE.creators).toEqual(["Alex Creator"]);
+  });
+
+  it("cut a long description to the passage around the match, with ellipses", async () => {
+    const { snippet, snippetField } = (await highlights("miscanthus")).MANY_AUTHORS;
+
+    expect(snippetField).toBe("description");
+    expect(snippet).toContain("<mark>miscanthus</mark>");
+    expect(snippet.startsWith("… ")).toBe(true);
+    expect(snippet.endsWith(" …")).toBe(true);
+  });
+
+  // For each indexed field: a query that matches EVERY_FIELD only through that field, and the
+  // highlights key that must explain the match.
+  const FIELD_CASES = {
+    title: ["quollfield", (h) => h.title],
+    description: ["tarsierdesc", (h) => h.snippetField === "description" && h.snippet],
+    abstract: ["possumabstract", (h) => h.snippetField === "abstract" && h.snippet],
+    "creator.name": ["cuscus", (h) => h.creators],
+    "contributors.name": ["bandicoot", (h) => h.contributors],
+    datasetName: ["quokkaset", (h) => h.matchedIn?.datasetName],
+    keywords: ["wombatword", (h) => h.matchedIn?.keywords],
+    "species.scientificName": ["numbatus", (h) => h.matchedIn?.species],
+    "species.strains": ["dingostrain", (h) => h.matchedIn?.strains],
+    identifier: ["GSE999001", (h) => h.matchedIn?.identifier],
+    journal_name: ["echidna", (h) => h.matchedIn?.journal_name],
+    brc: ["JBEI", (h) => h.matchedIn?.brc],
+    repository: ["wallaby", (h) => h.matchedIn?.repository],
+    analysisType: ["bilbyomics", (h) => h.matchedIn?.analysisType],
+    topic: ["kookatopic", (h) => h.matchedIn?.topic],
+    theme: ["emutheme", (h) => h.matchedIn?.theme],
+  };
+
+  it("cover every field the search index reads", async () => {
+    // Read the field list from the live generated column, so a field added to the index by
+    // any migration fails here until highlighting covers it.
+    const [[{ expression }]] = await db.sequelize.query(`
+      SELECT pg_get_expr(d.adbin, d.adrelid) AS expression
+      FROM pg_attrdef d
+      JOIN pg_attribute a ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+      WHERE a.attrelid = 'datasets'::regclass AND a.attname = 'search_tsv'`);
+    const scalarFields = [...expression.matchAll(/->> '(\w+)'/g)].map((m) => m[1]);
+    const pathFields = [...expression.matchAll(/'\$\.([^']*)'::jsonpath/g)]
+      .map((m) => m[1].replaceAll('"', "").replaceAll("[*]", ""));
+
+    expect([...new Set([...scalarFields, ...pathFields])].sort()).toEqual(Object.keys(FIELD_CASES).sort());
+  });
+
+  it.each(Object.entries(FIELD_CASES))("explain a match through %s", async (_field, [query, explained]) => {
+    const found = await highlights(query);
+
+    expect(found).toHaveProperty("EVERY_FIELD");
+    expect(explained(found.EVERY_FIELD), JSON.stringify(found.EVERY_FIELD)).toBeTruthy();
+  });
+
+  it("list each matched value once, marked", async () => {
+    const found = await highlights("wombatword OR kookatopic");
+
+    expect(found.EVERY_FIELD.matchedIn).toEqual({
+      keywords: ["<mark>wombatword</mark>"],
+      topic: ["<mark>Kookatopic</mark>"],
+    });
+  });
+
+  it("are left out unless requested, and for the detail shape", async () => {
+    const plain = await datasetsService.searchLocalDatasets({
+      textQueryTerm: "lignin",
+      shape: "list-item",
+    });
+    expect(plain.items[0]).not.toHaveProperty("highlights");
+
+    const detail = await datasetsService.searchLocalDatasets({
+      textQueryTerm: "lignin",
+      shape: "detail",
+      highlight: true,
+    });
+    expect(detail.items[0]).not.toHaveProperty("highlights");
+  });
+});
+
 describe("GET /api/datasets", () => {
   it("returns 200 for the inputs that used to return 500", async () => {
     for (const q of ["(cellulose", "1:1"]) {
@@ -231,6 +407,15 @@ describe("GET /api/datasets", () => {
     expect(response.status).toBe(200);
     expect(response.body.totalResults).toBe(2);
     expect(response.body.items.map((item) => item.uid)).toEqual(["LIGNIN_TITLE", "LIGNIN_ABSTRACT"]);
+  });
+
+  it("returns highlights when asked for them", async () => {
+    const response = await request(app)
+      .get("/api/datasets")
+      .query({ q: "lignin", shape: "list-item", highlight: true });
+
+    expect(response.status).toBe(200);
+    expect(response.body.items[0].highlights.title).toBe("<mark>Lignin</mark> degradation in switchgrass");
   });
 
   it("returns no results for a schema key name", async () => {
