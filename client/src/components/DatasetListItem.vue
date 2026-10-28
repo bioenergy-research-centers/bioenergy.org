@@ -132,7 +132,7 @@ const truncateMiddle = (str, maxStart = 100, maxEnd = 50) => {
 
     <div v-if="alsoMatched.length" class="row">
       <div class="small text-muted also-matched mb-2">
-        Also matched —
+        <strong>Matching fields</strong> —
         <template v-for="(field, fieldIndex) in alsoMatched" :key="field.key">
           <span v-if="fieldIndex > 0"> · </span>
           {{ field.label }}:
