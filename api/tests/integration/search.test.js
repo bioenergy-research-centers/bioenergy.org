@@ -90,6 +90,19 @@ const RECORDS = [
       `${"Results were compared across all sites and seasons. ".repeat(4)}`,
     date: "2017-01-01",
   }],
+  ["SPLIT_TERMS", {
+    // For "quendalin pademelon": quendalin only late in the long title and the long
+    // description, pademelon only in an author. No field matches both terms.
+    title: `${"Field samples were logged on arrival at the station. ".repeat(3)}` +
+      "Quendalin levels were then measured. " +
+      `${"Each batch was stored and labelled for the archive. ".repeat(3)}`,
+    date: "2016-01-01",
+    description:
+      `${"Plots were sown in spring and cut in the autumn of each year. ".repeat(4)}` +
+      "Quendalin was assayed in every cut. " +
+      `${"Data were checked and entered by the field team. ".repeat(3)}`,
+    creator: [{ name: "Rory Pademelon" }],
+  }],
   // Unsupported schema version: excluded from every search by the supportedOnly scope.
   ["LEGACY_LIGNIN", { title: "Lignin legacy record", date: "2020-01-01" }, "0.0.8"],
 ];
@@ -285,6 +298,31 @@ describe("highlights", () => {
     const found = await highlights("ethanol OR biomass -corn");
 
     expect(found.ETHANOL_CORN.title).toBe("<mark>Ethanol</mark> fermentation from corn stover");
+  });
+
+  it("do not mark terms excluded inside parentheses", async () => {
+    // websearch_to_tsquery reads "(-corn)" as excluding corn, so it must stay unmarked.
+    const found = await highlights("ethanol OR biomass (-corn)");
+
+    expect(found.ETHANOL_CORN.title).toBe("<mark>Ethanol</mark> fermentation from corn stover");
+  });
+
+  it("mark both words of a quoted phrase containing a hyphen", async () => {
+    // Inside quotes "-" is not an exclusion: this is the phrase "ethanol fermentation".
+    const found = await highlights('"ethanol -fermentation"');
+
+    expect(found.ETHANOL_CORN.title).toBe("<mark>Ethanol</mark> <mark>fermentation</mark> from corn stover");
+  });
+
+  it("cut long fields around their own term when the other term matched elsewhere", async () => {
+    // The full query matches no single field, so passages are chosen around either term.
+    const found = (await highlights("quendalin pademelon")).SPLIT_TERMS;
+
+    expect(found.creators).toEqual(["Rory Pademelon"]);
+    expect(found.title).toMatch(/^… .*<mark>Quendalin<\/mark>.* …$/);
+    expect(found.title.replace(/<\/?mark>/g, "").length).toBeLessThan(160);
+    expect(found.snippetField).toBe("description");
+    expect(found.snippet).toMatch(/^… .*<mark>Quendalin<\/mark>.* …$/);
   });
 
   it("cut a title too long for the list to one passage around the match", async () => {

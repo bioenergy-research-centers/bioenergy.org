@@ -739,13 +739,15 @@ describe("buildHighlightQuery", () => {
     });
   });
 
+  // Excluded terms are dropped in SQL from the parsed query (searchHighlights.js), so the
+  // text is the search's own, quoted phrases included.
   it.each([
-    ["ethanol -corn", "ethanol"],
-    ["ethanol NOT corn", "ethanol"],
-    ["ethanol ! corn", "ethanol"],
-    ['ethanol -"corn stover" biomass', "ethanol  biomass"],
-    ["co-culture -yeast", "co-culture"],
-  ])("drops excluded terms from %j", (query, text) => {
+    ["ethanol -corn", "ethanol -corn"],
+    ["ethanol NOT corn", "ethanol -corn"],
+    ["ethanol ! corn", "ethanol -corn"],
+    ['"ethanol -corn"', '"ethanol -corn"'],
+    ["ethanol OR biomass (-corn)", "ethanol OR biomass (-corn)"],
+  ])("passes %j through as the search reads it", (query, text) => {
     expect(buildHighlightQuery(query)).toEqual({ fn: "websearch_to_tsquery", text });
   });
 });

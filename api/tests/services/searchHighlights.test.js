@@ -47,6 +47,18 @@ describe("toHighlights", () => {
     expect(highlights.title).toBe("… words. <mark>Lignin</mark> is degraded here. Closing …");
   });
 
+  it("leaves out a long title whose passage has no mark, rather than return all of it", () => {
+    const longTitle = `${"Introductory words. ".repeat(8)}Lignin is degraded here. ${"Closing words. ".repeat(8)}`;
+
+    const highlights = toHighlights(row({
+      title: longTitle.replace("Lignin", "<mark>Lignin</mark>"),
+      title_passage: "Introductory words. Introductory words. Introductory",
+      title_source: longTitle,
+    }));
+
+    expect(highlights).not.toHaveProperty("title");
+  });
+
   it("prefers a description match over an abstract match", () => {
     const highlights = toHighlights(row({
       description: "A <mark>lignin</mark> study",

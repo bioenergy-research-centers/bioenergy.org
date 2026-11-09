@@ -36,17 +36,16 @@ function buildTextSearchQuery(textQueryTerm) {
     return db.Sequelize.fn("brc_prefix_tsquery", trimmedQueryTerm);
 }
 
-// The query used to mark matched words in results (see searchHighlights.js). It is the
-// search query minus any excluded terms: "ethanol -corn" excludes corn, so corn did not
-// match anything and must not be marked, but ts_headline would mark it if it stayed in.
+// The query used to mark matched words in results (see searchHighlights.js): the same
+// tsquery function and text as the search. Excluded terms ("ethanol -corn") are dropped in
+// SQL, from the parsed query, so that phrases and operators are read exactly as PostgreSQL
+// read them for the search; a regex over the text cannot tell "-corn" from "ethanol -corn"
+// inside quotes, or see the exclusion in "(-corn)".
 function buildHighlightQuery(textQueryTerm) {
     const trimmedQueryTerm = textQueryTerm.trim();
 
     if (WEBSEARCH_OPERATORS.test(trimmedQueryTerm)) {
-        const withoutExclusions = toWebsearchSyntax(trimmedQueryTerm)
-            .replace(/(^|\s)-("[^"]*"?|\S+)/g, "$1")
-            .trim();
-        return { fn: "websearch_to_tsquery", text: withoutExclusions };
+        return { fn: "websearch_to_tsquery", text: toWebsearchSyntax(trimmedQueryTerm) };
     }
 
     return { fn: "brc_prefix_tsquery", text: trimmedQueryTerm };

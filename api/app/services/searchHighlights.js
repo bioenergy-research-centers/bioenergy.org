@@ -13,6 +13,15 @@
 // A field counts as matched when ts_headline marked at least one word in it. That is looser
 // than `@@`, deliberately: in "lignin myers" the title matches "lignin" and the author
 // matches "myers", and neither field matches both words on its own.
+//
+// Two queries are derived from the search query (see buildHighlightSql):
+// - `query` is its positive part. querytree() drops excluded terms ("ethanol -corn" gives
+//   'ethanol'), parsed by PostgreSQL itself, so quoted phrases and every operator form are
+//   handled exactly as the search handled them. It marks whole fields.
+// - `any_term` joins every positive word with OR. It picks description, abstract and title
+//   passages. Given the full query, ts_headline only builds passages around text that
+//   satisfies all of it, so for "lignin myers" (lignin in the description, Myers an author)
+//   it would fall back to the opening words and lose the lignin passage.
 
 const START = "<mark>";
 const STOP = "</mark>";
@@ -84,17 +93,24 @@ function buildHighlightSql(queryFunction) {
   return `
     SELECT d.uid,
       ts_headline('english', d."json"->>'title', q.query, '${WHOLE_FIELD}') AS title,
-      ts_headline('english', d."json"->>'title', q.query, '${TITLE_PASSAGE}') AS title_passage,
+      ts_headline('english', d."json"->>'title', q.any_term, '${TITLE_PASSAGE}') AS title_passage,
       d."json"->>'title' AS title_source,
-      ts_headline('english', d."json"->>'description', q.query, '${PASSAGES}') AS description,
+      ts_headline('english', d."json"->>'description', q.any_term, '${PASSAGES}') AS description,
       d."json"->>'description' AS description_source,
-      ts_headline('english', d."json"->>'abstract', q.query, '${PASSAGES}') AS abstract,
+      ts_headline('english', d."json"->>'abstract', q.any_term, '${PASSAGES}') AS abstract,
       d."json"->>'abstract' AS abstract_source,
       ${matchedNames("creator")} AS creators,
       ${matchedNames("contributors")} AS contributors,
       ${matchedIn()} AS matched_in
     FROM datasets d
-    CROSS JOIN (SELECT ${querySql} AS query) q
+    CROSS JOIN (
+      -- querytree() returns 'T' when nothing positive is left ("-corn") and '' when the
+      -- query has no words at all; both become NULL, which marks nothing. Lexemes never
+      -- contain spaces, so ' & ' and ' <-> ' (or ' <2> ') only ever match operators.
+      SELECT positive::tsquery AS query,
+        regexp_replace(positive, ' (&|<->|<[0-9]+>) ', ' | ', 'g')::tsquery AS any_term
+      FROM (SELECT NULLIF(NULLIF(querytree(${querySql}), 'T'), '') AS positive) AS parsed
+    ) q
     WHERE d.uid IN (:uids)`;
 }
 
@@ -117,10 +133,14 @@ function withEllipses(passages, source) {
 function toHighlights(row) {
   const highlights = {};
 
+  // A long title is only ever returned cut. If its passage somehow has no mark, the title is
+  // left out, and the list shows its usual 125-character cut, rather than the whole title.
   if (hasMatch(row.title)) {
-    highlights.title = row.title_source?.length > TITLE_MAX_LENGTH && hasMatch(row.title_passage)
-      ? withEllipses(row.title_passage, row.title_source)
-      : row.title;
+    if (!(row.title_source?.length > TITLE_MAX_LENGTH)) {
+      highlights.title = row.title;
+    } else if (hasMatch(row.title_passage)) {
+      highlights.title = withEllipses(row.title_passage, row.title_source);
+    }
   }
 
   // The description is preferred; the abstract is used only when the description has no match.
