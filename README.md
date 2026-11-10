@@ -13,7 +13,7 @@ A site dedicated to creating FAIR data products to share across bioenergy resear
 
 - JBEI  = Hector Plahar (haplahar@lbl.gov)
 - GLBRC = Dirk Norman (dirk.norman@wisc.edu)
-- CABBI = Katie Bowman (krhodges@illinois.edu)
+- CABBI = Jessie Bhalerao (jesspb@illinois.edu)
 - CBI = Stanton Martin (martins@ornl.gov)
 
 ## Tech contacts
@@ -229,7 +229,7 @@ docker compose -f docker-compose.dev.yml build --no-cache client
 
 ## BRC Data End Points
 
-- CABBI: <https://cabbitools.igb.illinois.edu/brc/cabbi.json>
+- CABBI: <https://cabbi-hub.illinois.edu/brcfeed/cabbi.json>
 - CBI: <https://bioenergy-research-centers.github.io/brc_data_feeds/cbi.json>
 - GLBRC: <https://fair-data.glbrc.org/glbrc.json>
 - JBEI: <https://bioenergy.org/JBEI/jbei.json>

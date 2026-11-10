@@ -6,7 +6,7 @@
         },
         {
             "name": "CABBI",
-            "url": "https://cabbitools.igb.illinois.edu/brc/cabbi.json"
+            "url": "https://cabbi-hub.illinois.edu/brcfeed/cabbi.json"
         },
         {
             "name": "CBI",
