@@ -18,7 +18,7 @@ describe('DatasetDataService', () => {
     it('calls GET /datasets with pagination and query params', () => {
       DatasetDataService.getAll({ page: 2, rows: 25, query: 'ethanol', filters: { brc: 'JBEI' }, from_date: '2025-01-01', until_date: '2025-12-31', });
       expect(http.get).toHaveBeenCalledWith('/datasets', {
-        params: { page: 2, rows: 25, q: 'ethanol', filters: { brc: 'JBEI' }, from_date: '2025-01-01', until_date: '2025-12-31', shape: 'list-item' },
+        params: { page: 2, rows: 25, q: 'ethanol', filters: { brc: 'JBEI' }, from_date: '2025-01-01', until_date: '2025-12-31', shape: 'list-item', highlight: undefined },
       });
     });
 
@@ -29,10 +29,17 @@ describe('DatasetDataService', () => {
       });
     });
 
+    it('passes highlight when set', () => {
+      DatasetDataService.getAll({ q: 'lignin', highlight: true });
+      expect(http.get).toHaveBeenCalledWith('/datasets', {
+        params: expect.objectContaining({ q: 'lignin', highlight: true }),
+      });
+    });
+
     it('works with no options', () => {
       DatasetDataService.getAll();
       expect(http.get).toHaveBeenCalledWith('/datasets', {
-        params: { page: undefined, rows: undefined, q: undefined, filters: undefined, from_date: undefined, until_date: undefined, shape: 'list-item' },
+        params: { page: undefined, rows: undefined, q: undefined, filters: undefined, from_date: undefined, until_date: undefined, shape: 'list-item', highlight: undefined },
       });
     });
   });

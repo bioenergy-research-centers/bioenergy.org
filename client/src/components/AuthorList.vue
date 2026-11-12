@@ -1,5 +1,6 @@
 <script setup>
   import { computed } from 'vue';
+  import { selectVisibleCreators } from '@/utils/visibleCreators';
   const props = defineProps({
     creators: {
       type: Array,
@@ -9,18 +10,16 @@
       type: Number,
       default: null,
     },
+    // Names that matched a search. They are marked, and shown even past maxVisible.
+    highlightedNames: {
+      type: Array,
+      default: () => [],
+    },
   });
 
-  const creators = computed(() => {
-    if(!Array.isArray(props.creators)) { return []; }
-    if (
-      !Number.isInteger(props.maxVisible) ||
-      props.maxVisible < 0
-    ) {
-      return props.creators;
-    }
-    return props.creators.slice(0, props.maxVisible);
-  });
+  const entries = computed(() =>
+    selectVisibleCreators(props.creators, props.maxVisible, props.highlightedNames)
+  );
   const contactTooltip = (creator) => {
     return `Corresponding Contact: ${creator.email || 'No e-mail address provided.'}`
   };
@@ -28,10 +27,12 @@
 
 <template>
   <div>
-    <template v-for="(creator, index) in creators" :key="creator.name + index">
+    <template v-for="({ creator, index, highlighted, afterGap }, position) in entries" :key="creator.name + index">
+      <span v-if="afterGap && position > 0" class="me-2">…</span>
       <div class="d-inline-flex align-items-baseline me-2">
 
-        <span class="me-1">{{ creator.name }}</span>
+        <mark v-if="highlighted" class="me-1">{{ creator.name }}</mark>
+        <span v-else class="me-1">{{ creator.name }}</span>
 
         <!-- Always show for primary contact -->
         <span v-if="creator.primaryContact === true" class="me-1">
@@ -48,7 +49,7 @@
           :title="creator.affiliation"
         ></i>
 
-        <span v-if="index !== creators.length - 1" class="">; </span>
+        <span v-if="position !== entries.length - 1" class="">; </span>
       </div>
       
     </template>

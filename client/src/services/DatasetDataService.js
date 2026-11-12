@@ -9,10 +9,12 @@ class DatasetDataService {
     const filters = options.filters;
     const from_date = options.from_date;
     const until_date = options.until_date;
+    // asks the API to mark what matched the text query in each result
+    const highlight = options.highlight;
     // overrides the default 'detail' shape for dataset records that returns all values
     // uses the smaller fixed 'list-item' shape by default for search
     const shape = options.shape ?? 'list-item';
-    return http.get("/datasets", { params: { page, rows, q, filters, from_date, until_date, shape } });
+    return http.get("/datasets", { params: { page, rows, q, filters, from_date, until_date, shape, highlight } });
   }
 
   getFacets(options = {}) {

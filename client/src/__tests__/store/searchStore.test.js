@@ -132,6 +132,7 @@ describe('searchStore', () => {
         filters: {},
         from_date: undefined,
         until_date: undefined,
+        highlight: true,
       });
       expect(mockGetFacets).toHaveBeenCalledWith({
         query: 'ethanol',
@@ -221,6 +222,7 @@ describe('searchStore', () => {
       filters: {},
       from_date: undefined,
       until_date: undefined,
+      highlight: true,
     });
     expect(store.facets).toEqual({ brc: [{ value: 'JBEI', count: 10 }] });
   });
@@ -439,6 +441,7 @@ describe('searchStore', () => {
       filters: {},
       from_date: '2025-01-01',
       until_date: '2025-12-31',
+      highlight: true,
     });
   });
 
