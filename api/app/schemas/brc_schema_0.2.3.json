@@ -30,7 +30,7 @@
         },
         "BRCOrganization": {
             "additionalProperties": false,
-            "description": "An organization involved in the dataset. The name denotes this is the BRC-specific model of an organization, rather than that defined by OSTI, though the classes are similar.",
+            "description": "An organization involved in the dataset, such as a funder, an affiliation, or an organizational author. This may be any organization (a university, national laboratory, consortium, or agency), not only a Bioenergy Research Center. The name denotes that this is the BRC schema's model of an organization, rather than the one defined by OSTI, though the classes are similar.",
             "properties": {
                 "organizationName": {
                     "description": "Name of the organization.",
@@ -91,19 +91,21 @@
             "description": "An individual who contributed to the dataset in some manner, not necessarily as an author.",
             "properties": {
                 "affiliation": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/BRCOrganization"
-                        },
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "description": "Affiliation of the individual.",
-                    "type": "string"
+                    "description": "Name of the individual's affiliation.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "affiliations": {
+                    "description": "All affiliations of the individual, in the order given by the source record. Affiliations may be any organization, not only a Bioenergy Research Center: for example, a GLBRC member may list both Great Lakes Bioenergy Research Center and University of Michigan. Matches the affiliations of a Person in OSTI E-Link 2.0 (name and ROR ID).",
+                    "items": {
+                        "$ref": "#/$defs/BRCOrganization"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "contributorType": {
                     "$ref": "#/$defs/ContributorTypeCodes",
@@ -113,6 +115,16 @@
                     "description": "Email address of the individual.",
                     "type": [
                         "string",
+                        "null"
+                    ]
+                },
+                "individual_roles": {
+                    "description": "Roles this individual holds for the dataset, such as first author, contributing author, or corresponding author. More than one individual may hold the same role (e.g., co-first authors), and one individual may hold several roles (e.g., a first author who is also the corresponding author). When no creator is explicitly marked FirstAuthor, the first creator in the list is taken to be the first author. These roles have no equivalent in the OSTI E-Link 2.0 schema, so they are not carried over to OSTI records; author order is preserved there through list order.",
+                    "items": {
+                        "$ref": "#/$defs/IndividualRoleEnum"
+                    },
+                    "type": [
+                        "array",
                         "null"
                     ]
                 },
@@ -171,6 +183,30 @@
         },
         "Dataset": {
             "additionalProperties": false,
+            "anyOf": [
+                {
+                    "properties": {
+                        "creator": {
+                            "items": {},
+                            "type": "array"
+                        }
+                    },
+                    "required": [
+                        "creator"
+                    ]
+                },
+                {
+                    "properties": {
+                        "organizational_creators": {
+                            "items": {},
+                            "type": "array"
+                        }
+                    },
+                    "required": [
+                        "organizational_creators"
+                    ]
+                }
+            ],
             "description": "A body of structured information describing some topic or topics of interest. This includes metadata about the dataset.",
             "properties": {
                 "abstract": {
@@ -221,6 +257,7 @@
                 },
                 "bibliographicCitation": {
                     "description": "Citation for the dataset.",
+                    "format": "uri",
                     "type": [
                         "string",
                         "null"
@@ -228,7 +265,7 @@
                 },
                 "brc": {
                     "$ref": "#/$defs/BRCEnum",
-                    "description": "The primary Bioenergy Research Center affiliation. This is a single BRC name."
+                    "description": "The primary Bioenergy Research Center affiliation. This is a single BRC name. Legacy datasets from the BioEnergy Science Center (BESC) use CBI, as CBI is BESC's successor."
                 },
                 "category": {
                     "description": "Category of the dataset. This is specific to the BRCs and is not intended to be an exhaustive list of categories.",
@@ -300,11 +337,14 @@
                     ]
                 },
                 "creator": {
-                    "description": "List of creators involved in the dataset, where one must be the primary contact.",
+                    "description": "List of individual creators (authors) involved in the dataset, where one must be the primary contact. The list is ordered: creators appear in author order, matching the order of AUTHOR persons in the corresponding OSTI record. Use individual_roles on each creator to label first, contributing, and corresponding authors explicitly, for example when there are co-first authors. A dataset must have creator, organizational_creators, or both.",
                     "items": {
                         "$ref": "#/$defs/Individual"
                     },
-                    "type": "array"
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "datasetName": {
                     "description": "\"Name of a overall dataset to which this data entry belongs.\"",
@@ -319,6 +359,7 @@
                 },
                 "dataset_url": {
                     "description": "URL for the dataset landing page.",
+                    "format": "uri",
                     "type": [
                         "string",
                         "null"
@@ -340,6 +381,16 @@
                     "description": "Funding source(s) for the dataset.",
                     "items": {
                         "$ref": "#/$defs/Funding"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "geolocations": {
+                    "description": "Geographic locations associated with the dataset, such as field sites, sampling locations, or study areas. Each entry is a single point, a bounding box, or a polygon, so a dataset collected at several sites lists one entry per site. Matches the geolocations of an OSTI E-Link 2.0 record, which supports lists of points, boxes, and polygons; accuracy and altitude are BRC additions.",
+                    "items": {
+                        "$ref": "#/$defs/Geolocation"
                     },
                     "type": [
                         "array",
@@ -439,6 +490,16 @@
                         "null"
                     ]
                 },
+                "organizational_creators": {
+                    "description": "Organizations credited as authors of the dataset, such as consortia, collaborations, or institutions. The list is ordered, and is kept separate from creator, matching OSTI E-Link 2.0, which lists organizations with type AUTHOR apart from AUTHOR persons. A dataset must have creator, organizational_creators, or both.",
+                    "items": {
+                        "$ref": "#/$defs/BRCOrganization"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "plasmid_features": {
                     "description": "Description of plasmid features, if applicable. This is a multivalued field.",
                     "items": {
@@ -519,7 +580,6 @@
             "required": [
                 "title",
                 "date",
-                "creator",
                 "brc",
                 "identifier",
                 "topic"
@@ -641,29 +701,198 @@
             "title": "Funding",
             "type": "object"
         },
+        "GeoPoint": {
+            "additionalProperties": false,
+            "description": "A single geographic point, in WGS 84 decimal degrees, with an optional altitude. Mirrors the point structure of OSTI E-Link 2.0, which has latitude and longitude only.",
+            "properties": {
+                "altitude": {
+                    "description": "Altitude in meters above mean sea level. Negative values are below sea level. Not part of the OSTI schema, so it is not carried over to OSTI records.",
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "latitude": {
+                    "description": "Latitude in decimal degrees (WGS 84), from -90 to 90 inclusive. Positive values are north of the equator.",
+                    "maximum": 90,
+                    "minimum": -90,
+                    "type": "number"
+                },
+                "longitude": {
+                    "description": "Longitude in decimal degrees (WGS 84), from -180 to 180 inclusive. Positive values are east of the prime meridian.",
+                    "maximum": 180,
+                    "minimum": -180,
+                    "type": "number"
+                }
+            },
+            "required": [
+                "latitude",
+                "longitude"
+            ],
+            "title": "GeoPoint",
+            "type": "object"
+        },
+        "Geolocation": {
+            "additionalProperties": false,
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "geolocation_type": {
+                                "const": "POINT"
+                            }
+                        },
+                        "required": [
+                            "geolocation_type"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "points": {
+                                "items": {},
+                                "type": "array"
+                            }
+                        },
+                        "required": [
+                            "points"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "geolocation_type": {
+                                "const": "BOX"
+                            }
+                        },
+                        "required": [
+                            "geolocation_type"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "points": {
+                                "items": {},
+                                "type": "array"
+                            }
+                        },
+                        "required": [
+                            "points"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "geolocation_type": {
+                                "const": "POLYGON"
+                            }
+                        },
+                        "required": [
+                            "geolocation_type"
+                        ]
+                    },
+                    "then": {
+                        "properties": {
+                            "points": {
+                                "items": {},
+                                "type": "array"
+                            }
+                        },
+                        "required": [
+                            "points"
+                        ]
+                    }
+                }
+            ],
+            "description": "A geographic location associated with a dataset: a single point, a bounding box, or a polygon. Coordinates are WGS 84 decimal degrees. This mirrors the OSTI E-Link 2.0 Geolocation structure, adding optional accuracy values. Many legacy coordinates were backfilled from place names or site descriptions, so leave the accuracy slots empty when the accuracy is not known rather than guessing.",
+            "properties": {
+                "geolocation_type": {
+                    "$ref": "#/$defs/GeolocationTypeEnum",
+                    "description": "The shape of this geolocation. Optional, as the shape can be determined from the points: one point is a POINT; two points, the northwest and southeast corners, are a BOX; four or more points are a POLYGON. A POLYGON should begin and end on the same point, so that the shape is closed."
+                },
+                "horizontal_accuracy": {
+                    "description": "Horizontal accuracy of the coordinates, in meters: the radius within which the true location is expected to lie. Applies to every point in this geolocation. Not part of the OSTI schema, so it is not carried over to OSTI records.",
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "label": {
+                    "description": "Place name for this location or set of points.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "points": {
+                    "description": "The points defining this location, in order. One point for a POINT, two (northwest corner, then southeast corner) for a BOX, and four or more for a POLYGON, with the first point repeated as the last.",
+                    "items": {
+                        "$ref": "#/$defs/GeoPoint"
+                    },
+                    "type": "array"
+                },
+                "vertical_accuracy": {
+                    "description": "Vertical accuracy of the altitude values, in meters. Applies to every point in this geolocation that has an altitude. Not part of the OSTI schema, so it is not carried over to OSTI records.",
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "points"
+            ],
+            "title": "Geolocation",
+            "type": "object"
+        },
+        "GeolocationTypeEnum": {
+            "description": "The shape of a geolocation. Matches the OSTI E-Link 2.0 geolocation types.",
+            "enum": [
+                "POINT",
+                "BOX",
+                "POLYGON"
+            ],
+            "title": "GeolocationTypeEnum",
+            "type": "string"
+        },
         "Individual": {
             "additionalProperties": false,
             "description": "An individual involved in the dataset.",
             "properties": {
                 "affiliation": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/BRCOrganization"
-                        },
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "description": "Affiliation of the individual.",
-                    "type": "string"
+                    "description": "Name of the individual's affiliation.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "affiliations": {
+                    "description": "All affiliations of the individual, in the order given by the source record. Affiliations may be any organization, not only a Bioenergy Research Center: for example, a GLBRC member may list both Great Lakes Bioenergy Research Center and University of Michigan. Matches the affiliations of a Person in OSTI E-Link 2.0 (name and ROR ID).",
+                    "items": {
+                        "$ref": "#/$defs/BRCOrganization"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "email": {
                     "description": "Email address of the individual.",
                     "type": [
                         "string",
+                        "null"
+                    ]
+                },
+                "individual_roles": {
+                    "description": "Roles this individual holds for the dataset, such as first author, contributing author, or corresponding author. More than one individual may hold the same role (e.g., co-first authors), and one individual may hold several roles (e.g., a first author who is also the corresponding author). When no creator is explicitly marked FirstAuthor, the first creator in the list is taken to be the first author. These roles have no equivalent in the OSTI E-Link 2.0 schema, so they are not carried over to OSTI records; author order is preserved there through list order.",
+                    "items": {
+                        "$ref": "#/$defs/IndividualRoleEnum"
+                    },
+                    "type": [
+                        "array",
                         "null"
                     ]
                 },
@@ -691,6 +920,16 @@
             },
             "title": "Individual",
             "type": "object"
+        },
+        "IndividualRoleEnum": {
+            "description": "Roles an individual may hold for a dataset, particularly with respect to authorship.",
+            "enum": [
+                "FirstAuthor",
+                "ContributingAuthor",
+                "CorrespondingAuthor"
+            ],
+            "title": "IndividualRoleEnum",
+            "type": "string"
         },
         "MediaFile": {
             "additionalProperties": false,
@@ -973,7 +1212,7 @@
             "description": "An organism studied in the dataset.",
             "properties": {
                 "NCBITaxID": {
-                    "description": "NCBI taxonomy ID for the organism.",
+                    "description": "NCBI Taxonomy ID for the organism, as a bare integer (e.g., 3694 for Populus trichocarpa).",
                     "type": [
                         "integer",
                         "null"
@@ -989,6 +1228,17 @@
                 "strains": {
                     "description": "Name of one or more strains of the organism.",
                     "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "taxon_ids": {
+                    "description": "Taxonomic or genome identifiers for the organism from sources other than NCBI Taxonomy, as CURIEs. Supported prefixes are GOLD (JGI Genomes OnLine Database IDs, e.g., GOLD:Gp0004954; organism IDs begin with Go, sequencing project IDs with Gp) and IMG.TAXON (JGI IMG taxon OIDs, which are integers). Use NCBITaxID for NCBI Taxonomy identifiers.",
+                    "items": {
+                        "pattern": "^(GOLD:G[a-z][0-9]+|IMG\\.TAXON:[0-9]+)$",
                         "type": "string"
                     },
                     "type": [
@@ -1120,6 +1370,7 @@
                 "Iowa State University FigShare",
                 "ICE",
                 "Illinois Data Bank",
+                "Interactive Tree of Life",
                 "iProX",
                 "JGI Data Portal",
                 "JGI Gold",
@@ -1139,11 +1390,13 @@
                 "OSTI",
                 "PanoramaPublic",
                 "PeptideAtlas",
+                "PISCES",
                 "PRIDE",
                 "Princeton Data Commons",
                 "Protein Data Bank",
                 "Protocols.io",
                 "The Cambridge Crystallographic Data Centre",
+                "Yoda",
                 "Zenodo"
             ],
             "title": "RepositoryEnum",
@@ -1176,5 +1429,5 @@
     },
     "title": "brc_schema",
     "type": "object",
-    "version": "0.2.0"
+    "version": "0.2.3"
 }
