@@ -69,7 +69,7 @@ let app;
 
 beforeAll(async () => {
   await loadDatasets(
-    RECORDS.map(([uid, json, schema_version = "0.2.0"]) => ({
+    RECORDS.map(([uid, json, schema_version = "0.2.3"]) => ({
       uid,
       schema_version,
       json: { identifier: uid, brc: "JBEI", creator: CREATOR, ...json },
