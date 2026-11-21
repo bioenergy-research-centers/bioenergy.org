@@ -54,4 +54,22 @@ describe('AuthorList', () => {
     const wrapper = mount(AuthorList, { props: { creators: null } });
     expect(wrapper.text()).toBe('');
   });
+
+  describe('with highlighted names', () => {
+    const many = ['Ana', 'Ben', 'Cy', 'Di', 'Quill'].map((name) => ({ name }));
+
+    it('marks a matched name within the visible creators', () => {
+      const wrapper = mount(AuthorList, { props: { creators: many, maxVisible: 3, highlightedNames: ['Ben'] } });
+      expect(wrapper.findAll('mark').map((m) => m.text())).toEqual(['Ben']);
+      expect(wrapper.text()).not.toContain('…');
+    });
+
+    it('shows a matched name past maxVisible, after an ellipsis', () => {
+      const wrapper = mount(AuthorList, { props: { creators: many, maxVisible: 3, highlightedNames: ['Quill'] } });
+      expect(wrapper.text()).toMatch(/Ana.*Ben.*Cy.*….*Quill/s);
+      expect(wrapper.text()).not.toContain('Di');
+      expect(wrapper.find('mark').text()).toBe('Quill');
+      expect(wrapper.text().trim().endsWith(';')).toBe(false);
+    });
+  });
 });

@@ -139,6 +139,7 @@ export const useSearchStore = defineStore('searchStore', () => {
           filters: filters.value,
           from_date: fromDate.value || undefined,
           until_date: untilDate.value || undefined,
+          highlight: true,
         });
 
         if (shouldFetchFacets) {
